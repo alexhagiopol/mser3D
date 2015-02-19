@@ -1,1 +1,0 @@
-/Users/alexhagiopol/Documents/Laboratory/Project_MSER/mser_nister/Build/CMakeFiles/nister.dir
