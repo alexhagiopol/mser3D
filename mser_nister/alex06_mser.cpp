@@ -204,8 +204,8 @@ int main(int argc, const char * argv[])
 	// Extract MSER
 	clock_t start = clock();
 	//MSER(int delta, double minArea, double maxArea, double maxVariation, double minDiversity, bool eight = false);
-	MSER mser4_1(2, 0.0005, 0.1, 0.5, 0.5, false); //4 connected MSER
-	MSER mser4_2(2, 0.0005, 0.1, 0.5, 0.5, false); //4 connected MSER
+	MSER mser4_1(2, 0.0005, 0.1, 0.9, 0.5, false); //4 connected MSER
+	MSER mser4_2(2, 0.0005, 0.1, 0.9, 0.5, false); //4 connected MSER
 	
 	vector<MSER::Region> regions[2];
 	
@@ -227,7 +227,7 @@ int main(int argc, const char * argv[])
 	ofstream myfile;
 	myfile.open("../../nister_ellipses.txt");
 	// Draw ellipses in the original image
-	const uint8_t colors[2][3] = {{0, 0, 0}, {255, 255, 255}};
+	const uint8_t colors[2][3] = {{255, 0, 0}, {255, 0, 0}};
 	
 	for (int i = 0; i < 2; ++i)
 		for (int j = 0; j < regions[i].size(); ++j)
