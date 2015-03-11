@@ -47,34 +47,41 @@ class Simulator(object):
         teamA = Team("A", '000000')
         teamB = Team("B", '000000')
         #Defining a couple of agents 
-        ag1Pos = array([80, 50, -20])
-        ag1Rot = array([30, 0, 0])
+        ag1Pos = array([100, 0, 0])
+        ag1Rot = array([0, 0, 0])
         ag1Brain = RunAtBallBrain()
         agent1 = Agent(teamA, ag1Pos, ag1Rot, ag1Brain, 5, 5)
          
-         
-        ag2Pos = array([-80, 0, 0])
+        
+        ag2Pos = array([100, 7, 0])
         ag2Rot = array([0, 0, 0])
         ag2Brain = RunAtBallBrain()
         agent2 = Agent(teamA, ag2Pos, ag2Rot, ag2Brain, 5, 5)
          
-        ag3Pos = array([70, 30, 50])
+        ag3Pos = array([7, -100, 0])
         ag3Rot = array([0, 0, 0])
         ag3Brain = RunAtBallBrain()
         agent3 = Agent(teamB, ag3Pos, ag3Rot, ag3Brain, 5, 5)
          
-        ag4Pos = array([-80, 20, 60])
+        ag4Pos = array([0, -100, 0])
         ag4Rot = array([0, 0, 0])
         ag4Brain = RunAtBallBrain()
         agent4 = Agent(teamB, ag4Pos, ag4Rot, ag4Brain, 5, 5)
+
+        ag5Pos = array([0, 0, 0])
+        ag5Rot = array([0, 0, 0])
+        ag5Brain = RunAtBallBrain()
+        agent5 = Agent(teamB, ag5Pos, ag5Rot, ag5Brain, 5, 5)
          
         #Add the agent to the world
         self.world.agents.append(agent1)
         self.world.agents.append(agent2)
         self.world.agents.append(agent3)
         self.world.agents.append(agent4)
+        self.world.agents.append(agent5)
 
 #         
+        '''
         #define a bunch of obstacles
         ob1Pos = array([-50,-50,-50])
         ob1 = Obstacle(ob1Pos, 30)
@@ -92,6 +99,7 @@ class Simulator(object):
         
         #add the ball to the world
         self.world.balls.append(ball)
+        '''
         
 #called at a fixed 30fps always
     def fixedLoop(self):
@@ -137,13 +145,14 @@ class Simulator(object):
         fig = plt.figure(figsize=(16,12))
         ax = fig.add_subplot(111, projection='3d') 
         ax.axis('off')
-        ax.view_init(elev = 30)
+        ax.view_init(elev = 90, azim = 90)
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
         ax.set_zlabel("Z")    
         fname = self.imageDirName + '/' + str(int(loopIndex)) + '.jpg' # name the file 
         self.loop(ax)
         plt.gca().set_ylim(ax.get_ylim()[::-1])
+        #plt.show()
         savefig(fname, format='jpg')
         print 'Written Frame No.'+ str(loopIndex)+' to '+ fname
         plt.close()
@@ -153,7 +162,7 @@ class Simulator(object):
 #set the size of the world
 world = World(100, 100)
 #specify which world to simulate, total simulation time, and frammerate for video
-sim = Simulator(world, 60, 30, "images")
+sim = Simulator(world, 1, 30, "images")
 #run the simulation
 sim.run()
 

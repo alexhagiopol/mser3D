@@ -48,7 +48,7 @@ class Agent(object):
         subplot.plot_surface(x, y, z,  rstride=4, cstride=4, linewidth = 0, color=sphereColor)
         
         #plots the left handed co-ordinate Frame
-        
+        '''
         #plots the forward a red line
         fw = self.position + self.forward * (self.drawRadius + 10)
         x_fw = array([self.position[0], fw[0]])
@@ -69,6 +69,7 @@ class Agent(object):
         y_up = array([self.position[1], up[1]])
         z_up = array([self.position[2], up[2]])
         subplot.plot(x_up, y_up, z_up, color='g')
+        '''
         
     '''
     Returns egocentric position of other object with respect to self

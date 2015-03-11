@@ -119,6 +119,8 @@ void drawAndWriteEllipse(const MSER::Region & region, int width, int height, int
 	// Centroid (mean)
 	const double x = region.moments_[0] / region.area_;
 	const double y = region.moments_[1] / region.area_;
+	cout << x << "," << y << endl;
+	cout << "converts to: x = " << -0.1492*x + 248.9608 << " y = " << -0.1927*y + 226.1396 << endl;
 	
 	// Covariance matrix [a b; b c]
 	const double a = region.moments_[2] / region.area_ - x * x;
@@ -204,8 +206,8 @@ int main(int argc, const char * argv[])
 	// Extract MSER
 	clock_t start = clock();
 	//MSER(int delta, double minArea, double maxArea, double maxVariation, double minDiversity, bool eight = false);
-	MSER mser4_1(2, 0.0005, 0.1, 0.9, 0.5, false); //4 connected MSER
-	MSER mser4_2(2, 0.0005, 0.1, 0.9, 0.5, false); //4 connected MSER
+	MSER mser4_1(2, 0.00005, 0.1, 0.9, 0.5, false); //4 connected MSER
+	MSER mser4_2(2, 0.00005, 0.1, 0.9, 0.5, false); //4 connected MSER
 	
 	vector<MSER::Region> regions[2];
 	

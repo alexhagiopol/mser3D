@@ -18,9 +18,9 @@ class RunAtBallBrain(object):
         pass
     
     def takeStep(self, myTeam=[], enemyTeam=[], balls=[], obstacles=[]):
-        deltaPos = np.array([1, 0, 0])
-        deltaRot = getYPRFromVector(balls[0].position)
-        return deltaPos, deltaRot
-        
+        #deltaPos = np.array([1, 0, 0])
+        #deltaRot = getYPRFromVector(balls[0].position)
+        #return deltaPos, deltaRot
+        return np.array([1,0,0]),np.array([0,0,0])
 
         
