@@ -119,8 +119,8 @@ void drawAndWriteEllipse(const MSER::Region & region, int width, int height, int
 	// Centroid (mean)
 	const double x = region.moments_[0] / region.area_;
 	const double y = region.moments_[1] / region.area_;
-	cout << x << "," << y << endl;
-	cout << "converts to: x = " << -0.1492*x + 248.9608 << " y = " << -0.1927*y + 226.1396 << endl;
+	//cout << x << "," << y << endl;
+	//cout << "converts to: x = " << -0.1492*x + 248.9608 << " y = " << -0.1927*y + 226.1396 << endl;
 	
 	// Covariance matrix [a b; b c]
 	const double a = region.moments_[2] / region.area_ - x * x;
@@ -129,7 +129,8 @@ void drawAndWriteEllipse(const MSER::Region & region, int width, int height, int
 	
 	//Output ellipse data in the same form as VL feat
 	//y preceeds x to be consistent with MATLAB format
-	myfile << y << "\n" << x << "\n" << a << "\n" << b << "\n" << c << "\n \n"; 
+	//myfile << y << "\n" << x << "\n" << a << "\n" << b << "\n" << c << "\n \n"; 
+	myfile << -0.1492*x + 248.9608 << "," << -0.1927*y + 226.1396 << "\n";
 
 	// Eigenvalues of the covariance matrix
 	const double d  = a + c;
@@ -227,7 +228,9 @@ int main(int argc, const char * argv[])
 	
 	//Prepare to write ellipse data to file
 	ofstream myfile;
-	myfile.open("../../nister_ellipses.txt");
+	myfile.open("../../positions_nister.txt", ios::app);
+	myfile << "FRAME" << "\n";
+
 	// Draw ellipses in the original image
 	const uint8_t colors[2][3] = {{255, 0, 0}, {255, 0, 0}};
 	
