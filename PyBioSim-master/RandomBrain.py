@@ -10,19 +10,18 @@ from LinearAlegebraUtils import getYPRFromVector
 import numpy as np
 from random import randint
 
-class RunAtBallBrain(object):
+class RandomBrain(object):
     '''
     classdocs
     '''
-
-
+    
     def __init__(self):      
         pass
     
     def takeStep(self, myTeam=[], enemyTeam=[], balls=[], obstacles=[]):
-        deltaPos = np.array([1, 0, 0])
-        deltaRot = getYPRFromVector(balls[0].position)
-        return deltaPos, deltaRot
-        return np.array([1,0,0]),np.array([0,0,0])
+        #deltaPos = np.array([1, 0, 0])
+        #deltaRot = getYPRFromVector(balls[0].position)
+        #return deltaPos, deltaRot
+        return np.array([-1,0,0]),np.array([0,0,0])
 
         

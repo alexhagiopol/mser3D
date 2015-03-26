@@ -33,16 +33,16 @@ class Simulator(object):
         self.imageDirName = imageDirName
         self.currWP = 0
         self.ballWPs = [array([50.0, -100.0, 0.0]), array([0.0, 100.0, -70.0]), array([50.0, 20.0, 100.0]),array([-30.0, 50.0, -100.0]), array([80.0, -50.0, 50.0]), array([80.0, -50.0, -50.0]), array([-65.0, 20.0, 50.0]), array([-50.0, 20.0, -60.0])]
+        self.file = open('positions_ground_truth.txt','w+')
 
     def setup(self):    
         #setup directory to save the images
-        self.imageDirName = 'images'
+        self.imageDirName = 'images_simulator'
         try:
             os.mkdir(self.imageDirName)
         except:
             print self.imageDirName + " subdirectory already exists. OK."
 
-  
          #define teams which the agents can be a part of
         teamA = Team("A", '000000')
         teamB = Team("B", '000000')
@@ -53,12 +53,12 @@ class Simulator(object):
         agent1 = Agent(teamA, ag1Pos, ag1Rot, ag1Brain, 5, 5)
          
         
-        ag2Pos = array([100, 7, 0])
+        ag2Pos = array([100, 15, 0])
         ag2Rot = array([0, 0, 0])
         ag2Brain = RunAtBallBrain()
         agent2 = Agent(teamA, ag2Pos, ag2Rot, ag2Brain, 5, 5)
          
-        ag3Pos = array([7, -100, 0])
+        ag3Pos = array([15, -100, 0])
         ag3Rot = array([0, 0, 0])
         ag3Brain = RunAtBallBrain()
         agent3 = Agent(teamB, ag3Pos, ag3Rot, ag3Brain, 5, 5)
@@ -92,18 +92,24 @@ class Simulator(object):
         #add obstacles to the world
         self.world.obstacles.append(ob1);
         self.world.obstacles.append(ob2)
-        
+        '''
         #define a ball
-        ball = Ball(array([0, 0, 0]))
+        ball = Ball(array([0, 10, 0]))
         
         
         #add the ball to the world
         self.world.balls.append(ball)
-        '''
+        
         
 #called at a fixed 30fps always
     def fixedLoop(self):
+        self.file.write("FRAME")
+        self.file.write("\n")
         for agent in self.world.agents:
+            for i in range(0,2):
+                self.file.write(str(agent.position[i]))
+                self.file.write(",")
+            self.file.write("\n")
             agent.moveAgent(self.world)
          
         for ball in self.world.balls:  
@@ -149,7 +155,7 @@ class Simulator(object):
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
         ax.set_zlabel("Z")    
-        fname = self.imageDirName + '/' + str(int(loopIndex)) + '.jpg' # name the file 
+        fname = self.imageDirName + '/' + str(int(100000000+loopIndex)) + '.jpg' # name the file 
         self.loop(ax)
         plt.gca().set_ylim(ax.get_ylim()[::-1])
         #plt.show()
@@ -164,7 +170,7 @@ world = World(100, 100)
 #specify which world to simulate, total simulation time, and frammerate for video
 sim = Simulator(world, 1, 30, "images")
 #run the simulation
-sim.run()
+#sim.run()
 
 '''
 To create a video using the image sequence, execute the following command in command line.

@@ -18,7 +18,6 @@ class Agent(object):
     classdocs
     '''
 
-
     def __init__(self, team, position, rotation, brain, colRadius, drawRadius):
         self.position = position.astype(float)        #numpy array [x, y ,z]
         self.rotation = rotation.astype(float)        #numpy array [yaw, pitch, roll] (in degrees)
@@ -31,7 +30,7 @@ class Agent(object):
         self.maxMove = double(0.6666)             #max distance the agent can move in each frame
         self.maxRot = array([5, 5, 5])           #max YPR in degrees the agent can rotate in each frame
         self.brain = brain
- 
+
     '''
     Plots a sphere of radius 10 with a left hand co-ordinate frame on the provided subplot.
     '''       
