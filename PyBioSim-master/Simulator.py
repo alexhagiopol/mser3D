@@ -13,7 +13,7 @@ from Obstacle import *
 from pylab import *
 from Ball import Ball
 from LinearAlegebraUtils import distBetween
-from RunAtBallBrain import RunAtBallBrain
+from AlexBrain import AlexBrain
 from Team import Team
 
 
@@ -37,49 +37,73 @@ class Simulator(object):
 
     def setup(self):    
         #setup directory to save the images
-        self.imageDirName = 'images_simulator'
+        self.imageDirName = 'BioSim_Output_Images'
         try:
             os.mkdir(self.imageDirName)
         except:
             print self.imageDirName + " subdirectory already exists. OK."
 
          #define teams which the agents can be a part of
-        teamA = Team("A", '000000')
-        teamB = Team("B", '000000')
-        #Defining a couple of agents 
+        teamA = Team("A", '#416341')  #Green Team
+        teamB = Team("B", '#FF3A83')  #PurpleTeam
+        teamC = Team("C", '#72AACA')  #Blue Team
+        teamD = Team("D", '#996633')  #Yellow Team
+
+        #Team A Green Team
         ag1Pos = array([100, 0, 0])
         ag1Rot = array([0, 0, 0])
-        ag1Brain = RunAtBallBrain()
-        agent1 = Agent(teamA, ag1Pos, ag1Rot, ag1Brain, 5, 5)
-         
-        
-        ag2Pos = array([100, 15, 0])
+        ag1Brain = AlexBrain(np.array([1,0,0]),np.array([0,0,0]))
+        agent1 = Agent(teamA, ag1Pos, ag1Rot, ag1Brain, 15, 15)
+                
+        ag2Pos = array([100, 50, 0])
         ag2Rot = array([0, 0, 0])
-        ag2Brain = RunAtBallBrain()
-        agent2 = Agent(teamA, ag2Pos, ag2Rot, ag2Brain, 5, 5)
-         
-        ag3Pos = array([15, -100, 0])
+        ag2Brain = AlexBrain(np.array([1,0,0]),np.array([0,0,0]))
+        agent2 = Agent(teamA, ag2Pos, ag2Rot, ag2Brain, 15, 15)
+        
+
+        #Team B Purple Team
+        ag3Pos = array([50, -100, 0])
         ag3Rot = array([0, 0, 0])
-        ag3Brain = RunAtBallBrain()
-        agent3 = Agent(teamB, ag3Pos, ag3Rot, ag3Brain, 5, 5)
+        ag3Brain = AlexBrain(np.array([0,1,0]),np.array([0,0,0]))
+        agent3 = Agent(teamB, ag3Pos, ag3Rot, ag3Brain, 15, 15)
          
         ag4Pos = array([0, -100, 0])
         ag4Rot = array([0, 0, 0])
-        ag4Brain = RunAtBallBrain()
-        agent4 = Agent(teamB, ag4Pos, ag4Rot, ag4Brain, 5, 5)
+        ag4Brain = AlexBrain(np.array([0,1,0]),np.array([0,0,0]))
+        agent4 = Agent(teamB, ag4Pos, ag4Rot, ag4Brain, 15, 15)
 
-        ag5Pos = array([0, 0, 0])
+        #Team C Blue Team
+        ag5Pos = array([-50, -100, 0])
         ag5Rot = array([0, 0, 0])
-        ag5Brain = RunAtBallBrain()
-        agent5 = Agent(teamB, ag5Pos, ag5Rot, ag5Brain, 5, 5)
-         
+        ag5Brain = AlexBrain(np.array([1,1,0]),np.array([0,0,0]))
+        agent5 = Agent(teamC, ag5Pos, ag5Rot, ag5Brain, 15, 15)
+        
+        ag6Pos = array([0, 0, 0])
+        ag6Rot = array([0, 0, 0])
+        ag6Brain = AlexBrain(np.array([1,1,0]),np.array([0,0,0]))
+        agent6 = Agent(teamC, ag6Pos, ag6Rot, ag6Brain, 15, 15)
+
+        #Team D Yellow Team
+        ag7Pos = array([-225, 0, 0])
+        ag7Rot = array([0, 0, 0])
+        ag7Brain = AlexBrain(np.array([1,0,0]),np.array([0,0,0]))
+        agent7 = Agent(teamD, ag7Pos, ag7Rot, ag7Brain, 15, 15)
+        
+        ag8Pos = array([-225, 50, 0])
+        ag8Rot = array([0, 0, 0])
+        ag8Brain = AlexBrain(np.array([1,0,0]),np.array([0,0,0]))
+        agent8 = Agent(teamD, ag8Pos, ag8Rot, ag8Brain, 15, 15)
+
+
         #Add the agent to the world
         self.world.agents.append(agent1)
         self.world.agents.append(agent2)
         self.world.agents.append(agent3)
         self.world.agents.append(agent4)
         self.world.agents.append(agent5)
-
+        self.world.agents.append(agent6)
+        self.world.agents.append(agent7)
+        self.world.agents.append(agent8)
 #         
         '''
         #define a bunch of obstacles
@@ -94,7 +118,7 @@ class Simulator(object):
         self.world.obstacles.append(ob2)
         '''
         #define a ball
-        ball = Ball(array([0, 10, 0]))
+        ball = Ball(array([0, 1100, 0]))
         
         
         #add the ball to the world
@@ -159,7 +183,7 @@ class Simulator(object):
         self.loop(ax)
         plt.gca().set_ylim(ax.get_ylim()[::-1])
         #plt.show()
-        savefig(fname, format='jpg')
+        savefig(fname, format='jpg', dpi = 20)
         print 'Written Frame No.'+ str(loopIndex)+' to '+ fname
         plt.close()
 
@@ -168,9 +192,9 @@ class Simulator(object):
 #set the size of the world
 world = World(100, 100)
 #specify which world to simulate, total simulation time, and frammerate for video
-sim = Simulator(world, 1, 30, "images")
+sim = Simulator(world, 6, 30, "images")
 #run the simulation
-#sim.run()
+sim.run()
 
 '''
 To create a video using the image sequence, execute the following command in command line.

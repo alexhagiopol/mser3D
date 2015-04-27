@@ -8,7 +8,7 @@ run('../vlfeat-0.9.19/toolbox/vl_setup')
 vl_version verbose
 
 % format = 'Sequence1/frame%02d.jpg'; N = 48; % framing
-format = '../images_input/Sequence2/frame%02d.jpg'; N = 50; % indoor
+format = '../Image Storage/images_input/Sequence2/frame%02d.jpg'; N = 50; % indoor
 % format = 'Sequence3/frame%02d.jpg'; N = 47; % hulk
 % format = 'Sequence4/frame%03d.jpg'; N = 101; % trees
 % format = 'Sequence5/frame%03d.jpg'; N = 193; % garage
