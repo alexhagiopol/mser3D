@@ -50,23 +50,26 @@ class Simulator(object):
         teamD = Team("D", '#996633')  #Yellow Team
 
         #Team A Green Team
+        '''
         ag1Pos = array([100, 0, 0])
         ag1Rot = array([0, 0, 0])
         ag1Brain = AlexBrain(np.array([1,0,0]),np.array([0,0,0]))
         agent1 = Agent(teamA, ag1Pos, ag1Rot, ag1Brain, 15, 15)
-                
+        
+
         ag2Pos = array([100, 50, 0])
         ag2Rot = array([0, 0, 0])
         ag2Brain = AlexBrain(np.array([1,0,0]),np.array([0,0,0]))
         agent2 = Agent(teamA, ag2Pos, ag2Rot, ag2Brain, 15, 15)
-        
+        '''
 
         #Team B Purple Team
+        '''
         ag3Pos = array([50, -100, 0])
         ag3Rot = array([0, 0, 0])
         ag3Brain = AlexBrain(np.array([0,1,0]),np.array([0,0,0]))
         agent3 = Agent(teamB, ag3Pos, ag3Rot, ag3Brain, 15, 15)
-         
+        '''
         ag4Pos = array([0, -100, 0])
         ag4Rot = array([0, 0, 0])
         ag4Brain = AlexBrain(np.array([0,1,0]),np.array([0,0,0]))
@@ -78,32 +81,36 @@ class Simulator(object):
         ag5Brain = AlexBrain(np.array([1,1,0]),np.array([0,0,0]))
         agent5 = Agent(teamC, ag5Pos, ag5Rot, ag5Brain, 15, 15)
         
+        '''
         ag6Pos = array([0, 0, 0])
         ag6Rot = array([0, 0, 0])
         ag6Brain = AlexBrain(np.array([1,1,0]),np.array([0,0,0]))
         agent6 = Agent(teamC, ag6Pos, ag6Rot, ag6Brain, 15, 15)
+        '''
 
         #Team D Yellow Team
+        '''
         ag7Pos = array([-225, 0, 0])
         ag7Rot = array([0, 0, 0])
         ag7Brain = AlexBrain(np.array([1,0,0]),np.array([0,0,0]))
         agent7 = Agent(teamD, ag7Pos, ag7Rot, ag7Brain, 15, 15)
         
+
         ag8Pos = array([-225, 50, 0])
         ag8Rot = array([0, 0, 0])
         ag8Brain = AlexBrain(np.array([1,0,0]),np.array([0,0,0]))
         agent8 = Agent(teamD, ag8Pos, ag8Rot, ag8Brain, 15, 15)
-
+        '''
 
         #Add the agent to the world
-        self.world.agents.append(agent1)
-        self.world.agents.append(agent2)
-        self.world.agents.append(agent3)
+        #self.world.agents.append(agent1)
+        #self.world.agents.append(agent2)
+        #self.world.agents.append(agent3)
         self.world.agents.append(agent4)
         self.world.agents.append(agent5)
-        self.world.agents.append(agent6)
-        self.world.agents.append(agent7)
-        self.world.agents.append(agent8)
+        #self.world.agents.append(agent6)
+        #self.world.agents.append(agent7)
+        #self.world.agents.append(agent8)
 #         
         '''
         #define a bunch of obstacles
