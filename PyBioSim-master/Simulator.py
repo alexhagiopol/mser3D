@@ -46,6 +46,7 @@ class Simulator(object):
          #define teams which the agents can be a part of
         teamA = Team("A", '#416341')  #Green Team
         teamB = Team("B", '#FF3A83')  #PurpleTeam
+        #teamC = Team("C", '#FF3A83')
         teamC = Team("C", '#72AACA')  #Blue Team
         teamD = Team("D", '#996633')  #Yellow Team
 
@@ -90,7 +91,7 @@ class Simulator(object):
 
         #Team D Yellow Team
         '''
-        ag7Pos = array([-225, 0, 0])
+        ag7Pos = array([-100, 0, 0])
         ag7Rot = array([0, 0, 0])
         ag7Brain = AlexBrain(np.array([1,0,0]),np.array([0,0,0]))
         agent7 = Agent(teamD, ag7Pos, ag7Rot, ag7Brain, 15, 15)
@@ -134,13 +135,13 @@ class Simulator(object):
         
 #called at a fixed 30fps always
     def fixedLoop(self):
-        self.file.write("FRAME")
+        #self.file.write("FRAME")
         self.file.write("\n")
         for agent in self.world.agents:
             for i in range(0,2):
                 self.file.write(str(agent.position[i]))
                 self.file.write(",")
-            self.file.write("\n")
+            #self.file.write("\n")
             agent.moveAgent(self.world)
          
         for ball in self.world.balls:  
@@ -199,7 +200,7 @@ class Simulator(object):
 #set the size of the world
 world = World(100, 100)
 #specify which world to simulate, total simulation time, and frammerate for video
-sim = Simulator(world, 6, 30, "images")
+sim = Simulator(world, 10, 30, "images")
 #run the simulation
 sim.run()
 

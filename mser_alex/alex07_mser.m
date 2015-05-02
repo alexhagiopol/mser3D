@@ -1,4 +1,4 @@
-%alex05_mser
+%alex07_mser
 %Naive version that produces hijacking effect.
 %MSER computation using VL Feat for images output by the PyBioSim
 %simulator. MSER tagging for tracking purposes. Data association? Particle
@@ -10,7 +10,7 @@ close all
 run('../vlfeat-0.9.19/toolbox/vl_setup') % start up vl_feat
 vl_version verbose
 format = '../PyBioSim-master/BioSim_Output_Images/%08d.jpg'; 
-N = 180;
+N = 300;
 
 %% Set up video output
 writer = VideoWriter('MSER_Tracking','MPEG-4');
@@ -18,10 +18,11 @@ writer.Quality = 100;
 writer.FrameRate = 30;
 open(writer);
 myFigure = figure(1);
-set(myFigure, 'Position', [0,0,700,900]);
+set(myFigure, 'Position', [0,0,1280,720]);
+red_track = [];
+blue_track = [];
 
 %% Initialize with first frame
-    data_assocs = [];
     f = 1;
     filename = sprintf(format, 100000000 + f);
     C = imread(filename);
@@ -41,13 +42,13 @@ set(myFigure, 'Position', [0,0,700,900]);
     darkEllipsesTrans = vl_ertr(DarkEllipses); 
     
     %Perform naive data association
-    ellipsesScores = compareRegionEllipses(darkEllipsesTrans,data_assoc(:,:)); 
+    ellipsesScores = compareRegionEllipses(darkEllipsesTrans,data_assoc(:,:));
     temp = [];
     for j = 1:size(data_assoc,2)
         temp = [temp, darkEllipsesTrans(:,ellipsesScores(1,j))];
     end
     data_assoc = [data_assoc; temp];
-    
+    %pause
 %% Track with rest of frames
 for f = 3:N
     %% Import and resize image
@@ -60,10 +61,10 @@ for f = 3:N
     darkEllipsesTrans = vl_ertr(DarkEllipses);
     
     %% Perform naive data association
-    ellipsesScores = compareRegionEllipses(darkEllipsesTrans,data_assoc(5*(f-2)+1:5*(f-1),:)); 
+    ellipsesScores = compareRegionEllipses(darkEllipsesTrans,data_assoc(5*(f-2)+1:5*(f-1),:))
     temp = [];
     for j = 1:size(data_assoc,2)
-        temp = [temp, darkEllipsesTrans(:,ellipsesScores(1,j))];
+        temp = [temp, darkEllipsesTrans(:,ellipsesScores(1,j))]
     end
     data_assoc = [data_assoc; temp];
     
@@ -74,19 +75,20 @@ for f = 3:N
         S(mser)=i*1*(size(Dark,1)-i);
     end    
     %% Subplot 1
-    subplot(2,1,1);
+    subplot(1,2,1);
     imshow(C);
     
     title('Original Image With Superimposed Tracks');
     set(gca,'FontSize',16,'fontWeight','bold') 
     hold on
     plot(data_assoc(1:5:end,1),data_assoc(2:5:end,1),'r.');
+    red_track = [red_track; data_assoc(end-4,1),data_assoc(end-3,1)];
     plot(data_assoc(1:5:end,2),data_assoc(2:5:end,2),'b.');
-    
+    blue_track = [blue_track; data_assoc(end-4,2),data_assoc(end-3,2)];
     
     hold off
     %% Subplot 2
-    subplot(2,1,2);
+    subplot(1,2,2);
     imshow(S)  
     title('MSER Output');
     set(gca,'FontSize',16,'fontWeight','bold') 
