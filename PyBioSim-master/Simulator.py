@@ -71,13 +71,13 @@ class Simulator(object):
         ag3Brain = AlexBrain(np.array([0,1,0]),np.array([0,0,0]))
         agent3 = Agent(teamB, ag3Pos, ag3Rot, ag3Brain, 15, 15)
         '''
-        ag4Pos = array([0, -100, 0])
+        ag4Pos = array([100, -100, 0])
         ag4Rot = array([0, 0, 0])
         ag4Brain = AlexBrain(np.array([0,1,0]),np.array([0,0,0]))
         agent4 = Agent(teamB, ag4Pos, ag4Rot, ag4Brain, 15, 15)
 
         #Team C Blue Team
-        ag5Pos = array([-50, -100, 0])
+        ag5Pos = array([50, -100, 0])
         ag5Rot = array([0, 0, 0])
         ag5Brain = AlexBrain(np.array([1,1,0]),np.array([0,0,0]))
         agent5 = Agent(teamC, ag5Pos, ag5Rot, ag5Brain, 15, 15)
@@ -90,13 +90,13 @@ class Simulator(object):
         '''
 
         #Team D Yellow Team
-        '''
-        ag7Pos = array([-100, 0, 0])
+        
+        ag7Pos = array([150, 0, 0])
         ag7Rot = array([0, 0, 0])
         ag7Brain = AlexBrain(np.array([1,0,0]),np.array([0,0,0]))
         agent7 = Agent(teamD, ag7Pos, ag7Rot, ag7Brain, 15, 15)
         
-
+        '''
         ag8Pos = array([-225, 50, 0])
         ag8Rot = array([0, 0, 0])
         ag8Brain = AlexBrain(np.array([1,0,0]),np.array([0,0,0]))
@@ -110,7 +110,7 @@ class Simulator(object):
         self.world.agents.append(agent4)
         self.world.agents.append(agent5)
         #self.world.agents.append(agent6)
-        #self.world.agents.append(agent7)
+        self.world.agents.append(agent7)
         #self.world.agents.append(agent8)
 #         
         '''
