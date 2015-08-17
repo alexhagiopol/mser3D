@@ -12,6 +12,11 @@ classdef track < handle
         particles;
         frames_for_v_est = 5; %use 5 frames to estimate velocity
         average_locations; 
+        %Range for initial particle locations;
+        rLowerBound = 200;
+        rUpperBound = 400;
+        cLowerBound = 100;
+        cUpperBound = 350;
     end     
     methods
         function T = track
@@ -23,8 +28,8 @@ classdef track < handle
             T.color = zeros(1,3);
             T.n = 1; %number of measurements we've made so far
             %assume image is 640 x 480
-            rPositions = randsample(200:400,T.numParticles,true);
-            cPositions = randsample(250:500,T.numParticles,true);
+            rPositions = randsample(T.rLowerBound:T.rUpperBound,T.numParticles,true);
+            cPositions = randsample(T.cLowerBound:T.cUpperBound,T.numParticles,true);
             T.particles = [rPositions',cPositions', (1/T.numParticles)*ones(T.numParticles,1)];
             T.average_locations = [];
         end
