@@ -126,8 +126,8 @@ close(writer);
 %% Display the movement of the MSER the user manually tracked.
 OD.printImage(size(C,1),size(C,2),2);
 
-%% Get measurements from tracked object data
-measurements = OD.getMsmts();
+%% Get measurements from tracked object data (Needs GTSAM)
+%measurements = OD.getMsmts();
 
 
 

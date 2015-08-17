@@ -19,7 +19,8 @@ classdef objectData < handle
             OD.frameNums = [OD.frameNums,frameNum];
             OD.pixelData{OD.totalFrames} = pixels;
             OD.ellipseData = [OD.ellipseData,ellipses];
-        end   
+        end
+        %Show contents of object 
         function printText(OD)
             for i = 1:OD.totalFrames
                 disp(['Frame ',num2str(OD.frameNums(i)),'******************']);
@@ -29,6 +30,7 @@ classdef objectData < handle
                 disp(OD.ellipseData(:,i));
             end
         end
+        %Show MSERs representing single object over multiple video frames
         function printImage(OD, rSize, cSize, figNum)
             canvas = 255*ones(rSize,cSize,'uint8'); 
             brightLevel = 255;
@@ -47,6 +49,7 @@ classdef objectData < handle
             end
             hold off
         end
+        %Projection part...not finished
         function measurements = getMsmts(OD)
             import gtsam.*
             measurements = Point2Vector;

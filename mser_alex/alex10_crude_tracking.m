@@ -35,10 +35,9 @@ MinDiversity = 0.7; %VL Feat tuning constant
 MinArea = 0.005; %VL Feat tuning constant
 MaxArea = 0.03; %VL Feat tuning constant
 
-
 %% Set up video output
-writer = VideoWriter('Nearest_Neighbor_Tracking_1','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
-%writer.Quality = 100; %No qyuality parameter for uncompressed avi 
+writer = VideoWriter('Nearest_Neighbor_Tracking_1','Uncompressed AVI'); %Uncompressed AVI required because mp4 doesnt work on Matlab for Linux :(
+%writer.Quality = 100; %No quality parameter for uncompressed avi 
 writer.FrameRate = 30;
 open(writer);
 frameTimes = zeros(N,1);
