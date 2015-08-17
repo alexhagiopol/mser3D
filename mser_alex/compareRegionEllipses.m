@@ -30,12 +30,12 @@ function ellipsesScores = compareRegionEllipses(prevEllipses, newEllipses)
     for i = 1:size(newEllipses,2)
         bestIndex = 1;
         bestScore = -Inf;
-        prevEllipses
-        newEllipses
+        prevEllipses;
+        newEllipses;
         for j = 1:size(prevEllipses, 2)            
-            differences = abs(newEllipses(1:2,i) - prevEllipses(1:2,j))
-            %differences(1:2,:) = differences(1:2,:)*5;
-            score = -1*mean(differences./abs(newEllipses(1:2,i)))
+            differences = abs(newEllipses(1:2,i) - prevEllipses(1:2,j));
+            differences(1:2,:) = differences(1:2,:)*5;
+            score = -1*mean(differences./abs(newEllipses(1:2,i)));
             %disp(['score = ',num2str(score)]);
             if score > bestScore
                 bestIndex = j;
@@ -43,7 +43,7 @@ function ellipsesScores = compareRegionEllipses(prevEllipses, newEllipses)
             end
         end
         ellipsesScores(1,i) = bestIndex;
-        ellipsesScores(2,i) = bestScore
+        ellipsesScores(2,i) = bestScore;
         %disp(['BEST = ',num2str(bestScore)]);
     end
 end
