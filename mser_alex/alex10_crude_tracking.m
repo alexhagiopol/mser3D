@@ -1,3 +1,13 @@
+% Needs VL Feat library
+% Uses code from frank01_mser
+
+clear
+clc
+close all
+run('../vlfeat-0.9.19/toolbox/vl_setup') % start up vl_feat
+vl_version verbose
+import gtsam.*
+
 %% Tuning constants 
 start = 1; %start at custom frame number. Default = 1.
 stop = 30;  %end at custom frame number. Default = N.
@@ -7,20 +17,13 @@ darknessFactor = 8; %When two regions are assigned the same color, we make the s
 MinDiversity = 0.7; %VL Feat tuning constant
 MinArea = 0.005; %VL Feat tuning constant
 MaxArea = 0.03; %VL Feat tuning constant
-
-% Needs VL Feat library
-% Uses code from frank01_mser
-
-clc
-close all
-run('../vlfeat-0.9.19/toolbox/vl_setup') % start up vl_feat
-vl_version verbose
-import gtsam.*
+time1 = cputime;
 
 %% Import video (comment this section out after you import once and store video frames in workspace; this takes a long time and a lot of memory)
 
 disp('Starting Video Import');
 readerobj = VideoReader('../videos_input/through_the_cracks_jing.mov', 'tag', 'myreader1');
+%readerobj = VideoReader('../videos_input/Walking_Video.MOV', 'tag', 'myreader1');
 vidFrames = read(readerobj);
 N = get(readerobj, 'NumberOfFrames');
 disp('Video Import Finished');
@@ -121,6 +124,8 @@ for f=start:stop
      
 end
 close(writer);
+time2 = cputime;
+disp(['Elapsed time = ',num2str(time2 - time1)]);
 
 
 
