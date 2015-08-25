@@ -1,4 +1,5 @@
 clc
+clear
 close all
 run('../vlfeat-0.9.19/toolbox/vl_setup') % start up vl_feat
 vl_version verbose
@@ -17,14 +18,11 @@ stop = N;  %end at custom frame number. Default = N.
 MinDiversity = 0.7; %VL Feat tuning constant
 MinArea = 0.005; %VL Feat tuning constant
 MaxArea = 0.03; %VL Feat tuning constant
-%Alex tuning constants
-darknessFactor = 6; %When two regions are assigned the same color, we make the second region a sligtly darker hue. Decrease this to make subsequent regions darker.
+%Alex tuning constant
 threshold = -1; %Score threshold needed for two regions to be considered to come from the same object. A higher score indicates higher similarity.
-memoryLoss = 6; %Higher memory loss throws away more of the old region knowledge with every frame. Increase memory loss when regions enter and exit the frame very quickly.
 
 %% Set up video output
 writer = VideoWriter('Nearest_Neighbor_Tracking_1','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
-%writer.Quality = 100; %No quality parameter for uncompressed avi 
 writer.FrameRate = 30;
 open(writer);
 frameTimes = zeros(N,1);
@@ -44,12 +42,12 @@ C = vidFrames(:,:,:,f);
 C = imresize(C,0.25);
 I=rgb2gray(C);
 %Detect MSERs
-[LastBright, LastBrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
+[Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
 %Set up image data structures for output
 S = 128*ones(size(I,1),size(I,2),'uint8'); %grayscale result
 Q = 128*ones(size(I,1),size(I,2),3,'uint8'); %color result
 %Choose random starting colors for regions
-numRegs = size(LastBrightEllipses,2);
+numRegs = size(BrightEllipses,2);
 LastBrightColors = zeros(1,numRegs);
 for i = 1:numRegs
     LastBrightColors(1,i) = randi([1,7],1,1);
@@ -68,9 +66,9 @@ for i=numRegs:-1:1
 end
 % Save this to display later
 prevQ = Q;
-    
+LastBrightEllipses = BrightEllipses;
 
-%% Process rest of frames
+%% Process rest of frames + make video
 for f=start + 1:stop
     %Read image from video and resize + grayscale
     C = vidFrames(:,:,:,f);
