@@ -1,16 +1,18 @@
 clc
-clear
+%clear
 close all
 run('../vlfeat-0.9.19/toolbox/vl_setup') % start up vl_feat
 vl_version verbose
 import gtsam.*
 
+%{
 %% Import video
 disp('Starting Video Import');
 readerobj = VideoReader('../videos_input/through_the_cracks_jing.mov', 'tag', 'myreader1');
 vidFrames = read(readerobj);
 N = get(readerobj, 'NumberOfFrames');
 disp('Video Import Finished');
+%}
 
 %% Tuning constants 
 start = 1; %start at custom frame number. Default = 1.
@@ -27,7 +29,7 @@ writer.FrameRate = 30;
 open(writer);
 frameTimes = zeros(N,1);
 two_pane_fig = figure(1);
-set(two_pane_fig, 'Position', [0,0,1200,500]); 
+set(two_pane_fig, 'Position', [0,0,1600,900]); 
 
 %% Color choices
 %                 red, orange, yellow, green, blue, purple, pink
@@ -102,27 +104,13 @@ for f=start + 1:stop
         currentBrightColors(i) = colorIndex;                 
     end
         
-
-    %% 2 quadrant video display
-    %% Quadrant 1: Original grayscale
-    subplot(1,2,1);
-    imshow(C); %original grayscale
-    title('Original Video');
+    %% Orignial, MSERs with color and lines
+    figure(two_pane_fig);
+    frames = [C,prevQ,Q];
+    imshow(frames)
+    title(['Original Frame # ',num2str(f), '                MSER Frame # ',num2str(f-1), '                MSER Frame # ',num2str(f)]);
     set(gca,'FontSize',16,'fontWeight','bold')
-    %Display frame number in a color appropriate to background brighness.
-    if mean(C(30,20,:)) < 125 
-        text(15,25,['#', num2str(f)],'FontSize',12,'fontWeight','bold','Color','w');
-    else
-        text(15,25,['#', num2str(f)],'FontSize',12,'fontWeight','bold','Color','k');
-    end
-    
-    %% Quadrant 2: MSERs with color and lines
-    subplot(1,2,2);
-    frames = [prevQ,Q];
-    imshow(frames)  
-    title('Tracked MSER Regions');
-    set(gca,'FontSize',16,'fontWeight','bold')    
-    
+      
     %% Plot ellipses
     %BrightEllipsesTrans = vl_ertr(BrightEllipses);
     %vl_plotframe(BrightEllipsesTrans, 'w.');
