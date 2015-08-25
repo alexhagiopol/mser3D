@@ -1,18 +1,18 @@
 clc
-%clear
+clear
 close all
 run('../vlfeat-0.9.19/toolbox/vl_setup') % start up vl_feat
 vl_version verbose
 import gtsam.*
 
-%{
+
 %% Import video
 disp('Starting Video Import');
 readerobj = VideoReader('../videos_input/through_the_cracks_jing.mov', 'tag', 'myreader1');
 vidFrames = read(readerobj);
 N = get(readerobj, 'NumberOfFrames');
 disp('Video Import Finished');
-%}
+
 
 %% Tuning constants 
 start = 1; %start at custom frame number. Default = 1.
@@ -29,7 +29,7 @@ writer.FrameRate = 30;
 open(writer);
 frameTimes = zeros(N,1);
 two_pane_fig = figure(1);
-set(two_pane_fig, 'Position', [0,0,1600,900]); 
+set(two_pane_fig, 'Position', [0,0,2100,700]); 
 
 %% Color choices
 %                 red, orange, yellow, green, blue, purple, pink
@@ -41,7 +41,7 @@ brightBcolorset = [  0,   0,   0,   0, 255, 255, 255];
 f = start;
 % Read image from video and resize + grayscale
 C = vidFrames(:,:,:,f);
-C = imresize(C,0.25);
+C = imresize(C,0.5);
 I=rgb2gray(C);
 %Detect MSERs
 [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
@@ -74,11 +74,11 @@ LastBrightEllipses = BrightEllipses;
 for f=start + 1:stop
     %Read image from video and resize + grayscale
     C = vidFrames(:,:,:,f);
-    C = imresize(C,0.25);
+    C = imresize(C,0.5);
     I=rgb2gray(C);    
     %Detect MSERs
     [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
-    %Compare new MSERs to previous MSERs
+    %Compare new MSERs to previous MSERs - perform matching step
     brightScores = compareRegionEllipses(LastBrightEllipses,BrightEllipses);
     %Set up image data structures for output
     S = 128*ones(size(I,1),size(I,2),'uint8'); %grayscale result
@@ -108,12 +108,16 @@ for f=start + 1:stop
     figure(two_pane_fig);
     frames = [C,prevQ,Q];
     imshow(frames)
-    title(['Original Frame # ',num2str(f), '                MSER Frame # ',num2str(f-1), '                MSER Frame # ',num2str(f)]);
-    set(gca,'FontSize',16,'fontWeight','bold')
+    title(['Original Frame # ',num2str(f), '                          MSER Previous Frame                           MSER Current Frame ']);
+    set(gca,'FontSize',13);
       
     %% Plot ellipses
-    %BrightEllipsesTrans = vl_ertr(BrightEllipses);
-    %vl_plotframe(BrightEllipsesTrans, 'w.');
+    BrightEllipsesTrans = vl_ertr(BrightEllipses); %Transpose from XY elipses to RC ellipses
+    LastBrightEllipsesTrans = vl_ertr(LastBrightEllipses); %Transpose from XY elipses to RC ellipses
+    BrightEllipsesTrans(1,:) = BrightEllipsesTrans(1,:) + 2*size(C,2); %Shift ellipse position to account for concatenated image
+    LastBrightEllipsesTrans(1,:) = LastBrightEllipsesTrans(1,:) + size(C,2); %Shift ellipse position to account for concatenated image
+    vl_plotframe(BrightEllipsesTrans, 'w.');
+    vl_plotframe(LastBrightEllipsesTrans, 'w.');
     
     %% Produce and write video frame 
     frame = frame2im(getframe(two_pane_fig));
