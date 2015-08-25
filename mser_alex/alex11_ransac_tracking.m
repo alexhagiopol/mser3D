@@ -101,12 +101,10 @@ for f=start + 1:stop
         Q(mserC3) = brightBcolorset(colorIndex);
         currentBrightColors(i) = colorIndex;                 
     end
-    %Update data structures
-    LastBrightEllipses = BrightEllipses;
-    LastBrightColors = currentBrightColors;    
+        
 
     %% 2 quadrant video display
-    %Quadrant 1: Original grayscale
+    %% Quadrant 1: Original grayscale
     subplot(1,2,1);
     imshow(C); %original grayscale
     title('Original Video');
@@ -117,17 +115,26 @@ for f=start + 1:stop
     else
         text(15,25,['#', num2str(f)],'FontSize',12,'fontWeight','bold','Color','k');
     end
-    % Quadrant 2: MSER color
+    
+    %% Quadrant 2: MSERs with color and lines
     subplot(1,2,2);
-    imshow(Q)  
+    frames = [prevQ,Q];
+    imshow(frames)  
     title('Tracked MSER Regions');
     set(gca,'FontSize',16,'fontWeight','bold')    
-    %Plot ellipses
-    BrightEllipsesTrans = vl_ertr(BrightEllipses);
-    vl_plotframe(BrightEllipsesTrans, 'w.');
-    %Produce and write video frame 
+    
+    %% Plot ellipses
+    %BrightEllipsesTrans = vl_ertr(BrightEllipses);
+    %vl_plotframe(BrightEllipsesTrans, 'w.');
+    
+    %% Produce and write video frame 
     frame = frame2im(getframe(two_pane_fig));
     writeVideo(writer,frame);
+    
+    %% Update data structures
+    LastBrightEllipses = BrightEllipses;
+    LastBrightColors = currentBrightColors;
+    prevQ = Q;
     %pause 
 end
 
