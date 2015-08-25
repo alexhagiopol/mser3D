@@ -19,8 +19,7 @@ MinArea = 0.005; %VL Feat tuning constant
 MaxArea = 0.03; %VL Feat tuning constant
 time1 = cputime;
 
-%% Import video (comment this section out after you import once and store video frames in workspace; this takes a long time and a lot of memory)
-
+%% Import video 
 disp('Starting Video Import');
 readerobj = VideoReader('../videos_input/through_the_cracks_jing.mov', 'tag', 'myreader1');
 %readerobj = VideoReader('../videos_input/Walking_Video.MOV', 'tag', 'myreader1');
@@ -123,6 +122,7 @@ for f=start:stop
     writeVideo(writer,frame);
      
 end
+%% Time the process
 close(writer);
 time2 = cputime;
 disp(['Elapsed time = ',num2str(time2 - time1)]);
