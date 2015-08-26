@@ -47,3 +47,4 @@ function ellipsesScores = compareRegionEllipses(prevEllipses, newEllipses)
         %disp(['BEST = ',num2str(bestScore)]);
     end
 end
+

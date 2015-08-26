@@ -89,6 +89,7 @@ for f=start + 1:stop
     %}
     %% Compare new MSERs to previous MSERs & perform matching step
     brightScores = compareRegionEllipses(LastBrightEllipses,BrightEllipses);
+    test_matches = generateMatches(LastBrightEllipses,BrightEllipses);
     %analyze matches 
     %% Choose MSER colors based on matching
     for i=numRegs:-1:1
