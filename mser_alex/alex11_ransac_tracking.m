@@ -71,26 +71,9 @@ for f=start + 1:stop
     Q = 128*ones(size(I,1),size(I,2),3,'uint8'); %color result        
     [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
     numRegs = size(Bright,1); %number of regions
-    currentBrightColors = ones(3,numRegs);
-    matches = [BrightEllipses; zeros(size(BrightEllipses))]; %data structure to store matched mser information
-    %% Matches data format:
-    %{
-    ***Matches are above + below eachother. If the match values are all equal to 0, there is no match***
-    current_center_X_1          current_center_X_2           ...
-    current_center_Y_1          current_center_Y_2           ...
-    current_cov_1_1             current_cov_1_2              ...
-    current_cov_2_1             current_cov_2_2              ... 
-    current_cov_3_1             current_cov_3_2              ... 
-    prev_match_center_X_1       prev_match_center_X_2        ...
-    prev_match_center_Y_1       prev_match_center_Y_2        ...
-    prev_match_cov1_1           prev_match_cov_1_2           ...
-    prev_match_cov2_1           prev_match_cov_2_2           ...
-    prev_match_cov3_1           prev_match_cov_3_2           ...
-    %}
-    %% Compare new MSERs to previous MSERs & perform matching step
-    brightScores = compareRegionEllipses(LastBrightEllipses,BrightEllipses);
-    test_matches = generateMatches(LastBrightEllipses,BrightEllipses);
-    %analyze matches 
+    %currentBrightColors = ones(3,numRegs);
+    %Generate matches   
+    [matches, matchSummary, currentBrightColors] = generateMatches(LastBrightEllipses,BrightEllipses,LastBrightColors, threshold);
     %% Choose MSER colors based on matching
     for i=numRegs:-1:1
         %% Get mser pixel locations from VL feat and convert region from grayscale dimensions to RGB dimensions:
@@ -98,21 +81,10 @@ for f=start + 1:stop
         [rS,cS] = ind2sub(size(S), mserS); 
         mserC1 = sub2ind(size(C), rS, cS, 1*ones(length(rS),1));
         mserC2 = sub2ind(size(C), rS, cS, 2*ones(length(rS),1));
-        mserC3 = sub2ind(size(C), rS, cS, 3*ones(length(rS),1));          
-        %% Decide if a match exists based on threshold
-        if brightScores(2,i) > threshold %Assign same color as "closest" mser
-            Q(mserC1) = LastBrightColors(1,brightScores(1,i)); %Assign color
-            Q(mserC2) = LastBrightColors(2,brightScores(1,i)); %Assign color 
-            Q(mserC3) = LastBrightColors(3,brightScores(1,i)); %Assign color
-            currentBrightColors(:,i) = LastBrightColors(:,brightScores(1,i)); %update colors
-            matches(6:end,i) = LastBrightEllipses(:,brightScores(1,i)); %place matched ellipse in correct place in matches data structure 
-        else
-            random_color = randi([0,255],3,1); %Generate random color
-            Q(mserC1) = random_color(1,1); %Assign color
-            Q(mserC2) = random_color(2,1); %Assign color
-            Q(mserC3) = random_color(3,1); %Assign color
-            currentBrightColors(:,i) = random_color(:,1); %update color
-        end                 
+        mserC3 = sub2ind(size(C), rS, cS, 3*ones(length(rS),1)); 
+        Q(mserC1) = currentBrightColors(1,i); %Assign color
+        Q(mserC2) = currentBrightColors(2,i); %Assign color
+        Q(mserC3) = currentBrightColors(3,i); %Assign color        
     end
         
     %% Show large concatenated image
@@ -125,8 +97,7 @@ for f=start + 1:stop
     %% Transform ellipses
     BrightEllipsesTrans = vl_ertr(BrightEllipses); %Transpose from XY elipses to RC ellipses
     LastBrightEllipsesTrans = vl_ertr(LastBrightEllipses); %Transpose from XY elipses to RC ellipses
-    matchesTrans = [vl_ertr(matches(1:5,:));vl_ertr(matches(6:10,:))];
-    
+    matchesTrans = [vl_ertr(matches(1:5,:));vl_ertr(matches(6:10,:))];    
     BrightEllipsesTrans(1,:) = BrightEllipsesTrans(1,:) + 2*size(C,2); %Shift ellipse position to account for concatenated image
     LastBrightEllipsesTrans(1,:) = LastBrightEllipsesTrans(1,:) + size(C,2); %Shift ellipse position to account for concatenated image
     matchesTrans(1,:) = matchesTrans(1,:) + 2*size(C,2);
@@ -138,7 +109,7 @@ for f=start + 1:stop
     
     %% Plot lines showing connections
     for i = 1:numRegs
-        if matchesTrans(6,i) ~= 0 && matchesTrans(7,i) ~= 0 %check if match actually exists 
+        if matchesTrans(6,i) > 0 && matchesTrans(7,i) > 0 %check if match actually exists 
             line([matchesTrans(1,i),matchesTrans(6,i)],[matchesTrans(2,i),matchesTrans(7,i)],'Color',[1, 1, 1]);
         end
     end    
@@ -148,11 +119,16 @@ for f=start + 1:stop
     writeVideo(writer,frame);    
     
     %% Update data structures
-    LastBrightEllipses = BrightEllipses;
-    LastBrightColors = currentBrightColors;
-    prevQ = Q;
+    lastNumRegs = size(LastBrightEllipses,2);
+    LastBrightEllipses = [BrightEllipses, LastBrightEllipses];
+    LastBrightColors = [currentBrightColors, LastBrightColors];
+    if lastNumRegs > numRegs
+        LastBrightEllipses = LastBrightEllipses(:,1:2*numRegs);
+        LastBrightColors = LastBrightColors(:,1:2*numRegs);
+    end
     
-    pause
+    prevQ = Q;    
+    %pause
 end
 
 close(writer);
