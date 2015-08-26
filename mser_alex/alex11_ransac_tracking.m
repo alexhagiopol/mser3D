@@ -77,14 +77,16 @@ for f=start + 1:stop
     %% Choose MSER colors based on matching
     for i=numRegs:-1:1
         %% Get mser pixel locations from VL feat and convert region from grayscale dimensions to RGB dimensions:
-        mserS=vl_erfill(I,Bright(i));        
-        [rS,cS] = ind2sub(size(S), mserS); 
-        mserC1 = sub2ind(size(C), rS, cS, 1*ones(length(rS),1));
-        mserC2 = sub2ind(size(C), rS, cS, 2*ones(length(rS),1));
-        mserC3 = sub2ind(size(C), rS, cS, 3*ones(length(rS),1)); 
-        Q(mserC1) = currentBrightColors(1,i); %Assign color
-        Q(mserC2) = currentBrightColors(2,i); %Assign color
-        Q(mserC3) = currentBrightColors(3,i); %Assign color        
+        if matchSummary(1,i) > 0 && matchSummary(2,i) > threshold %color in MSERs only if they get matched
+            mserS=vl_erfill(I,Bright(i));        
+            [rS,cS] = ind2sub(size(S), mserS); 
+            mserC1 = sub2ind(size(C), rS, cS, 1*ones(length(rS),1));
+            mserC2 = sub2ind(size(C), rS, cS, 2*ones(length(rS),1));
+            mserC3 = sub2ind(size(C), rS, cS, 3*ones(length(rS),1)); 
+            Q(mserC1) = currentBrightColors(1,i); %Assign color
+            Q(mserC2) = currentBrightColors(2,i); %Assign color
+            Q(mserC3) = currentBrightColors(3,i); %Assign color 
+        end
     end
         
     %% Show large concatenated image
