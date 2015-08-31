@@ -43,7 +43,7 @@ function [matches, match_summary, newColors] = generateMatches(prevEllipses,newE
     newColors = zeros(3,numNewRegions);
     matches = [newEllipses;-1*ones(size(newEllipses))];
     for i = 1:numNewRegions
-        if match_summary(1,i) > 0 && match_summary(2,i) > threshold
+        if match_summary(1,i) > 0 && match_summary(2,i) > threshold %Match identified
             matches(6:10,i) = prevEllipses(:,match_summary(1,i));
             newColors(:,i) = prevColors(:,match_summary(1,i));
         else
@@ -51,7 +51,7 @@ function [matches, match_summary, newColors] = generateMatches(prevEllipses,newE
         end
     end
     
-    disp(match_scores);
-    disp(match_summary);
-    disp(matches);
+    %disp(match_scores);
+    %disp(match_summary);
+    %disp(matches);
 end

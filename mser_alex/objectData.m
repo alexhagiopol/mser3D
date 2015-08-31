@@ -49,7 +49,8 @@ classdef objectData < handle
             end
             hold off
         end
-        %Projection part...not finished
+        %{
+        Projection part...not finished
         function measurements = getMsmts(OD)
             import gtsam.*
             measurements = Point2Vector;
@@ -58,5 +59,6 @@ classdef objectData < handle
                 measurements.push_back(point);                             
             end 
         end
+        %}
     end
 end

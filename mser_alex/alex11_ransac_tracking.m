@@ -24,7 +24,7 @@ threshold = -1; %Score threshold needed for two regions to be considered to come
 
 %% Set up video output
 writer = VideoWriter('Nearest_Neighbor_Tracking_1','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
-writer.FrameRate = 30;
+writer.FrameRate = 10;
 open(writer);
 frameTimes = zeros(N,1);
 two_pane_fig = figure(1);
@@ -71,7 +71,6 @@ for f=start + 1:stop
     Q = 128*ones(size(I,1),size(I,2),3,'uint8'); %color result        
     [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
     numRegs = size(Bright,1); %number of regions
-    %currentBrightColors = ones(3,numRegs);
     %Generate matches   
     [matches, matchSummary, currentBrightColors] = generateMatches(LastBrightEllipses,BrightEllipses,LastBrightColors, threshold);
     %% Choose MSER colors based on matching
