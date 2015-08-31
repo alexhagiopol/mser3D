@@ -5,7 +5,7 @@ classdef MSER < handle
     methods
         %initialize
         function M = MSER(ellipse,seed,frame)
-            M.data = [ellipse;seed,frame];            
+            M.data = [ellipse;seed;frame];            
         end
         %return info
         function ellipse = getEllipse(M)

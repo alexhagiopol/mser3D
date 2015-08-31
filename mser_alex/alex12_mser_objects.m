@@ -29,3 +29,25 @@ open(writer);
 frameTimes = zeros(N,1);
 two_pane_fig = figure(1);
 %set(two_pane_fig, 'Position', [0,0,2100,700]); 
+
+%% Process first video frame 
+f = start;
+% Read image from video and resize + grayscale
+C = vidFrames(:,:,:,f);
+C = imresize(C,0.5);
+I=rgb2gray(C);
+%Detect MSERs
+[Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
+%Choose random starting colors for regions
+numRegs = size(BrightEllipses,2);
+%Create object farm!
+myOF = objectFarm(numRegs,stop - start + 1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
+%Create objects!
+for i = 1:numRegs
+    myMSER = MSER(BrightEllipses(:,i),Bright(i),f); %store MSER info
+    color = randi([0,255],3,1); %generate random color
+    %Object ID: 1.012 = frame #1, region #12. That's why we divide by 1000.
+    myObject = worldObject(myMSER,f+i/1000,f,color); %create new object for each mser
+    myOF.addObject(myObject); %add to big data structure
+end
+%imshow(myOF.getImage(I,f));
