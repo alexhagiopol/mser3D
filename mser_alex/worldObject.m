@@ -24,5 +24,9 @@ classdef worldObject < handle
             WO.recent_i = WO.recent_i + 1;
             WO.msers = [WO.msers, mser];
         end
+        %update most recent frame appearance
+        function updateLastFrame(WO, frame_num)
+            WO.last_seen = frame_num;
+        end
     end    
 end

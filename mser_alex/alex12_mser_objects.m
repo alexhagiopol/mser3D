@@ -1,17 +1,19 @@
 %% Initialize
 clc
-clear
+%clear
 close all
 run('../vlfeat-0.9.19/toolbox/vl_setup') % start up vl_feat
 vl_version verbose
 import gtsam.*
 
 %% Import video
+
 disp('Starting Video Import');
 readerobj = VideoReader('../videos_input/through_the_cracks_jing.mov', 'tag', 'myreader1');
 vidFrames = read(readerobj);
 N = get(readerobj, 'NumberOfFrames');
 disp('Video Import Finished');
+
 
 %% Set tuning constants 
 start = 1; %start at custom frame number. Default = 1.
@@ -28,7 +30,7 @@ writer.FrameRate = 10;
 open(writer);
 frameTimes = zeros(N,1);
 two_pane_fig = figure(1);
-%set(two_pane_fig, 'Position', [0,0,2100,700]); 
+set(two_pane_fig, 'Position', [0,0,2100,700]); 
 
 %% Process first video frame 
 f = start;
@@ -40,7 +42,7 @@ I=rgb2gray(C);
 [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
 numRegs = size(BrightEllipses,2);
 %Create object farm!
-mainOF = objectFarm(numRegs,stop - start + 1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
+mainOF = objectFarm(); %tell the object data structure that the last #numRegs objects are associated with the last frame 
 %Create objects!
 for i = 1:numRegs
     myMSER = MSER(BrightEllipses(:,i),Bright(i),f); %store MSER info
@@ -49,17 +51,17 @@ for i = 1:numRegs
     myObject = worldObject(myMSER,f+i/1000,f,color); %create new object for each mser
     mainOF.addObject(myObject); %add to big data structure
 end
-imshow(mainOF.getImage(I,f));
+prevIm = mainOF.getImage(I,f);
 
 %% Process rest of frames + make video
-for f=start + 1: start + 2 %stop
+for f=start + 1:stop
     %% Read image, resize, grayscale, make data structures, & detect MSERs
     C = vidFrames(:,:,:,f);
     C = imresize(C,0.5);
     I=rgb2gray(C);
     [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
     numRegs = size(Bright,1); %number of regions
-    tempOF = objectFarm(numRegs,stop - start + 1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
+    tempOF = objectFarm(); %tell the object data structure that the last #numRegs objects are associated with the last frame 
     %Create objects!
     for i = 1:numRegs
         myMSER = MSER(BrightEllipses(:,i),Bright(i),f); %store MSER info
@@ -68,8 +70,21 @@ for f=start + 1: start + 2 %stop
         myObject = worldObject(myMSER,f+i/1000,f,color); %create new object for each mser
         tempOF.addObject(myObject); %add to big data structure
     end
-    mainOF.matchObjects(f-1,0,threshold,tempOF);
-    %imshow(myOF.showMatches());
+    mainOF.matchObjects(f-1,f,threshold,tempOF);
+    newIm = mainOF.getImage(I,f);
+    
+    hold on;
+    frames = [C,prevIm,newIm];
+    imshow(frames)
+    title(['Original Frame # ',num2str(f), '                          MSER Previous Frame                           MSER Current Frame ']);
+    set(gca,'FontSize',13);
+    
+    %% Produce and write video frame 
+    frame = frame2im(getframe(two_pane_fig));
+    writeVideo(writer,frame);
+    
+    prevIm = newIm;
+    pause;    
 end
     
     
