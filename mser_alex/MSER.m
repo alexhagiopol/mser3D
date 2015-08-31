@@ -14,7 +14,7 @@ classdef MSER < handle
         function seed = getSeed(M)
             seed = M.data(6);
         end
-        function num = getFrameNum(m)
+        function num = getFrameNum(M)
             num = M.data(7);
         end
     end    

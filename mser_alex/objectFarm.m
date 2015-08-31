@@ -26,6 +26,7 @@ classdef objectFarm < handle
             %uses syntax from alex11_ransac_tracking.m
             S = 128*ones(size(I,1),size(I,2),'uint8'); %grayscale result
             Q = 128*ones(size(I,1),size(I,2),3,'uint8'); %color result
+            %ugh, linear time search...need a hash table solution...
             for i = 1:length(OF.objects)
                 obj = OF.objects(i);
                 if obj.last_seen == f
@@ -44,5 +45,47 @@ classdef objectFarm < handle
                 %imshow(Q);
             end
         end
+        %perform object matching for member objects in a given frame to
+        %non-member objects in a given objectFarm
+        %lookback_num = number of frames to look back in; 0 is default
+        function matchObjects(OF, f, lookback_num, threshold, farm)
+            prev_ellipses = [];
+            current_ellipses = [];
+            %find objects in previous frame(s) and extract their ellipse
+            %info
+            %ugh, linear time search...need a hash table solution...
+            for i = 1:length(OF.objects)
+                obj = OF.objects(i);
+                if obj.last_seen >= f - lookback_num
+                    ellipse = [obj.getLatestMSER().getEllipse();i]; %associate index of object with its ellipse to retrieve later
+                    prev_ellipses = [prev_ellipses,ellipse];
+                end
+            end
+            %extract ellipses from external farm
+            for i = 1:length(farm.objects)
+                obj = farm.objects(i);
+                ellipse = [obj.getLatestMSER().getEllipse();i]; %associate index of object with its ellipse to retrieve later
+                current_ellipses = [current_ellipses,ellipse];
+            end
+            match_summary_ = matchEllipses(prev_ellipses, current_ellipses);
+            %disp(match_summary);
+        end
     end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

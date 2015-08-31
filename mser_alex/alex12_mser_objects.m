@@ -38,16 +38,59 @@ C = imresize(C,0.5);
 I=rgb2gray(C);
 %Detect MSERs
 [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
-%Choose random starting colors for regions
 numRegs = size(BrightEllipses,2);
 %Create object farm!
-myOF = objectFarm(numRegs,stop - start + 1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
+mainOF = objectFarm(numRegs,stop - start + 1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
 %Create objects!
 for i = 1:numRegs
     myMSER = MSER(BrightEllipses(:,i),Bright(i),f); %store MSER info
     color = randi([0,255],3,1); %generate random color
     %Object ID: 1.012 = frame #1, region #12. That's why we divide by 1000.
     myObject = worldObject(myMSER,f+i/1000,f,color); %create new object for each mser
-    myOF.addObject(myObject); %add to big data structure
+    mainOF.addObject(myObject); %add to big data structure
 end
-%imshow(myOF.getImage(I,f));
+imshow(mainOF.getImage(I,f));
+
+%% Process rest of frames + make video
+for f=start + 1: start + 2 %stop
+    %% Read image, resize, grayscale, make data structures, & detect MSERs
+    C = vidFrames(:,:,:,f);
+    C = imresize(C,0.5);
+    I=rgb2gray(C);
+    [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
+    numRegs = size(Bright,1); %number of regions
+    tempOF = objectFarm(numRegs,stop - start + 1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
+    %Create objects!
+    for i = 1:numRegs
+        myMSER = MSER(BrightEllipses(:,i),Bright(i),f); %store MSER info
+        color = randi([0,255],3,1); %generate random color
+        %Object ID: 1.012 = frame #1, region #12. That's why we divide by 1000.
+        myObject = worldObject(myMSER,f+i/1000,f,color); %create new object for each mser
+        tempOF.addObject(myObject); %add to big data structure
+    end
+    mainOF.matchObjects(f-1,0,threshold,tempOF);
+    %imshow(myOF.showMatches());
+end
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
