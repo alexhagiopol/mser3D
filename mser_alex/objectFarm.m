@@ -3,7 +3,7 @@ classdef objectFarm < handle
         objects; %objects data structure
     end
     methods        
-        %initialize
+        %constructor
         function OF = objectFarm()
 
         end
@@ -144,6 +144,24 @@ classdef objectFarm < handle
                     OF.addObject(other_farm.objects(i));
                 end
             end
+        end
+        
+        %Returns coordinates of matched MSERs in frame f and frame f - 1
+        function matches = getMatchCoords(OF, f)
+            matches = [];
+            if f ~= 1
+                for o = 1:length(OF.objects)
+                    obj = OF.objects(o);
+                    if obj.last_seen == f && length(obj.msers) > 1                        
+                        matches = [matches,[obj.msers(obj.recent_i).getEllipse();obj.msers(obj.recent_i - 1).getEllipse()]];
+                    end
+                end
+            end
+        end
+        
+        %Shows all groups of MSERs of size > min_size
+        function showTracks(OF, min_size)
+            
         end
     end
 end

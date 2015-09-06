@@ -70,21 +70,37 @@ for f=start + 1:stop
         myObject = worldObject(myMSER,f+i/1000,f,color); %create new object for each mser
         tempOF.addObject(myObject); %add to big data structure
     end
+    %Perform matching
     mainOF.matchObjects(f-1,f,threshold,tempOF);
     newIm = mainOF.getImage(I,f);
     
+    %% Display results
+    %Show raw image, prev frame, new frame
     hold on;
     frames = [C,prevIm,newIm];
     imshow(frames)
     title(['Original Frame # ',num2str(f), '                          MSER Previous Frame                           MSER Current Frame ']);
-    set(gca,'FontSize',13);
+    set(gca,'FontSize',13);    
+    %Get matches between current and past frame in matrix form
+    matches = mainOF.getMatchCoords(f);
+    %Change from XY elipses to RC ellipses
+    matchesTrans = [vl_ertr(matches(1:5,:));vl_ertr(matches(6:10,:))];
+    %Shift locations over because of image concatenation
+    matchesTrans(1,:) = matchesTrans(1,:) + 2*size(C,2);
+    matchesTrans(6,:) = matchesTrans(6,:) + size(C,2);    
+    %Draw lines
+    for i = 1:size(matchesTrans,2)
+        if matchesTrans(6,i) > 0 && matchesTrans(7,i) > 0 %check if match actually exists 
+            line([matchesTrans(1,i),matchesTrans(6,i)],[matchesTrans(2,i),matchesTrans(7,i)],'Color',[1, 1, 1]);
+        end
+    end
     
     %% Produce and write video frame 
     frame = frame2im(getframe(two_pane_fig));
     writeVideo(writer,frame);
     
     prevIm = newIm;
-    pause;    
+    %pause;    
 end
     
     
