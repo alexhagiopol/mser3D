@@ -1,16 +1,22 @@
 classdef objectFarm < handle
     properties
         objects; %objects data structure
+        frames;
     end
     methods        
         %constructor
-        function OF = objectFarm()
-
+        function OF = objectFarm(r,c,n)
+            OF.frames = cast(zeros(r,c,n),'UINT8');
         end
         
         %add object
         function addObject(OF, object)
             OF.objects = [OF.objects, object];
+        end
+        
+        %add GRAYSCALE image to retrieve later
+        function addImage(OF, n, I)
+            OF.frames(:,:,n) = I; 
         end
         
         %Produce an image with the MSERs painted on. Must pass original
@@ -159,9 +165,89 @@ classdef objectFarm < handle
             end
         end
         
-        %Shows all groups of MSERs of size > min_size
-        function showTracks(OF, min_size)
-            
+        %Shows all tracks of MSERs of size > min_size. Opens new figure for
+        %each tack.
+        function showTracks(OF, min_size,rSize,cSize,fig_num_start) 
+            close all;
+            fig_num = fig_num_start;
+            %look at all objects
+            for o = 1:length(OF.objects)
+                obj = OF.objects(o);
+                %if object meets track length criteria
+                if length(obj.msers) > min_size
+                    bwcanvas = 255*ones(rSize,cSize,'uint8'); 
+                    brightLevel = 255;
+                    brightChange = floor(255 / size(obj.msers,2));
+                    %Paint each MSER region with a slightly different
+                    %brightness to show motion
+                    figure(fig_num);                      
+                    for m = 1:length(obj.msers)
+                        mser = obj.msers(m);
+                        pixels = vl_erfill(OF.frames(:,:,mser.getFrameNum()), mser.getSeed());
+                        brightLevel = brightLevel - brightChange;
+                        bwcanvas(pixels) = brightLevel;                         
+                    end
+                    %Plot red crosses at the center of each MSER. Hack
+                    %below is necessary because MATLAB plot() function
+                    %craps itself when you have many consective figures
+                    rgbcanvas = cast(zeros(size(bwcanvas,1),size(bwcanvas,2),3),'UINT8');
+                    rgbcanvas(:,:,1) = bwcanvas;
+                    rgbcanvas(:,:,2) = bwcanvas;
+                    rgbcanvas(:,:,3) = bwcanvas;
+                    for m = 1:length(obj.msers)
+                        mser = obj.msers(m);
+                        ctr = floor(mser.data(1:2)); %vl_ertr(mser.data(1:5));
+                        rgbcanvas(ctr(1)-3:ctr(1)+3,ctr(2),1) = 255;
+                        rgbcanvas(ctr(1),ctr(2)-3:ctr(2)+3,1) = 255;
+                    end
+                    %display
+                    imshow(rgbcanvas);
+                    title(['MSER Track from Frame #',num2str(obj.last_seen - size(obj.msers,2) + 1),' to Frame #',num2str(obj.last_seen)]);
+                    set(gca,'FontSize',16,'fontWeight','bold');
+                    fig_num = fig_num + 1; 
+                end                
+            end           
+        end
+        
+        %Same concept as showTracks() except it makes a cool video of the
+        %MSER tracks in motion
+        function makeTrackVideo(OF, min_size,rSize,cSize,fig_num)
+            %% Set up video output
+            writer = VideoWriter('Object_Tracks','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
+            writer.FrameRate = 7;
+            open(writer);
+            two_pane_fig = figure(fig_num);
+            set(two_pane_fig, 'Position', [0,0,2100,700]);
+            %% Look at every object   
+            obj_num = 1;
+            for o = 1:length(OF.objects)
+                obj = OF.objects(o);
+                %if object meets track length criteria
+                if length(obj.msers) > min_size
+                    bwcanvas = 255*ones(rSize,cSize,'uint8'); 
+                    brightLevel = 255;
+                    brightChange = floor(255 / size(obj.msers,2));                                         
+                    for m = 1:length(obj.msers)
+                        mser = obj.msers(m);
+                        pixels = vl_erfill(OF.frames(:,:,mser.getFrameNum()), mser.getSeed());
+                        brightLevel = brightLevel - brightChange;
+                        bwcanvas(pixels) = brightLevel;                          
+                        title(['MSER Track from Frame #',num2str(obj.last_seen - size(obj.msers,2) + 1),' to Frame #',num2str(obj.last_seen)]);
+                        set(gca,'FontSize',16,'fontWeight','bold');
+                        frame = [OF.frames(:,:,mser.getFrameNum()),bwcanvas];
+                        imshow(frame);
+                        hold on;
+                        vl_plotframe(vl_ertr(mser.data(1:5)), 'r.');                          
+                        title(['Current track #',num2str(obj_num),' over ',num2str(length(obj.msers)),' frames. Current video frame #',num2str(mser.getFrameNum()),' out of ',num2str(size(OF.frames,3)),' video frames.']);
+                        set(gca,'FontSize',16,'fontWeight','bold');
+                        %% Produce and write video frame 
+                        frame = frame2im(getframe(two_pane_fig));
+                        writeVideo(writer,frame);
+                    end
+                    obj_num = obj_num + 1;
+                end                
+            end             
+            close(writer);
         end
     end
 end

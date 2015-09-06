@@ -14,7 +14,6 @@ vidFrames = read(readerobj);
 N = get(readerobj, 'NumberOfFrames');
 disp('Video Import Finished');
 
-
 %% Set tuning constants 
 start = 1; %start at custom frame number. Default = 1.
 stop = N;  %end at custom frame number. Default = N.
@@ -25,12 +24,11 @@ MaxArea = 0.03; %VL Feat tuning constant
 threshold = -1; %Score threshold needed for two regions to be considered to come from the same object. A higher score indicates higher similarity.
 
 %% Set up video output
-writer = VideoWriter('Nearest_Neighbor_Tracking_1','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
+writer = VideoWriter('Naive_Tracking','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
 writer.FrameRate = 10;
 open(writer);
-frameTimes = zeros(N,1);
-two_pane_fig = figure(1);
-set(two_pane_fig, 'Position', [0,0,2100,700]); 
+three_pane_fig = figure(1);
+set(three_pane_fig, 'Position', [0,0,2100,700]); 
 
 %% Process first video frame 
 f = start;
@@ -42,7 +40,8 @@ I=rgb2gray(C);
 [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
 numRegs = size(BrightEllipses,2);
 %Create object farm!
-mainOF = objectFarm(); %tell the object data structure that the last #numRegs objects are associated with the last frame 
+mainOF = objectFarm(size(I,1),size(I,2),stop - start + 1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
+mainOF.addImage(f,I);
 %Create objects!
 for i = 1:numRegs
     myMSER = MSER(BrightEllipses(:,i),Bright(i),f); %store MSER info
@@ -60,8 +59,9 @@ for f=start + 1:stop
     C = imresize(C,0.5);
     I=rgb2gray(C);
     [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
+    mainOF.addImage(f,I);
     numRegs = size(Bright,1); %number of regions
-    tempOF = objectFarm(); %tell the object data structure that the last #numRegs objects are associated with the last frame 
+    tempOF = objectFarm(size(I,1),size(I,2),1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
     %Create objects!
     for i = 1:numRegs
         myMSER = MSER(BrightEllipses(:,i),Bright(i),f); %store MSER info
@@ -96,13 +96,14 @@ for f=start + 1:stop
     end
     
     %% Produce and write video frame 
-    frame = frame2im(getframe(two_pane_fig));
-    writeVideo(writer,frame);
-    
+    frame = frame2im(getframe(three_pane_fig));
+    writeVideo(writer,frame);    
     prevIm = newIm;
     %pause;    
 end
-    
+close(writer);
+%mainOF.showTracks(3,size(I,1),size(I,2),2);
+mainOF.makeTrackVideo(5,size(I,1),size(I,2),2);   
     
     
     
