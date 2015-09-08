@@ -223,21 +223,55 @@ classdef objectFarm < handle
             for o = 1:length(OF.objects)
                 obj = OF.objects(o);
                 %if object meets track length criteria
-                if length(obj.msers) > min_size
-                    bwcanvas = 255*ones(rSize,cSize,'uint8'); 
-                    brightLevel = 255;
-                    brightChange = floor(255 / size(obj.msers,2));                                         
+                if length(obj.msers) > min_size 
+                    left_display = 255*zeros(rSize,cSize,3,'uint8');
+                    right_display = 255*ones(rSize,cSize,3,'uint8');
+                    bright_level = 255;
+                    bright_change = floor(255 / size(obj.msers,2));                                         
                     for m = 1:length(obj.msers)
                         mser = obj.msers(m);
-                        pixels = vl_erfill(OF.frames(:,:,mser.getFrameNum()), mser.getSeed());
-                        brightLevel = brightLevel - brightChange;
-                        bwcanvas(pixels) = brightLevel;                          
+                        mser_pixels = vl_erfill(OF.frames(:,:,mser.getFrameNum()), mser.getSeed());
+                        bright_level = bright_level - bright_change;
+                        
+                        tempR = right_display(:,:,1);
+                        tempG = right_display(:,:,2);
+                        tempB = right_display(:,:,3);
+                        tempR(mser_pixels) = bright_level;
+                        tempG(mser_pixels) = 0;
+                        tempB(mser_pixels) = 0;
+                        right_display(:,:,1) = tempR;
+                        right_display(:,:,2) = tempG;
+                        right_display(:,:,3) = tempB;
+                        
+                        orig_bwimage = OF.frames(:,:,mser.getFrameNum());
+                        tempR = orig_bwimage;
+                        tempG = orig_bwimage;
+                        tempB = orig_bwimage;
+                        tempR(mser_pixels) = 255;
+                        tempG(mser_pixels) = 0;
+                        tempB(mser_pixels) = 0;
+                        left_display(:,:,1) = tempR;
+                        left_display(:,:,2) = tempG;
+                        left_display(:,:,3) = tempB;
+                        
+                        for m_1 = 1:m
+                            mser_1 = obj.msers(m_1);
+                            ctr = floor(mser_1.data(1:2)); %vl_ertr(mser.data(1:5));
+                            right_display(ctr(1)-3:ctr(1)+3,ctr(2),1) = 0;
+                            right_display(ctr(1)-3:ctr(1)+3,ctr(2),2) = 255;
+                            right_display(ctr(1)-3:ctr(1)+3,ctr(2),3) = 255;
+                            right_display(ctr(1),ctr(2)-3:ctr(2)+3,1) = 0;
+                            right_display(ctr(1),ctr(2)-3:ctr(2)+3,2) = 255;
+                            right_display(ctr(1),ctr(2)-3:ctr(2)+3,3) = 255;
+                        end
+                        
+                        frame = [left_display,right_display];
+                        imshow(frame);
                         title(['MSER Track from Frame #',num2str(obj.last_seen - size(obj.msers,2) + 1),' to Frame #',num2str(obj.last_seen)]);
                         set(gca,'FontSize',16,'fontWeight','bold');
-                        frame = [OF.frames(:,:,mser.getFrameNum()),bwcanvas];
-                        imshow(frame);
+                        
                         hold on;
-                        vl_plotframe(vl_ertr(mser.data(1:5)), 'r.');                          
+                        %vl_plotframe(vl_ertr(mser.data(1:5)), 'r.');                          
                         title(['Current track #',num2str(obj_num),' over ',num2str(length(obj.msers)),' frames. Current video frame #',num2str(mser.getFrameNum()),' out of ',num2str(size(OF.frames,3)),' video frames.']);
                         set(gca,'FontSize',16,'fontWeight','bold');
                         %% Produce and write video frame 
