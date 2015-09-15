@@ -56,7 +56,7 @@ classdef objectFarm < handle
             %ugh, linear time search...need a hash table solution...
             for i = 1:length(OF.objects)
                 obj = OF.objects(i);
-                if obj.last_seen == prev_f
+                if obj.last_seen == prev_f || obj.last_seen == prev_f - 1 || obj.last_seen == prev_f - 2 || obj.last_seen == prev_f - 3
                     ellipse = [obj.getLatestMSER().getEllipse();i]; %associate index of object with its ellipse to retrieve later
                     prev_ellipses = [prev_ellipses,ellipse];
                 end
@@ -282,6 +282,15 @@ classdef objectFarm < handle
                 end                
             end             
             close(writer);
+        end
+        
+        function mser_counts = computeStats(OF)
+            disp(['Number of tracks = ',num2str(length(OF.objects))]);
+            mser_counts = ones(1,length(OF.objects));
+            for i = 1:length(OF.objects)
+                obj = OF.objects(i);
+                mser_counts(i) = size(obj.msers,2);
+            end            
         end
     end
 end

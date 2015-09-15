@@ -103,12 +103,20 @@ for f=start + 1:stop
 end
 close(writer);
 %mainOF.showTracks(3,size(I,1),size(I,2),2);
-mainOF.makeTrackVideo(5,size(I,1),size(I,2),2);   
-    
-    
-    
-    
-    
+%mainOF.makeTrackVideo(5,size(I,1),size(I,2),2); 
+mser_counts = mainOF.computeStats();
+disp(['Avg length of tracks = ',num2str(mean(mser_counts))]);
+disp(['Max length of tracks = ',num2str(max(mser_counts))]);
+disp(['Min length of tracks = ',num2str(min(mser_counts))]);
+disp(['STDEV length of tracks = ',num2str(std(mser_counts))]);
+fig = figure;
+set(fig, 'Position', [0,0,800,500]);
+edges = [1:1:9,10,50];
+histogram(mser_counts,edges);  
+ylim([0,450]);
+ylabel('Number of Tracks');
+xlabel('Number of MSERs per Track');
+title('MSER Track Statistics Using Multiple Frame Matching');
     
     
     
