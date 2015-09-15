@@ -56,7 +56,7 @@ classdef objectFarm < handle
             %ugh, linear time search...need a hash table solution...
             for i = 1:length(OF.objects)
                 obj = OF.objects(i);
-                if obj.last_seen == prev_f || obj.last_seen == prev_f - 1 || obj.last_seen == prev_f - 2 || obj.last_seen == prev_f - 3
+                if obj.last_seen == prev_f || obj.last_seen == prev_f - 1 || obj.last_seen == prev_f - 2 || obj.last_seen == prev_f - 3 || obj.last_seen == prev_f - 4 || obj.last_seen == prev_f - 5
                     ellipse = [obj.getLatestMSER().getEllipse();i]; %associate index of object with its ellipse to retrieve later
                     prev_ellipses = [prev_ellipses,ellipse];
                 end
