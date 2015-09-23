@@ -19,9 +19,9 @@ start = 1; %start at custom frame number. Default = 1.
 stop = N;  %end at custom frame number. Default = N.
 MinDiversity = 0.7; %VL Feat tuning constant
 MinArea = 0.005; %VL Feat tuning constant
-MaxArea = 0.03; %VL Feat tuning constant
+MaxArea = 0.09; %0.03 %VL Feat tuning constant
 % Alex tuning constant
-threshold = -1; %Score threshold needed for two regions to be considered to come from the same object. A higher score indicates higher similarity.
+threshold = -1; %-1 %Score threshold needed for two regions to be considered to come from the same object. A higher score indicates higher similarity.
 
 %% Set up video output
 writer = VideoWriter('Naive_Tracking','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
@@ -58,7 +58,7 @@ for f=start + 1:stop
     C = vidFrames(:,:,:,f);
     C = imresize(C,0.5);
     I=rgb2gray(C);
-    [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
+    [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',0,'DarkOnBright',1); %Set to compute dark on bright!!!
     mainOF.addImage(f,I);
     numRegs = size(Bright,1); %number of regions
     tempOF = objectFarm(size(I,1),size(I,2),1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
@@ -84,17 +84,18 @@ for f=start + 1:stop
     %Get matches between current and past frame in matrix form
     matches = mainOF.getMatchCoords(f);
     %Change from XY elipses to RC ellipses
-    matchesTrans = [vl_ertr(matches(1:5,:));vl_ertr(matches(6:10,:))];
-    %Shift locations over because of image concatenation
-    matchesTrans(1,:) = matchesTrans(1,:) + 2*size(C,2);
-    matchesTrans(6,:) = matchesTrans(6,:) + size(C,2);    
-    %Draw lines
-    for i = 1:size(matchesTrans,2)
-        if matchesTrans(6,i) > 0 && matchesTrans(7,i) > 0 %check if match actually exists 
-            line([matchesTrans(1,i),matchesTrans(6,i)],[matchesTrans(2,i),matchesTrans(7,i)],'Color',[1, 1, 1]);
+    if size(matches,2) > 0
+        matchesTrans = [vl_ertr(matches(1:5,:));vl_ertr(matches(6:10,:))];
+        %Shift locations over because of image concatenation
+        matchesTrans(1,:) = matchesTrans(1,:) + 2*size(C,2);
+        matchesTrans(6,:) = matchesTrans(6,:) + size(C,2);    
+        %Draw lines
+        for i = 1:size(matchesTrans,2)
+            if matchesTrans(6,i) > 0 && matchesTrans(7,i) > 0 %check if match actually exists 
+                line([matchesTrans(1,i),matchesTrans(6,i)],[matchesTrans(2,i),matchesTrans(7,i)],'Color',[1, 1, 1]);
+            end
         end
     end
-    
     %% Produce and write video frame 
     frame = frame2im(getframe(three_pane_fig));
     writeVideo(writer,frame);    
@@ -102,9 +103,12 @@ for f=start + 1:stop
     %pause;    
 end
 close(writer);
+
+%% Compute and display statistics
+
 %mainOF.showTracks(3,size(I,1),size(I,2),2);
 %mainOF.makeTrackVideo(5,size(I,1),size(I,2),2); 
-mser_counts = mainOF.computeStats();
+mser_counts = mainOF.computeTrackLengths();
 stdev = std(mser_counts);
 avg = mean(mser_counts);
 maxi = max(mser_counts);
@@ -120,11 +124,17 @@ histogram(mser_counts,edges);
 ylim([0,450]);
 ylabel('Number of Tracks');
 xlabel('Number of MSERs per Track');
-title('MSER Track Statistics Using Multiple (6) Frame Matching');
+title('MSER Track Statistics Using Multiple (6) Frame Matching for Dark on Bright MSERs');
 line([avg,avg],[0,450],'Color',[1,0,0],'LineStyle','-');
 line([avg + stdev,avg + stdev],[0,450],'Color',[1,0,0],'LineStyle','--');
-    
-    
+
+fig2 = figure;
+set(fig2, 'Position', [0,0,1500,500]);
+tracks_per_frame = mainOF.computeGoodTracksPerFrame(round(stdev));
+plot(tracks_per_frame,'b*');
+ylabel('Number of Good Tracks');
+xlabel('Frame #');
+title('Good Dark on Bright Tracks Visible in Each Video Frame');
     
     
     

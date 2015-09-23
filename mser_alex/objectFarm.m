@@ -284,13 +284,30 @@ classdef objectFarm < handle
             close(writer);
         end
         
-        function mser_counts = computeStats(OF)
+        function mser_counts  = computeTrackLengths(OF)
             disp(['Number of tracks = ',num2str(length(OF.objects))]);
             mser_counts = ones(1,length(OF.objects));
             for i = 1:length(OF.objects)
                 obj = OF.objects(i);
                 mser_counts(i) = size(obj.msers,2);
             end            
+        end
+        
+        function good_tracks_per_frame = computeGoodTracksPerFrame(OF, threshold)
+            good_tracks_per_frame = zeros(1,size(OF.frames,3));
+            for i = 1:size(OF.frames,3)
+                for j = 1:length(OF.objects)
+                    obj = OF.objects(j);
+                    if size(obj.msers,2) > threshold
+                        for k = 1:size(obj.msers,2)
+                            if obj.msers(k).getFrameNum() == i
+                                good_tracks_per_frame(i) = good_tracks_per_frame(i) + 1;
+                                break;
+                            end                            
+                        end                      
+                    end
+                end
+            end
         end
     end
 end
