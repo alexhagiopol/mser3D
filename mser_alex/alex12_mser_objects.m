@@ -19,7 +19,7 @@ start = 1; %start at custom frame number. Default = 1.
 stop = N;  %end at custom frame number. Default = N.
 MinDiversity = 0.7; %VL Feat tuning constant
 MinArea = 0.005; %VL Feat tuning constant
-MaxArea = 0.09; %0.03 %VL Feat tuning constant
+MaxArea = 0.03; %0.09 %VL Feat tuning constant
 % Alex tuning constant
 threshold = -1; %-1 %Score threshold needed for two regions to be considered to come from the same object. A higher score indicates higher similarity.
 
@@ -58,7 +58,7 @@ for f=start + 1:stop
     C = vidFrames(:,:,:,f);
     C = imresize(C,0.5);
     I=rgb2gray(C);
-    [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',0,'DarkOnBright',1); %Set to compute dark on bright!!!
+    [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0); %Set to compute dark on bright!!!
     mainOF.addImage(f,I);
     numRegs = size(Bright,1); %number of regions
     tempOF = objectFarm(size(I,1),size(I,2),1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
@@ -130,8 +130,9 @@ line([avg + stdev,avg + stdev],[0,450],'Color',[1,0,0],'LineStyle','--');
 
 fig2 = figure;
 set(fig2, 'Position', [0,0,1500,500]);
-tracks_per_frame = mainOF.computeGoodTracksPerFrame(round(stdev));
+tracks_per_frame = mainOF.computeGoodTracksPerFrame(round(stdev + avg));
 plot(tracks_per_frame,'b*');
+ylim([0,18]);
 ylabel('Number of Good Tracks');
 xlabel('Frame #');
 title('Good Dark on Bright Tracks Visible in Each Video Frame');
