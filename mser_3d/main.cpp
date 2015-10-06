@@ -142,10 +142,54 @@ int main() {
 	GLuint colorbuffer; //create color buffer outside loop so it can be purged outside loop
 	
 
-	for (int f = 0; f < 50; f++){	
+	for (int f = 0; f < 5000; f++){	
 		// One color for each vertex. They were generated randomly.
 		glClearColor(distr(eng), distr(eng), distr(eng), distr(eng)); //random background color
 		//random cube color
+		float randomR = distr(eng);  
+		float randomG = distr(eng);
+		float randomB = distr(eng);
+
+		GLfloat g_color_buffer_data[] = { 
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+			randomR, randomG, randomB,
+		};
+
+		/*
 		GLfloat g_color_buffer_data[] = { 
 			distr(eng),  distr(eng),  distr(eng),
 			distr(eng),  distr(eng),  distr(eng),
@@ -184,7 +228,7 @@ int main() {
 			distr(eng),  distr(eng),  distr(eng),
 			distr(eng),  distr(eng),  distr(eng),
 		};
-
+		*/
 		//Place color info into a buffer
 		glGenBuffers(1, &colorbuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
@@ -220,18 +264,15 @@ int main() {
 		glDisableVertexAttribArray(1);		
 		glfwSwapBuffers(window); // Swap buffers
 		glfwPollEvents();
-		Mat img(768, 1024, CV_8UC3);
-		//use fast 4-byte alignment (default anyway) if possible
-		glPixelStorei(GL_PACK_ALIGNMENT, (img.step & 3) ? 1 : 4);
-		//set length of one complete row in destination data (doesn't need to equal img.cols)
-		glPixelStorei(GL_PACK_ROW_LENGTH, img.step/img.elemSize());
-		glReadPixels(0, 0, img.cols, img.rows, GL_BGR, GL_UNSIGNED_BYTE, img.data);
-		Mat flipped(768, 1024, CV_8UC3);
+		Mat img(768, 1024, CV_8UC3); //store image data here to output to a file		
+		glPixelStorei(GL_PACK_ALIGNMENT, (img.step & 3) ? 1 : 4); //use fast 4-byte alignment (default anyway) if possible
+		glPixelStorei(GL_PACK_ROW_LENGTH, img.step/img.elemSize()); //set length of one complete row in destination data (doesn't need to equal img.cols)
+		glReadPixels(0, 0, img.cols, img.rows, GL_BGR, GL_UNSIGNED_BYTE, img.data); //import OpenGL window repsesentation into cv::Mat
+		Mat flipped(768, 1024, CV_8UC3); //we have to flip because OpenCV and OpenGL use different xy conventions
 		cv::flip(img, flipped, 0);
 		char fileName[80]; 
-		sprintf(fileName, "/home/alex/mser/mser_3d/output/img%010i.jpg",f);
-		imwrite(fileName, flipped);
-		//usleep(100000);
+		sprintf(fileName, "/home/alex/mser/mser_3d/output2/img%010i.jpg",f); //format filename
+		imwrite(fileName, flipped); //save to output folder
 	} 
 	/*
 	// Check if the ESC key was pressed or the window was closed
