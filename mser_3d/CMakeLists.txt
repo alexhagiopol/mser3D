@@ -7,7 +7,8 @@ set(SOURCE_FILES main.cpp
 	         /home/alex/mser/mser_3d/common/shader.hpp
 		 TransformVertexShader.vertexshader
 	         ColorFragmentShader.fragmentshader
-)
+		Visualizer.h)
+set(OpenCV_DIR "/home/alex/opencv-2.4.11/build")
 
 #Include OpenGL
 find_package(OpenGL REQUIRED)

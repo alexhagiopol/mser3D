@@ -6,8 +6,10 @@ run('../vlfeat-0.9.19/toolbox/vl_setup')
 vl_version verbose
 format = '/home/alex/mser/mser_3d/output2/img%010d.jpg';
 N = 100;
+%% Subplot setup
 three_pane_fig = figure(1);
 set(three_pane_fig, 'Position', [0,0,2100,700]);
+%%
 MSER_STATS = zeros(768,1024);
 for f = 1:N
     rand_MinArea = 0.001 + 0.009*rand();
@@ -20,11 +22,12 @@ for f = 1:N
     C = imfilter(C,rand_filter,'same');
     I = rgb2gray(C);
     
-    %subplot(1,3,1);
-    %imshow(C);
-    %subplot(1,3,2);
-    %imshow(I);
-    
+    %% Subplot
+    subplot(1,3,1);
+    imshow(C(50:end-50,50:end-50,:));
+    subplot(1,3,2);
+    imshow(I(50:end-50,50:end-50));
+    %% 
     Bright=vl_mser(I,'MinArea',rand_MinArea,'MaxArea',rand_MaxArea,'MinDiversity',rand_MinDiversity,'BrightOnDark',1,'DarkOnBright',0);
     Dark=vl_mser(I,'MinArea',rand_MinArea,'MaxArea',rand_MaxArea,'MinDiversity',rand_MinDiversity,'BrightOnDark',0,'DarkOnBright',1);
     S=128*ones(size(I,1),size(I,2),'uint8');
@@ -38,12 +41,21 @@ for f = 1:N
         S(mser)=i*1*(size(Dark,1)-i);
         MSER_STATS(mser) = MSER_STATS(mser) + 1;
     end
-    %subplot(1,3,3);
-    %imshow(S);
-    %pause
+    %% Subplot
+    subplot(1,3,3);
+    imshow(S(50:end-50,50:end-50));
+    pause
     disp(f);
 end
 
 figure;
 MSER_STATS = MSER_STATS(50:end-50,50:end-50);
 mesh(MSER_STATS'/N);
+%axis equal
+zlim([0,1]);
+xlim([0,1000]);
+ylim([0,1000]);
+title('Probability of Being in an MSER Measurement for Each Pixel in an Image');
+zlabel('Probability');
+xlabel('X Direction');
+ylabel('Y Direction');
