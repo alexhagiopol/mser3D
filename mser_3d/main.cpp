@@ -1,6 +1,4 @@
-
-
-//#include "Visualizer.h"
+#include "Visualizer.h"
 #include <gtsam/geometry/Point3.h>
 #include <gtsam/geometry/SimpleCamera.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
@@ -108,18 +106,7 @@ std::vector<gtsam::Pose3> createPoses() {
     return poses;
 }
 
-int main() {
-    //Extract VO data from video - save this for later when we make a camera fly through a real scene
-    /*
-    SfM_data mydata;
-    string filename = "/home/alex/mser/datasets/fpv_bal_280_nf2.txt";
-    readBAL(filename, mydata);
-    cout << boost::format("read %1% tracks on %2% cameras\n") % mydata.number_tracks() % mydata.number_cameras();
-    BOOST_FOREACH(const SfM_Camera& camera, mydata.cameras){
-        const Pose3 pose = camera.pose();
-        pose.print("Camera pose:\n");
-    }
-     */
+void SFMexample(){
     Cal3_S2::shared_ptr K(new Cal3_S2(50.0, 50.0, 0.0, 50.0, 50.0)); //made up calibration for now; replace with Jing's calibration later
     noiseModel::Isotropic::shared_ptr measurementNoise = noiseModel::Isotropic::Sigma(2, 1.0);
 
@@ -127,7 +114,7 @@ int main() {
     vector<Pose3> poses = createPoses();
 
     NonlinearFactorGraph graph;
-    noiseModel::Diagonal::shared_ptr poseNoise = noiseModel::Diagonal::Sigmas((Vector(6) << Vector3::Constant(0.3), Vector3::Constant(0.1)).finished()); // 30cm std on x,y,z 0.1 rad on roll,pitch,yaw
+    noiseModel::Diagonal::shared_ptr poseNoise = noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << Vector3::Constant(0.3), Vector3::Constant(0.1)).finished()); // 30cm std on x,y,z 0.1 rad on roll,pitch,yaw
     graph.push_back(PriorFactor<Pose3>(Symbol('x', 0), poses[0], poseNoise)); // add directly to graph
 
     //Simulates measurements
@@ -156,8 +143,21 @@ int main() {
     result.print("Final results:\n");
     std::cout << "initial error = " << graph.error(initialEstimate) << std::endl;
     std::cout << "final error = " << graph.error(result) << std::endl;
+}
 
-    //visualize(50);
+void printJingData(){
+    SfM_data mydata;
+    string filename = "/home/alex/mser/datasets/fpv_bal_280_nf2.txt";
+    readBAL(filename, mydata);
+    cout << boost::format("read %1% tracks on %2% cameras\n") % mydata.number_tracks() % mydata.number_cameras();
+    BOOST_FOREACH(const SfM_Camera& camera, mydata.cameras){
+                    const Pose3 pose = camera.pose();
+                    pose.print("Camera pose:\n");
+                }
+}
+
+int main() {
+    visualize(50);
     return 0;
 }
 
