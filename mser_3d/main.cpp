@@ -56,22 +56,6 @@ private:
     double minorAxis_;
 };
 
-std::vector<gtsam::SimpleCamera> createCameras(int numCams){
-    gtsam::Cal3_S2::shared_ptr K(new gtsam::Cal3_S2(50.0, 50.0, 0.0, 50.0, 50.0));
-    std::vector<gtsam::SimpleCamera> cameras;
-    gtsam::Point3 target(0,0,0);
-    gtsam::Point3 up(0,0,1);
-    double theta = 0.0;
-    double radius = 30;
-    for (int i = 0; i < numCams; i++){
-        gtsam::Point3 position(radius*cos(theta), radius*sin(theta),0);
-        gtsam::SimpleCamera camera = gtsam::SimpleCamera::Lookat(position, target, up, *K);
-        cameras.push_back(camera);
-        theta += 2*M_PI / numCams;
-    }
-    return cameras;
-}
-
 std::vector<gtsam::Point3> createPoints() {
 
     // Create the set of ground-truth landmarks
@@ -88,9 +72,7 @@ std::vector<gtsam::Point3> createPoints() {
     return points;
 }
 
-/* ************************************************************************* */
 std::vector<gtsam::Pose3> createPoses() {
-
     // Create the set of ground-truth poses
     std::vector<gtsam::Pose3> poses;
     double radius = 30.0;
@@ -106,12 +88,39 @@ std::vector<gtsam::Pose3> createPoses() {
     return poses;
 }
 
+std::vector<Pose3> alexCreatePoses(double radius, Point3 target, int numPoses){
+    std::vector<gtsam::Pose3> poses;
+    double theta = 0.0;
+    Point3 up = Point3(0,0,1);
+    for(int i = 0; i < numPoses; i++){
+        Point3 position = Point3(target.x() + radius*cos(theta), target.y() + radius*sin(theta), target.z() + 0.0);
+        SimpleCamera tempCam = SimpleCamera::Lookat(position, target, up);
+        theta += 2*M_PI/numPoses;
+        poses.push_back(tempCam.pose());
+    }
+    return poses;
+}
+
+std::vector<SimpleCamera> alexCreateCameras(double radius, Point3 target, int numCams){
+    Cal3_S2::shared_ptr K(new Cal3_S2(50.0, 50.0, 0.0, 50.0, 50.0)); //made up calibration for now; replace with Jing's calibration later
+    std::vector<SimpleCamera> cameras;
+    double theta = 0.0;
+    Point3 up = Point3(0,0,1);
+    for(int i = 0; i < numCams; i++){
+        Point3 position = Point3(target.x() + radius*cos(theta), target.y() + radius*sin(theta), target.z() + 0.0);
+        SimpleCamera tempCam = SimpleCamera::Lookat(position, target, up, *K);
+        cameras.push_back(tempCam);
+        theta += 2*M_PI/numCams;
+    }
+    return cameras;
+}
+
 void SFMexample(){
     Cal3_S2::shared_ptr K(new Cal3_S2(50.0, 50.0, 0.0, 50.0, 50.0)); //made up calibration for now; replace with Jing's calibration later
     noiseModel::Isotropic::shared_ptr measurementNoise = noiseModel::Isotropic::Sigma(2, 1.0);
 
     vector<Point3> points = createPoints();
-    vector<Pose3> poses = createPoses();
+    vector<Pose3> poses = alexCreatePoses(30.0, Point3(0.0,0.0,0.0), 8);
 
     NonlinearFactorGraph graph;
     noiseModel::Diagonal::shared_ptr poseNoise = noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << Vector3::Constant(0.3), Vector3::Constant(0.1)).finished()); // 30cm std on x,y,z 0.1 rad on roll,pitch,yaw
@@ -157,7 +166,33 @@ void printJingData(){
 }
 
 int main() {
-    visualize(50);
+    Point3 target = Point3(0.5,0.5,0.5); //ground truth object centroid
+
+    //create synthetic camera poses
+    int numCams = 8;
+    double radius = 30.0;
+    std::vector<SimpleCamera> cameras = alexCreateCameras(radius, target, numCams);
+    //create synthetic measurements
+    std::vector<mserMeasurement> measurements;
+    NonlinearFactorGraph graph;
+    for (int i = 0; i < numCams; i++){
+        Point2 measurement = cameras[i].project(target);
+        noiseModel::Isotropic::shared_ptr pointNoise = noiseModel::Isotropic::Sigma(3, 0.1);
+        Point3 backProjectedPoint3 = cameras[i].backproject(measurement, radius); //assume depth is known from other methods e.g. VO
+        graph.add(PriorFactor<Point3>(1, backProjectedPoint3, pointNoise));
+        cameras[i].print("CAMERA \n");
+        measurement.print("MSER CENTROID \n");
+        backProjectedPoint3.print("BACK PROJECTED POINT");
+    }
+    //estimate object centroid location
+    Values initial;
+    initial.insert(1, Point3(0.1,0.1,0.1));
+    Values result = LevenbergMarquardtOptimizer(graph, initial).optimize();
+    result.print();
+
+
+
+
     return 0;
 }
 

@@ -24,8 +24,6 @@ using namespace glm;
 using namespace std;
 #include <common/shader.hpp> //shader.hpp needs the GLM namespace, else you will get "xyz does not name a type" errors.
 
-
-
 int visualize(int numFrames){
     GLFWwindow* window;
     // Initialise GLFW
