@@ -22,15 +22,24 @@ using namespace std;
 class mserMeasurement : public Point2 {
 public:
     mserMeasurement(double x, double y, double theta, double majorAxis, double minorAxis): theta_(theta), majorAxis_(majorAxis), minorAxis_(minorAxis){}
-    double theta() {return theta_;}
-    double majorAxis() {return majorAxis_;}
-    double minorAxis() {return minorAxis_;}
+    double theta() const {return theta_;}
+    double majorAxis() const {return majorAxis_;}
+    double minorAxis() const {return minorAxis_;}
+    bool equals(const mserMeasurement& q, double tol) const {
+        return (fabs(this->x() - q.x()) < tol && fabs(this->y() - q.y()) < tol  && fabs(theta_ - q.theta()) < tol && fabs(majorAxis_ - q.majorAxis()) < tol && fabs(minorAxis_ - q.minorAxis()) < tol);
+    }
 private:
     double theta_;
     double majorAxis_;
     double minorAxis_;
 };
 
+namespace gtsam{
+template<>
+struct traits<mserMeasurement> : public internal::VectorSpace<Point2> {};
+};
+
+/*
 class objectPose3 : public Pose3{
 public:
     objectPose3(const Pose3& pose, double theta, double majorAxis, double minorAxis): theta_(theta), majorAxis_(majorAxis), minorAxis_(minorAxis){}
@@ -55,38 +64,7 @@ private:
     double majorAxis_;
     double minorAxis_;
 };
-
-std::vector<gtsam::Point3> createPoints() {
-
-    // Create the set of ground-truth landmarks
-    std::vector<gtsam::Point3> points;
-    points.push_back(gtsam::Point3(10.0,10.0,10.0));
-    points.push_back(gtsam::Point3(-10.0,10.0,10.0));
-    points.push_back(gtsam::Point3(-10.0,-10.0,10.0));
-    points.push_back(gtsam::Point3(10.0,-10.0,10.0));
-    points.push_back(gtsam::Point3(10.0,10.0,-10.0));
-    points.push_back(gtsam::Point3(-10.0,10.0,-10.0));
-    points.push_back(gtsam::Point3(-10.0,-10.0,-10.0));
-    points.push_back(gtsam::Point3(10.0,-10.0,-10.0));
-
-    return points;
-}
-
-std::vector<gtsam::Pose3> createPoses() {
-    // Create the set of ground-truth poses
-    std::vector<gtsam::Pose3> poses;
-    double radius = 30.0;
-    int i = 0;
-    double theta = 0.0;
-    gtsam::Point3 up(0,0,1);
-    gtsam::Point3 target(0,0,0);
-    for(; i < 8; ++i, theta += 2*M_PI/8) {
-        gtsam::Point3 position = gtsam::Point3(radius*cos(theta), radius*sin(theta), 0.0);
-        gtsam::SimpleCamera camera = gtsam::SimpleCamera::Lookat(position, target, up);
-        poses.push_back(camera.pose());
-    }
-    return poses;
-}
+*/
 
 std::vector<Pose3> alexCreatePoses(double radius, Point3 target, int numPoses){
     std::vector<gtsam::Pose3> poses;
@@ -115,45 +93,6 @@ std::vector<SimpleCamera> alexCreateCameras(double radius, Point3 target, int nu
     return cameras;
 }
 
-void SFMexample(){
-    Cal3_S2::shared_ptr K(new Cal3_S2(50.0, 50.0, 0.0, 50.0, 50.0)); //made up calibration for now; replace with Jing's calibration later
-    noiseModel::Isotropic::shared_ptr measurementNoise = noiseModel::Isotropic::Sigma(2, 1.0);
-
-    vector<Point3> points = createPoints();
-    vector<Pose3> poses = alexCreatePoses(30.0, Point3(0.0,0.0,0.0), 8);
-
-    NonlinearFactorGraph graph;
-    noiseModel::Diagonal::shared_ptr poseNoise = noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << Vector3::Constant(0.3), Vector3::Constant(0.1)).finished()); // 30cm std on x,y,z 0.1 rad on roll,pitch,yaw
-    graph.push_back(PriorFactor<Pose3>(Symbol('x', 0), poses[0], poseNoise)); // add directly to graph
-
-    //Simulates measurements
-    for (size_t i = 0; i < poses.size(); ++i) {
-        SimpleCamera temp_cam(poses[i], *K);
-        for (size_t j = 0; j < points.size(); ++j){
-            Point2 measurement = temp_cam.project(points[j]);
-            graph.push_back(GenericProjectionFactor<Pose3, Point3, Cal3_S2>(measurement, measurementNoise, Symbol('x', i), Symbol('l', j), K));
-        }
-    }
-
-    noiseModel::Isotropic::shared_ptr pointNoise = noiseModel::Isotropic::Sigma(3, 0.1);
-    graph.push_back(PriorFactor<Point3>(Symbol('l', 0), points[0], pointNoise));
-
-    graph.print("Factor Graph:\n");
-    Values initialEstimate;
-    for (size_t i = 0; i < poses.size(); ++i){
-        initialEstimate.insert(Symbol('x', i), poses[i].compose(Pose3(Rot3::Rodrigues(-0.1, 0.2, 0.25), Point3(0.05, -0.10, 0.20))));
-    }
-    for (size_t j = 0; j < points.size(); ++j){
-        initialEstimate.insert(Symbol('l', j), points[j].compose(Point3(-0.25, 0.20, 0.15)));
-    }
-    initialEstimate.print("Initial Estimates:\n");
-    // Optimize the graph and print results
-    Values result = DoglegOptimizer(graph, initialEstimate).optimize();
-    result.print("Final results:\n");
-    std::cout << "initial error = " << graph.error(initialEstimate) << std::endl;
-    std::cout << "final error = " << graph.error(result) << std::endl;
-}
-
 void printJingData(){
     SfM_data mydata;
     string filename = "/home/alex/mser/datasets/fpv_bal_280_nf2.txt";
@@ -165,34 +104,69 @@ void printJingData(){
                 }
 }
 
-int main() {
-    Point3 target = Point3(0.5,0.5,0.5); //ground truth object centroid
-
-    //create synthetic camera poses
-    int numCams = 8;
-    double radius = 30.0;
+Values locateObject(Point3 target, Point3 guess, int numCams, double radius){
     std::vector<SimpleCamera> cameras = alexCreateCameras(radius, target, numCams);
-    //create synthetic measurements
-    std::vector<mserMeasurement> measurements;
     NonlinearFactorGraph graph;
     for (int i = 0; i < numCams; i++){
         Point2 measurement = cameras[i].project(target);
         noiseModel::Isotropic::shared_ptr pointNoise = noiseModel::Isotropic::Sigma(3, 0.1);
         Point3 backProjectedPoint3 = cameras[i].backproject(measurement, radius); //assume depth is known from other methods e.g. VO
         graph.add(PriorFactor<Point3>(1, backProjectedPoint3, pointNoise));
-        cameras[i].print("CAMERA \n");
-        measurement.print("MSER CENTROID \n");
-        backProjectedPoint3.print("BACK PROJECTED POINT");
     }
     //estimate object centroid location
     Values initial;
-    initial.insert(1, Point3(0.1,0.1,0.1));
+    initial.insert(1, guess);
     Values result = LevenbergMarquardtOptimizer(graph, initial).optimize();
-    result.print();
+    //result.print();
+    return result;
+}
 
+Values averageMSERExperiment(mserMeasurement guess, int numMeasurements){
+    NonlinearFactorGraph graph;
+    for (int i = 0; i < numMeasurements; i++){
+        mserMeasurement tempMsmt = mserMeasurement(0.0,0.0 + i,0.0,0 + i, 5 + i);
+        noiseModel::Isotropic::shared_ptr mserNoise = noiseModel::Isotropic::Sigma(5, 0.1);
+        graph.add(PriorFactor<mserMeasurement>(1, tempMsmt, mserNoise));
+    }
+    Values initial;
+    initial.insert(1, guess);
+    Values result = LevenbergMarquardtOptimizer(graph, initial).optimize();
+    return result;
+}
 
+void testPipeline(){
+    //test for object localization via back projection
+    Point3 target = Point3(1.5,1.5,1.5);
+    Point3 guess = Point3(1.1,1.1,1.1);
+    int numCameras = 8;
+    double cameraMotionRadius = 30.0;
+    Values correct1;
+    correct1.insert(1,target);
+    Values result1 = locateObject(target, guess, numCameras, cameraMotionRadius);
+    if (result1.equals(correct1,0.0001)){
+        cout << "\n Localization PASSED. \n" << endl;
+    }
+    else{
+        cout << "\n Localization FAILED. \n" << endl;
+    }
 
+    //test MSER averaging
+    mserMeasurement guessMSER = mserMeasurement(0.1,3.5,0.1,3.5,7.5);
+    int numMeasurements = 10;
+    Values correct2;
+    correct2.insert(1, mserMeasurement(0.0,4.5,0.0,4.5,9.5));
+    Values result2 = averageMSERExperiment(guessMSER, numMeasurements);
+    result2.print();
+    if (result2.equals(correct2,0.0001)){
+        cout << "\n MSER Average PASSED. \n" << endl;
+    }
+    else{
+        cout << "\n MSER Average FAILED. \n" << endl;
+    }
+}
 
+int main() {
+    testPipeline();
     return 0;
 }
 
