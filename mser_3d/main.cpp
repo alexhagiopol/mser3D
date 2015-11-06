@@ -1,38 +1,44 @@
 //#include "Visualizer.h"
 #include "alexFunctions.h"
-#include <gtsam/slam/expressions.h>
-#include <gtsam/nonlinear/ExpressionFactorGraph.h>
-#include <gtsam/base/Manifold.h>
+#include <gtsam/base/Manifold.h> //required for MSER object
+#include <gtsam/geometry/Pose3.h> //required for MSER object
+#include <gtsam/geometry/Pose2.h> //required for MSER measurement
+#include <gtsam/geometry/Point2.h> //required for MSER object
+#include <gtsam/slam/expressions.h> //required for optimization with Expressions syntax
 
 using namespace gtsam;
 using namespace std;
 using namespace noiseModel;
 
-/*
 typedef ProductManifold<Pose3, Point2> mserObject;
 template<> struct traits<mserObject> : internal::ManifoldTraits<mserObject>{
     static void Print(const mserObject& o, const string& s = ""){
-        cout << s << "(" << o.first << "," << o.second << ")" << endl;
+        cout << s << " (";
+        o.first.print();
+        cout << ",";
+        o.second.print();
+        cout << ")" << endl;
+        //cout << s << "(" << o.first << "," << o.second << ")" << endl;
     }
     static bool Equals(const mserObject& o1, const mserObject& o2, double tol = 1e-8){
-        return o1 == o2;
+        return ((o1.first.equals(o2.first)) && (o1.second.equals(o2.second)));
     }
 };
 
-/*
 typedef ProductManifold<Pose2, Point2> mserMeasurement;
 template<> struct traits<mserMeasurement> : internal::ManifoldTraits<mserMeasurement>{
-    static void Print(const mserMeasurement & m, const string & s = ""){
-        cout << s << "(" << m.first << "," << m.second << ")" << endl;
-        Point2 x = Point2(0,0);
-        cout << x << endl;
+    static void Print(const mserMeasurement& m, const string& s = ""){
+        cout << s << " (";
+        m.first.print();
+        cout << ",";
+        m.second.print();
+        cout << ")" << endl;
+        //cout << s << "(" << m.first << "," << m.second << ")" << endl;
     }
-    static bool Equals(const mserMeasurement & m1, const mserMeasurement & m2, double tol = 1e-8){
-        return m1 == m2;
+    static bool Equals(const mserMeasurement& m1, const mserMeasurement& m2, double tol = 1e-8){
+        return ((m1.first.equals(m2.first)) && (m1.second.equals(m2.second)));
     }
 };
- */
-
 
 //******************************************************************************
 typedef ProductManifold<Point2,Point2> MyPoint2Pair;
