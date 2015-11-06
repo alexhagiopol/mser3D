@@ -1,113 +1,94 @@
-#include "Visualizer.h"
-#include <gtsam/geometry/Point3.h>
-#include <gtsam/geometry/SimpleCamera.h>
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
-#include <gtsam/nonlinear/ExpressionFactorGraph.h>
-#include <gtsam/slam/PriorFactor.h>
-#include <gtsam/slam/ProjectionFactor.h>
+//#include "Visualizer.h"
+#include "alexFunctions.h"
 #include <gtsam/slam/expressions.h>
-#include <gtsam/slam/dataset.h> 
-#include <gtsam/slam/GeneralSFMFactor.h>
-#include <gtsam/nonlinear/DoglegOptimizer.h>
-#include <gtsam/inference/Symbol.h>
-#include <gtsam/geometry/OrientedPlane3.h>
-#include <random>
-#include <vector>
-#include <iostream>
+#include <gtsam/nonlinear/ExpressionFactorGraph.h>
+#include <gtsam/base/Manifold.h>
 
 using namespace gtsam;
 using namespace std;
+using namespace noiseModel;
 
 /*
-class mserMeasurement : public Point2 {
-public:
-    mserMeasurement(double x, double y, double theta, double majorAxis, double minorAxis): theta_(theta), majorAxis_(majorAxis), minorAxis_(minorAxis){}
-    double theta() const {return theta_;}
-    double majorAxis() const {return majorAxis_;}
-    double minorAxis() const {return minorAxis_;}
-    bool equals(const mserMeasurement& q, double tol) const {
-        return (fabs(this->x() - q.x()) < tol && fabs(this->y() - q.y()) < tol  && fabs(theta_ - q.theta()) < tol && fabs(majorAxis_ - q.majorAxis()) < tol && fabs(minorAxis_ - q.minorAxis()) < tol);
+typedef ProductManifold<Pose3, Point2> mserObject;
+template<> struct traits<mserObject> : internal::ManifoldTraits<mserObject>{
+    static void Print(const mserObject& o, const string& s = ""){
+        cout << s << "(" << o.first << "," << o.second << ")" << endl;
     }
-private:
-    double theta_;
-    double majorAxis_;
-    double minorAxis_;
-};
-
-namespace gtsam{
-template<>
-struct traits<mserMeasurement> : public internal::VectorSpace<Point2> {};
-};
-
-
-class objectPose3 : public Pose3{
-public:
-    objectPose3(const Pose3& pose, double theta, double majorAxis, double minorAxis): theta_(theta), majorAxis_(majorAxis), minorAxis_(minorAxis){}
-    double theta() {return theta_;}
-    double majorAxis() {return majorAxis_;}
-    double minorAxis() {return minorAxis_;}
-private:
-    double theta_;
-    double majorAxis_;
-    double minorAxis_;
-};
-
-//Don't like this because it uses Unit3 not Pose3...
-class objectPlane : public OrientedPlane3{
-public:
-    objectPlane(const Unit3& s, double d,  double theta, double majorAxis, double minorAxis): theta_(theta), majorAxis_(majorAxis), minorAxis_(minorAxis){}
-    double theta() {return theta_;}
-    double majorAxis() {return majorAxis_;}
-    double minorAxis() {return minorAxis_;}
-private:
-    double theta_;
-    double majorAxis_;
-    double minorAxis_;
-};
-*/
-
-std::vector<Pose3> alexCreatePoses(double radius, Point3 target, int numPoses){
-    std::vector<gtsam::Pose3> poses;
-    double theta = 0.0;
-    Point3 up = Point3(0,0,1);
-    for(int i = 0; i < numPoses; i++){
-        Point3 position = Point3(target.x() + radius*cos(theta), target.y() + radius*sin(theta), target.z() + 0.0);
-        SimpleCamera tempCam = SimpleCamera::Lookat(position, target, up);
-        theta += 2*M_PI/numPoses;
-        poses.push_back(tempCam.pose());
+    static bool Equals(const mserObject& o1, const mserObject& o2, double tol = 1e-8){
+        return o1 == o2;
     }
-    return poses;
+};
+
+/*
+typedef ProductManifold<Pose2, Point2> mserMeasurement;
+template<> struct traits<mserMeasurement> : internal::ManifoldTraits<mserMeasurement>{
+    static void Print(const mserMeasurement & m, const string & s = ""){
+        cout << s << "(" << m.first << "," << m.second << ")" << endl;
+        Point2 x = Point2(0,0);
+        cout << x << endl;
+    }
+    static bool Equals(const mserMeasurement & m1, const mserMeasurement & m2, double tol = 1e-8){
+        return m1 == m2;
+    }
+};
+ */
+
+
+//******************************************************************************
+typedef ProductManifold<Point2,Point2> MyPoint2Pair;
+
+// Define any direct product group to be a model of the multiplicative Group concept
+template<> struct traits<MyPoint2Pair> : internal::ManifoldTraits<MyPoint2Pair> {
+    static void Print(const MyPoint2Pair& m, const string& s = "") {
+        cout << s << "(" << m.first << "," << m.second << ")" << endl;
+    }
+    static bool Equals(const MyPoint2Pair& m1, const MyPoint2Pair& m2, double tol = 1e-8) {
+        return m1 == m2;
+    }
+};
+
+/*
+Values SFMExpressionsProductManifolds(){
+    typedef Expression<mserObject> mserObject_;
+    typedef Expression<mserMeasurement> mserMeasurement_;
+    vector<Point3> points = createPoints();
+    vector<Pose3> poses = createPoses();
+    vector<mserObject>
+    Cal3_S2::shared_ptr K(new Cal3_S2(50.0, 50.0, 0.0, 50.0, 50.0));
+    //measurement noise
+    noiseModel::Isotropic::shared_ptr measurementNoise = noiseModel::Isotropic::Sigma(2, 1.0); // one pixel in u and v
+    vector<Point3> points = createPoints();
+    ExpressionFactorGraph graph;
+    //pose noise
+    Vector6 sigmas; sigmas << Vector3(0.3,0.3,0.3), Vector3(0.1,0.1,0.1);
+    Diagonal::shared_ptr poseNoise = Diagonal::Sigmas(sigmas);
+    mserObject_ x0('x',0);
+    graph.addExpressionFactor(x0, poses[0], poseNoise);
+
+}
+ */
+
+//Example optimization using a new object that consists of a pair of Point2 objects.
+//Essentially computes the average of a set of these objects to serve as unit test.
+//Uses standard GTSAM syntax i.e. no Expressions yet.
+Values pointPairOptimize(){
+    MyPoint2Pair p1(Point2(1,2),Point2(3,4));
+    MyPoint2Pair p2(Point2(10,20),Point2(30,40));
+    NonlinearFactorGraph graph;
+    noiseModel::Isotropic::shared_ptr pointNoise = noiseModel::Isotropic::Sigma(4, 0.1);
+    graph.add(PriorFactor<MyPoint2Pair>(1,p1,pointNoise));
+    graph.add(PriorFactor<MyPoint2Pair>(1,p2,pointNoise));
+    Values initial;
+    initial.insert(1, p1);
+    Values result = LevenbergMarquardtOptimizer(graph, initial).optimize();
+    result.print();
+    return result;
 }
 
-std::vector<SimpleCamera> alexCreateCameras(double radius, Point3 target, int numCams){
-    Cal3_S2::shared_ptr K(new Cal3_S2(50.0, 50.0, 0.0, 50.0, 50.0)); //made up calibration for now; replace with Jing's calibration later
-    std::vector<SimpleCamera> cameras;
-    double theta = 0.0;
-    Point3 up = Point3(0,0,1);
-    for(int i = 0; i < numCams; i++){
-        Point3 position = Point3(target.x() + radius*cos(theta), target.y() + radius*sin(theta), target.z() + 0.0);
-        SimpleCamera tempCam = SimpleCamera::Lookat(position, target, up, *K);
-        cameras.push_back(tempCam);
-        theta += 2*M_PI/numCams;
-    }
-    return cameras;
-}
-
-void printJingData(){
-    SfM_data mydata;
-    string filename = "/home/alex/mser/datasets/fpv_bal_280_nf2.txt";
-    readBAL(filename, mydata);
-    cout << boost::format("read %1% tracks on %2% cameras\n") % mydata.number_tracks() % mydata.number_cameras();
-    BOOST_FOREACH(const SfM_Camera& camera, mydata.cameras){
-                    const Pose3 pose = camera.pose();
-                    pose.print("Camera pose:\n");
-                }
-}
-
+//Example optimization using 3D points. Given a set of data points
 Values locateObject(Point3 target, Point3 guess, int numCams, double radius){
     std::vector<SimpleCamera> cameras = alexCreateCameras(radius, target, numCams);
-    produceMSERMeasurements(cameras);
+    //produceMSERMeasurements(cameras); //virtual stuff in opengl
     NonlinearFactorGraph graph;
     for (int i = 0; i < numCams; i++){
         Point2 measurement = cameras[i].project(target);
@@ -122,22 +103,24 @@ Values locateObject(Point3 target, Point3 guess, int numCams, double radius){
     //result.print();
     return result;
 }
-/* //Still not compiling hence the comments
-Values averageMSERExperiment(mserMeasurement guess, int numMeasurements){
-    NonlinearFactorGraph graph;
-    for (int i = 0; i < numMeasurements; i++){
-        mserMeasurement tempMsmt = mserMeasurement(0.0,0.0 + i,0.0,0 + i, 5 + i);
-        noiseModel::Isotropic::shared_ptr mserNoise = noiseModel::Isotropic::Sigma(5, 0.1);
-        graph.add(PriorFactor<mserMeasurement>(1, tempMsmt, mserNoise));
-    }
-    Values initial;
-    initial.insert(1, guess);
-    Values result = LevenbergMarquardtOptimizer(graph, initial).optimize();
-    return result;
-}
- */
 
-void testPipeline(){
+//Unit test for pointPairOptimize()
+void testPointPairOptimize(){
+    MyPoint2Pair pair1;
+    Vector4 d;
+    d << 1,2,3,4;
+    MyPoint2Pair expected(Point2(1,2),Point2(3,4));
+    MyPoint2Pair pair2 = pair1.retract(d);
+    if (gtsam::traits<MyPoint2Pair>::Equals(expected, pair2)){
+        std::cout << "Point2 Pair Example PASSED." << std::endl;
+    }
+    else{
+        std::cout << "Point2 Pair Example FAILED." << std::endl;
+    }
+}
+
+//Unit test for 3D object location
+void testLocateObject(){
     //test for object localization via back projection
     Point3 target = Point3(1.5,1.5,1.5);
     Point3 guess = Point3(1.1,1.1,1.1);
@@ -147,33 +130,20 @@ void testPipeline(){
     correct1.insert(1,target);
     Values result1 = locateObject(target, guess, numCameras, cameraMotionRadius);
     if (result1.equals(correct1,0.0001)){
-        cout << "\n Localization PASSED. \n" << endl;
+        cout << "Localization PASSED." << endl;
     }
     else{
-        cout << "\n Localization FAILED. \n" << endl;
+        cout << "Localization FAILED." << endl;
     }
-
-    /*
-    //test MSER averaging: still not compiling hence the comments
-    mserMeasurement guessMSER = mserMeasurement(0.1,3.5,0.1,3.5,7.5);
-    int numMeasurements = 10;
-    Values correct2;
-    correct2.insert(1, mserMeasurement(0.0,4.5,0.0,4.5,9.5));
-    Values result2 = averageMSERExperiment(guessMSER, numMeasurements);
-    result2.print();
-    if (result2.equals(correct2,0.0001)){
-        cout << "\n MSER Average PASSED. \n" << endl;
-    }
-    else{
-        cout << "\n MSER Average FAILED. \n" << endl;
-    }
-     */
 }
 
 int main() {
-    testPipeline();
+    testLocateObject();
+    testPointPairOptimize();
+    pointPairOptimize();
     return 0;
 }
+
 
 
 
