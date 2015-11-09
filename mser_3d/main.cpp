@@ -150,10 +150,21 @@ void testLocateObject(){
     }
 }
 
+//Ensures that graphics pipeline does not throw errors. Outputs 5 images with random cubes into output folder.
+void testGraphics(){
+    int success = produceRandomCubeImages(5);
+    if (success == 0){
+        cout << "Graphics WORKING" << endl;
+    }else{
+        cout << "Graphics NOT WORKING"<< endl;
+    }
+}
+
 int main() {
     testLocateObject();
     testPointPairOptimize();
     pointPairOptimize();
+    testGraphics();
     return 0;
 }
 
