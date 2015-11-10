@@ -528,12 +528,12 @@ int produceMSERMeasurements(std::vector<gtsam::SimpleCamera>& cameras, Point3& t
         //cout << regions.size() << endl;
         for (size_t i = 0; i < regions.size(); i++)
         {
-            RotatedRect rr = fitEllipse(regions[i]); //fit rectangle to region - might come in handy as alternative shape descriptor
-            ellipse(gray, rr, Scalar(0,0,0),5); //fit ellipse to region
-            //cout << "Angle " << rr.angle << endl;
-            //cout << "Center " << rr.center << endl;
-            //cout << "Height " << rr.size.height << endl;
-            //cout << "Width " << rr.size.width << endl;
+            RotatedRect rr = fitEllipse(regions[i]); //fit ellipse to region. Store info in rotated rectangle data structure
+            ellipse(gray, rr, Scalar(0,0,0),5);
+            Pose2 ellipsePose = Pose2(rr.center.x,rr.center.y,rr.angle);
+            Point2 ellipseAxes = Point2(rr.size.height,rr.size.width);
+            mserMeasurement msmt = mserMeasurement(ellipsePose,ellipseAxes);
+            measurements.push_back(msmt);
         }
         //imshow("mser",gray_flipped);
         waitKey(1);

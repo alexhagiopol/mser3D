@@ -1,6 +1,8 @@
 #include "Visualizer.h"
 #include "geometryFunctions.h"
 #include "mserClasses.h"
+#include <gtsam/base/Testable.h>
+#include <gtsam/base/Manifold.h> //required for MSER object
 
 using namespace gtsam;
 using namespace std;
@@ -57,6 +59,11 @@ void testMSERMeasurements(){
     std::vector<SimpleCamera> cameras = alexCreateCameras(radius, target, numCams);
     std::vector<mserMeasurement> measurements;
     int success = produceMSERMeasurements(cameras, target, measurements);
+    if (success == 0){
+        for (size_t i  = 0; i < measurements.size(); i++ ){
+            traits<mserMeasurement>::Print(measurements[i]);
+        }
+    }
 }
 
 int main() {
