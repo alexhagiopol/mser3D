@@ -137,8 +137,42 @@ Values locateObject(Point3 target, Point3 guess, int numCams, double radius){
     return result;
 }
 
+void inferObject(std::vector<SimpleCamera>& cameras, std::vector<mserMeasurement>& measurements, mserObject& object){
+    //Orientation optimization
+    NonlinearFactorGraph cam_pose_graph;
+    NonlinearFactorGraph ellipse_pose_graph;
+    NonlinearFactorGraph ellipse_dim_graph;
+    for (size_t i = 0; i < measurements.size(); i++){
+        noiseModel::Diagonal::shared_ptr pose3Noise = noiseModel::Isotropic::Sigma(6,0.1);
+        noiseModel::Diagonal::shared_ptr pose2Noise = noiseModel::Isotropic::Sigma(3,0.1);
+        noiseModel::Diagonal::shared_ptr point2Noise = noiseModel::Isotropic::Sigma(2,0.1);
+        cam_pose_graph.add(PriorFactor<Pose3>(1,cameras[i].pose(), pose3Noise));
+        ellipse_pose_graph.add(PriorFactor<Pose2>(1,measurements[i].first,pose2Noise));
+        ellipse_dim_graph.add(PriorFactor<Point2>(1,measurements[i].second,point2Noise));
+    }
+    Values initial_cam_pose;
+    Values initial_ellipse_pose;
+    Values initial_ellipse_dim;
+    initial_cam_pose.insert(1,cameras[0].pose());
+    initial_ellipse_pose.insert(1,measurements[0].first);
+    initial_ellipse_dim.insert(1, measurements[0].second);
+    Values cam_pose_result = LevenbergMarquardtOptimizer(cam_pose_graph,initial_cam_pose).optimize();
+    Values ellipse_pose_result = LevenbergMarquardtOptimizer(ellipse_pose_graph,initial_ellipse_pose).optimize();
+    Values ellipse_dim_result = LevenbergMarquardtOptimizer(ellipse_dim_graph,initial_ellipse_dim).optimize();
+
+    cam_pose_result.print("cam pose");
+    ellipse_pose_result.print("ellipse pose");
+    ellipse_dim_result.print("ellipse dim");
+}
+
 /*
-Values optimizationSFMExpressionsProductManifolds(){
+Values naiveMSEROptimizationExampleExpressions(){
+    int numCams = 20;
+    double radius = 10.0;
+    Point3 target = Point3(0.0,0.0,0.0);
+    std::vector<SimpleCamera> cameras = alexCreateCameras(radius, target, numCams);
+    std::vector<mserMeasurement> measurements;
+    int success = produceMSERMeasurements(cameras, target, measurements);
     typedef Expression<mserObject> mserObject_;
     typedef Expression<mserMeasurement> mserMeasurement_;
     vector<Point3> points = createPoints();
@@ -154,8 +188,6 @@ Values optimizationSFMExpressionsProductManifolds(){
     Diagonal::shared_ptr poseNoise = Diagonal::Sigmas(sigmas);
     mserObject_ x0('x',0);
     graph.addExpressionFactor(x0, poses[0], poseNoise);
-
 }
- */
-
+*/
 #endif //MSER_3D_GEOMETRYFUNCTIONS_H

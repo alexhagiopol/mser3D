@@ -51,7 +51,7 @@ void testGraphics(){
     }
 }
 
-//Test production of MSER measurements from synthetic world model
+//Test production of MSER measurements from synthetic world model. Still need to verify output...
 void testMSERMeasurements(){
     int numCams = 20;
     double radius = 10.0;
@@ -61,9 +61,29 @@ void testMSERMeasurements(){
     int success = produceMSERMeasurements(cameras, target, measurements);
     if (success == 0){
         for (size_t i  = 0; i < measurements.size(); i++ ){
-            traits<mserMeasurement>::Print(measurements[i]);
+            //traits<mserMeasurement>::Print(measurements[i]);
         }
+        cout << "MSER measurements PRODUCED" << endl;
+    } else {
+        cout << "MSER measurements FAILED" << endl;
     }
+}
+
+void testNaiveMSEROptimization(){
+    int numCams = 20;
+    double radius = 10.0;
+    Point3 target = Point3(0.0,0.0,0.0);
+    std::vector<SimpleCamera> cameras = alexCreateCameras(radius, target, numCams);
+    std::vector<mserMeasurement> measurements;
+    mserObject object;
+    int success = produceMSERMeasurements(cameras, target, measurements);
+    if ((success != 0) || (measurements.size() != cameras.size())){
+        cout << "MSER optimization FAILED because measurement simulation FAILED" << endl;
+    } else {
+        inferObject(cameras, measurements, object);
+        traits<mserObject>::Print(object); //not ready yet
+    }
+
 }
 
 int main() {
@@ -72,6 +92,7 @@ int main() {
     pointPairOptimize();
     testGraphics();
     testMSERMeasurements();
+    testNaiveMSEROptimization();
     return 0;
 }
 
