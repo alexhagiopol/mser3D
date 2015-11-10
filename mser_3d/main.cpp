@@ -49,11 +49,22 @@ void testGraphics(){
     }
 }
 
+//Test production of MSER measurements from synthetic world model
+void testMSERMeasurements(){
+    int numCams = 20;
+    double radius = 10.0;
+    Point3 target = Point3(0.0,0.0,0.0);
+    std::vector<SimpleCamera> cameras = alexCreateCameras(radius, target, numCams);
+    std::vector<mserMeasurement> measurements;
+    int success = produceMSERMeasurements(cameras, target, measurements);
+}
+
 int main() {
     testLocateObject();
     testPointPairOptimize();
     pointPairOptimize();
     testGraphics();
+    testMSERMeasurements();
     return 0;
 }
 

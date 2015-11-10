@@ -6,6 +6,7 @@
 #ifndef MSER_3D_VISUALIZER_H
 #define MSER_3D_VISUALIZER_H
 
+#include "mserClasses.h"
 #include <GL/glew.h> // Include GLEW
 #include <glfw3.h> // Include GLFW
 #include <glm/glm.hpp> // Include GLM
@@ -28,6 +29,7 @@
 using namespace cv;
 using namespace glm;
 using namespace std;
+using namespace gtsam;
 #include <common/shader.hpp> //shader.hpp needs the GLM namespace, else you will get "xyz does not name a type" errors.
 
 int produceRandomCubeImages(int numFrames){
@@ -140,47 +142,47 @@ int produceRandomCubeImages(int numFrames){
         // One color for each vertex. They were generated randomly.
         glClearColor(distr(eng), distr(eng), distr(eng), distr(eng)); //random background color
         //random cube color
-        float randomR = distr(eng);
-        float randomG = distr(eng);
-        float randomB = distr(eng);
+        float cubeR = distr(eng);
+        float cubeG = distr(eng);
+        float cubeB = distr(eng);
 
         GLfloat g_color_buffer_data[] = {
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
         };
 
         /* //Use this if you need cubes with multicolored faces
@@ -284,7 +286,7 @@ int produceRandomCubeImages(int numFrames){
     return 0;
 }
 
-int produceMSERMeasurements(std::vector<gtsam::SimpleCamera>& cameras){
+int produceMSERMeasurements(std::vector<gtsam::SimpleCamera>& cameras, Point3& target, std::vector<mserMeasurement>& measurements){
     GLFWwindow* window;
     // Initialise GLFW
     if( !glfwInit() )
@@ -337,9 +339,8 @@ int produceMSERMeasurements(std::vector<gtsam::SimpleCamera>& cameras){
     for (size_t f = 0; f < cameras.size(); f++) {
         // Camera matrix
         glm::mat4 View = glm::lookAt(
-                glm::vec3(cameras[f].pose().x(), cameras[f].pose().y(),
-                          cameras[f].pose().z()), // Camera position in world cpace
-                glm::vec3(0, 0, 0), // and looks at the origin
+                glm::vec3(cameras[f].pose().x(), cameras[f].pose().y(), cameras[f].pose().z()), // Camera position in world space
+                glm::vec3(target.x(), target.y(), target.z()), // and looks at the target
                 glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
         );
         glm::mat4 Model = glm::mat4(1.0f); // Model matrix : an identity matrix (model will be at the origin)
@@ -387,53 +388,51 @@ int produceMSERMeasurements(std::vector<gtsam::SimpleCamera>& cameras){
                 1.0f, -1.0f, 1.0f
         };
 
-        glClearColor(1.0,1.0,1.0,1.0); //In this case, not random anymore TODO: change variable names //distr(eng), distr(eng), distr(eng), distr(eng)); //random background color
-
-        float randomR = 0.5;//distr(eng);
-        float randomG = 0.5;//distr(eng);
-        float randomB = 1.0;//distr(eng);
-
+        //Set color of cube
+        glClearColor(1.0,1.0,1.0,1.0);
+        float cubeR = 0.5;//distr(eng);
+        float cubeG = 0.5;//distr(eng);
+        float cubeB = 1.0;//distr(eng);
         GLfloat g_color_buffer_data[] = {
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
-                randomR, randomG, randomB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
+                cubeR, cubeG, cubeB,
         };
 
         //Place vertex info into a buffer
-
         glGenBuffers(1, &vertexbuffer);
         glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
         glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
@@ -486,6 +485,7 @@ int produceMSERMeasurements(std::vector<gtsam::SimpleCamera>& cameras){
         char fileName[80];
         sprintf(fileName, "/home/alex/mser/mser_3d/output/original%010lu.jpg", f); //format filename
         imwrite(fileName, flipped); //Use OpenCV to save to output folder
+
         //Perform MSER with OpenCV
         /*
         int delta = 5; //! delta, in the code, it compares (size_{i}-size_{i-delta})/size_{i-delta}
@@ -498,48 +498,48 @@ int produceMSERMeasurements(std::vector<gtsam::SimpleCamera>& cameras){
         double areaThreshold = 1.01; //! the area threshold to cause re-initialize
         double minMargin = 0.003; //! ignore too small margin
         int edgeBlurSize = 5; //! the aperture size for edge blur
-
-         //! the full constructor
-    CV_WRAP explicit MSER( int _delta=5, int _min_area=60, int _max_area=14400,
-          double _max_variation=0.25, double _min_diversity=.2,
-          int _max_evolution=200, double _area_threshold=1.01,
-          double _min_margin=0.003, int _edge_blur_size=5 );
-
          */
    	    int _delta = 5;
         int	_min_area = 6;
-        int _max_area = 14400000;
+        int _max_area = 144000; //tuned to only detect the cube in the scene
         double 	_max_variation = 2500;
         double 	_min_diversity = 0.02;
         int _max_evolution=20000;
         double _area_threshold=1.01;
         double _min_margin=0.00003;
         int _edge_blur_size=50;
-        MSER mser(_delta, _min_area, _max_area, _max_variation, _min_diversity, _max_evolution, _area_threshold, _min_margin, _edge_blur_size);
-        //MSER mser;
-        vector<vector<Point>> regions;
-        //vector<Rect> bboxes;
-        /***INSANE OPENCV BEHAVIOR/BUG: if you load an image from a file, it works. If you use the raw Mat image, it doesn't work!!! WTF!!!! */
-        Mat box = imread(fileName,1);//imread("/home/alex/mser/mser_3d/mser_test_img.png",1);
-        Mat gray_flipped;
-        cvtColor(box, gray_flipped, CV_BGR2GRAY );
+        MSER mser(_delta, _min_area, _max_area, _max_variation, _min_diversity, _max_evolution, _area_threshold, _min_margin, _edge_blur_size); //initialize MSER
+        vector<vector<Point>> regions; //data structure to store pixels for each region
+        /***INSANE OPENCV BEHAVIOR/BUG: if you load an image from a file, MSER works. If you use the raw Mat image, it doesn't work!!! WTF!!!! */
+        Mat from_file = imread(fileName,1); //I'm forced to read my matrix from a file
+        Mat gray; //apply grayscale
+        cvtColor(from_file, gray, CV_BGR2GRAY );
+
+        /* //I tried to debug the OpenCV bug by looking at RGB matrix values. No luck.
+        FileStorage from_file_file("/home/alex/mser/mser_3d/from_file.xml", FileStorage::WRITE);
+        from_file_file << "FROM_FILE" << from_file;
+        FileStorage flipped_file("/home/alex/mser/mser_3d/flipped.xml", FileStorage::WRITE);
+        flipped_file << "FROM_OPENGL"<< flipped;
+        FileStorage gray_flipped_file("/home/alex/mser/mser_3d/gray_flipped.xml", FileStorage::WRITE);
+        gray_flipped_file << "GRAY_FROM_OPENGL"<< gray_flipped;
+        */
         const Mat mask;
-        mser(gray_flipped, regions, mask);
-        cout << regions.size() << endl;
+        mser(gray, regions, mask); //Detect MSER on grayscale image from file. Store results in regions vector.
+        //cout << regions.size() << endl;
         for (size_t i = 0; i < regions.size(); i++)
         {
-            RotatedRect rr = fitEllipse(regions[i]);
-            ellipse(gray_flipped, rr, Scalar(0,0,0),5);
-            cout << "Angle " << rr.angle << endl;
-            cout << "Center " << rr.center << endl;
-            cout << "Height " << rr.size.height << endl;
-            cout << "Width " << rr.size.width << endl;
+            RotatedRect rr = fitEllipse(regions[i]); //fit rectangle to region - might come in handy as alternative shape descriptor
+            ellipse(gray, rr, Scalar(0,0,0),5); //fit ellipse to region
+            //cout << "Angle " << rr.angle << endl;
+            //cout << "Center " << rr.center << endl;
+            //cout << "Height " << rr.size.height << endl;
+            //cout << "Width " << rr.size.width << endl;
         }
-        imshow("mser",gray_flipped);
-        waitKey(0);
+        //imshow("mser",gray_flipped);
+        waitKey(1);
         char fileNameMSER[80];
         sprintf(fileNameMSER, "/home/alex/mser/mser_3d/output/mser%010lu.jpg", f); //format filename
-        imwrite(fileNameMSER, gray_flipped); //Use OpenCV to save to output folder
+        imwrite(fileNameMSER, gray); //Use OpenCV to save to output folder
     }
     // Cleanup VBO and shader
     glDeleteBuffers(1, &vertexbuffer);

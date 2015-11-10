@@ -10,6 +10,8 @@
 #include <gtsam/geometry/Pose2.h> //required for MSER measurement
 #include <gtsam/geometry/Point2.h> //required for MSER object
 
+using namespace std;
+
 namespace gtsam { //required to keep GCC from complaining
     typedef ProductManifold<Pose3, Point2> mserObject;
 

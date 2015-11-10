@@ -156,5 +156,6 @@ Values optimizationSFMExpressionsProductManifolds(){
     graph.addExpressionFactor(x0, poses[0], poseNoise);
 
 }
-*/
+ */
+
 #endif //MSER_3D_GEOMETRYFUNCTIONS_H
