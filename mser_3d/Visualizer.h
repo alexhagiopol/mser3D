@@ -30,7 +30,7 @@ using namespace cv;
 using namespace glm;
 using namespace std;
 using namespace gtsam;
-#include <common/shader.hpp> //shader.hpp needs the GLM namespace, else you will get "xyz does not name a type" errors.
+#include "common/shader.hpp" //shader.hpp needs the GLM namespace, else you will get "xyz does not name a type" errors.
 
 int produceRandomCubeImages(int numFrames){
     GLFWwindow* window;
@@ -76,7 +76,7 @@ int produceRandomCubeImages(int numFrames){
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
-    GLuint programID = LoadShaders( "../../TransformVertexShader.vertexshader", "../../ColorFragmentShader.fragmentshader" ); // Create and compile our GLSL program from the shaders
+    GLuint programID = LoadShaders( "../TransformVertexShader.vertexshader", "../ColorFragmentShader.fragmentshader" ); // Create and compile our GLSL program from the shaders
     GLuint MatrixID = glGetUniformLocation(programID, "MVP"); // Get a handle for our "MVP" uniform
     glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f); // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
     // Camera matrix
@@ -330,7 +330,7 @@ int produceMSERMeasurements(std::vector<gtsam::SimpleCamera>& cameras, Point3& t
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
-    GLuint programID = LoadShaders( "../../TransformVertexShader.vertexshader", "../../ColorFragmentShader.fragmentshader" ); // Create and compile our GLSL program from the shaders
+    GLuint programID = LoadShaders( "../TransformVertexShader.vertexshader", "../ColorFragmentShader.fragmentshader" ); // Create and compile our GLSL program from the shaders
     GLuint MatrixID = glGetUniformLocation(programID, "MVP"); // Get a handle for our "MVP" uniform
     glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f); // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 
