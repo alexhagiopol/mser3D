@@ -1,5 +1,5 @@
 # CMake entry point
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8)
 project (mser_3d)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -11,6 +11,8 @@ find_package(Eigen3 REQUIRED)
 #include(GtsamTesting)
 #include(GtsamMatlabWrap)
 #find_package(GTSAM REQUIRED) # Uses installed package
+#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "home/alex/EigenLibrary/cmake")
+#set(Eigen3_DIR "home/alex/EigenLibrary/cmake")
 
 if( CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR )
     message( FATAL_ERROR "Please select another Build Directory ! (and give it a clever name, like bin_Visual2012_64bits/)" )

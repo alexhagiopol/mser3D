@@ -93,6 +93,7 @@ int main() {
     testGraphics();
     testMSERMeasurements();
     testNaiveMSEROptimization();
+    drawEllipse();
     return 0;
 }
 
