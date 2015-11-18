@@ -553,7 +553,7 @@ int produceMSERMeasurements(std::vector<gtsam::SimpleCamera>& cameras, Point3& t
     return 0;
 }
 
-int drawEllipse() {
+int drawEllipses(std::vector<gtsam::SimpleCamera>& cameras, std::vector<mserMeasurement>& measurements) {
     GLFWwindow *window;
     // Initialise GLFW
     if (!glfwInit()) {
@@ -607,7 +607,7 @@ int drawEllipse() {
 
     // Camera matrix
     glm::mat4 View = glm::lookAt(
-            glm::vec3(4, 3, -3),
+            glm::vec3(30, 30, -60), //camera position
             glm::vec3(0, 0, 0), // and looks at the target
             glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
     );
@@ -616,54 +616,50 @@ int drawEllipse() {
                     Model; // Our ModelViewProjection : multiplication of our 3 matrices. Remember, matrix multiplication is the other way around
 
 
-    GLfloat g_vertex_buffer_data[360*9];
-    GLfloat g_color_buffer_data[360*9];
-    float cubeR = 0.5;//distr(eng);
-    float cubeG = 0.5;//distr(eng);
-    float cubeB = 1.0;//distr(eng);
-    for (int i = 0; i < 360*9; i+=9) {
-        // Object vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
-        float rad_angle = (i/9) * M_PI / 180;
-        float next_rad_angle = (i/9 + 1) * M_PI / 180;
-        float ellipse_x_radius = 1;
-        float ellipse_y_radius = 1.5;
+    GLfloat g_vertex_buffer_data[360*9*measurements.size() ];
+    GLfloat g_color_buffer_data[360*9*measurements.size() ];
 
-        g_vertex_buffer_data[i] = 0.0f;
-        g_vertex_buffer_data[i+1] = 0.0f;
-        g_vertex_buffer_data[i+2] = 0.0f;
-        g_vertex_buffer_data[i+3] = cos(rad_angle) * ellipse_x_radius;
-        g_vertex_buffer_data[i+4] = sin(rad_angle) * ellipse_y_radius;
-        g_vertex_buffer_data[i+5] = 0.0f;
-        g_vertex_buffer_data[i+6] = cos(next_rad_angle) * ellipse_x_radius;
-        g_vertex_buffer_data[i+7] = sin(next_rad_angle) * ellipse_y_radius;
-        g_vertex_buffer_data[i+8] = 0.0f;
-        /*
-        g_vertex_buffer_data[] = {
-                0.0f, 0.0f, 0.0f,
-                cos(rad_angle) * ellipse_x_radius, sin(rad_angle) * ellipse_y_radius, 0.0f,
-                cos(next_rad_angle) * ellipse_x_radius, sin(next_rad_angle) * ellipse_y_radius, 0.0f,
-        };
-         */
-        //Set color of object
-        glClearColor(1.0, 1.0, 1.0, 1.0);
-        /*
-        GLfloat g_color_buffer_data[] = {
-                cubeR, cubeG, cubeB,
-                cubeR, cubeG, cubeB,
-                cubeR, cubeG, cubeB,
+    //float cubeR = 0.5;
+    //float cubeG = 0.5;
+    //float cubeB = 1.0;
 
-        };
-         */
-        g_color_buffer_data[i] = cubeR;
-        g_color_buffer_data[i+1] = cubeG;
-        g_color_buffer_data[i+2] = cubeB;
-        g_color_buffer_data[i+3] = cubeR;
-        g_color_buffer_data[i+4] = cubeG;
-        g_color_buffer_data[i+5] = cubeB;
-        g_color_buffer_data[i+6] = cubeR;
-        g_color_buffer_data[i+7] = cubeG;
-        g_color_buffer_data[i+8] = cubeB;
+    for (int m = 0; m < measurements.size(); m++){
+        float cubeR = distr(eng);
+        float cubeG = distr(eng);
+        float cubeB = distr(eng);
+        for (int i = 0 + m*360*9; i < 360*9 + m*360*9; i+=9) {
+            // Object vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
+            float rad_angle = (i/9) * M_PI / 180;
+            float next_rad_angle = (i/9 + 1) * M_PI / 180;
+            float ellipse_x_radius = measurements[m].second.x() / 40;
+            float ellipse_y_radius = measurements[m].second.y() / 40;
+            cout << ellipse_x_radius << " " << ellipse_y_radius << endl;
+
+            g_vertex_buffer_data[i] = cameras[m].pose().x();
+            g_vertex_buffer_data[i+1] = cameras[m].pose().y();
+            g_vertex_buffer_data[i+2] = cameras[m].pose().z();
+            g_vertex_buffer_data[i+3] = cameras[m].pose().x() + cos(rad_angle) * ellipse_x_radius;
+            g_vertex_buffer_data[i+4] = cameras[m].pose().y() + sin(rad_angle) * ellipse_y_radius;
+            g_vertex_buffer_data[i+5] = cameras[m].pose().z();
+            g_vertex_buffer_data[i+6] = cameras[m].pose().x() + cos(next_rad_angle) * ellipse_x_radius;
+            g_vertex_buffer_data[i+7] = cameras[m].pose().y() + sin(next_rad_angle) * ellipse_y_radius;
+            g_vertex_buffer_data[i+8] = cameras[m].pose().z();
+
+            //Set color of object
+            glClearColor(1.0, 1.0, 1.0, 1.0);
+
+            g_color_buffer_data[i] = cubeR;
+            g_color_buffer_data[i+1] = cubeG;
+            g_color_buffer_data[i+2] = cubeB;
+            g_color_buffer_data[i+3] = cubeR;
+            g_color_buffer_data[i+4] = cubeG;
+            g_color_buffer_data[i+5] = cubeB;
+            g_color_buffer_data[i+6] = cubeR;
+            g_color_buffer_data[i+7] = cubeG;
+            g_color_buffer_data[i+8] = cubeB;
+        }
     }
+
     //Place vertex info into a buffer
     glGenBuffers(1, &vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -700,7 +696,7 @@ int drawEllipse() {
             0,                                // stride
             (void *) 0                          // array buffer offset
     );
-    glDrawArrays(GL_TRIANGLES, 0, 360 * 3); // Draw the triangle ! 12*3 indices starting at 0 -> 12 triangles
+    glDrawArrays(GL_TRIANGLES, 0, 360 * 3 * measurements.size()); // Draw the triangle ! 12*3 indices starting at 0 -> 12 triangles
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
     glfwSwapBuffers(window); // Swap buffers

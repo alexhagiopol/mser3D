@@ -54,11 +54,12 @@ void testGraphics(){
 //Test production of MSER measurements from synthetic world model. Still need to verify output...
 void testMSERMeasurements(){
     int numCams = 20;
-    double radius = 10.0;
+    double radius = 15.0;
     Point3 target = Point3(0.0,0.0,0.0);
     std::vector<SimpleCamera> cameras = alexCreateCameras(radius, target, numCams);
     std::vector<mserMeasurement> measurements;
     int success = produceMSERMeasurements(cameras, target, measurements);
+    drawEllipses(cameras, measurements);
     if (success == 0){
         for (size_t i  = 0; i < measurements.size(); i++ ){
             //traits<mserMeasurement>::Print(measurements[i]);
@@ -93,7 +94,7 @@ int main() {
     testGraphics();
     testMSERMeasurements();
     testNaiveMSEROptimization();
-    drawEllipse();
+    //drawEllipses();
     return 0;
 }
 
