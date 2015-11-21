@@ -165,6 +165,8 @@ void inferObject(std::vector<SimpleCamera>& cameras, std::vector<mserMeasurement
     ellipse_dim_result.print("ellipse dim");
 }
 
+
+
 /*
 Values naiveMSEROptimizationExampleExpressions(){
     int numCams = 20;
