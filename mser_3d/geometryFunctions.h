@@ -6,6 +6,7 @@
 #define MSER_3D_GEOMETRYFUNCTIONS_H
 
 #include "mserClasses.h"
+#include "boost/optional.hpp"
 #include <gtsam/geometry/OrientedPlane3.h>
 #include <gtsam/geometry/Point3.h>
 #include <gtsam/geometry/SimpleCamera.h>
@@ -19,6 +20,7 @@
 #include <gtsam/slam/expressions.h>  //required for optimization with Expressions syntax
 #include <gtsam/slam/dataset.h>
 #include <gtsam/slam/GeneralSFMFactor.h>
+#include <math.h>
 #include <string>
 #include <random>
 #include <vector>
@@ -165,7 +167,19 @@ void inferObject(std::vector<SimpleCamera>& cameras, std::vector<mserMeasurement
     ellipse_dim_result.print("ellipse dim");
 }
 
+double ellipse2DOrientation(Point2& center, Point2& majorAxisPoint, OptionalJacobian<1,2> H1 = boost::none, OptionalJacobian<1,2> H2 = boost::none){
+    //Math reference: https://en.wikipedia.org/wiki/Atan2
+    //C++ atan2(y,x) reference: http://en.cppreference.com/w/c/numeric/math/atan2
+    double y = majorAxisPoint.y() - center.y();
+    double x = majorAxisPoint.x() - center.x();
+    double orientation = atan2(y,x);
 
+    if (H1 || H2){
+        Matrix12 H;
+        
+    }
+
+}
 
 /*
 Values naiveMSEROptimizationExampleExpressions(){

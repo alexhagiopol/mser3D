@@ -43,6 +43,12 @@ void testLocateObject(){
     }
 }
 
+void testATAN2(){
+    Point2 p1(5,5);
+    Point2 p2(10,10);
+
+}
+
 void testAllGeometry(){
     testPointPairOptimize();
     testLocateObject();
