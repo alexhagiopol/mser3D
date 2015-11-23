@@ -6,6 +6,7 @@
 #define MSER_3D_TESTGEOMETRY_H
 #include "geometryFunctions.h"
 #include "mserClasses.h"
+#include <gtsam/nonlinear/Values.h>
 
 using namespace gtsam;
 using namespace std;
@@ -43,15 +44,34 @@ void testLocateObject(){
     }
 }
 
-void testATAN2(){
-    Point2 p1(5,5);
-    Point2 p2(10,10);
-
+void testEllipse2DOrientation(){
+    Point2 center(5,5);
+    Point2 majorAxisTip(10,10);
+    Matrix12 H1, H2, correctCenterJacobian, correctAxisPointJacobian;
+    double orientation = ellipse2DOrientation(center, majorAxisTip, H1, H2);
+    //cout << orientation << H1 << H2 << endl;
+    correctCenterJacobian << 0.1, -0.1; //hand calculated value
+    correctAxisPointJacobian << -0.1, 0.1; //hand calculated value
+    double correctOrientation = 0.7854; //(radians) hand calculated value
+    Values correct;
+    Values tested;
+    correct.insert(1, correctCenterJacobian);
+    correct.insert(2, correctAxisPointJacobian);
+    correct.insert(3, correctOrientation);
+    tested.insert(1, H1);
+    tested.insert(2, H2);
+    tested.insert(3, orientation);
+    if (correct.equals(tested, 0.00001)){
+        cout << "ellipse2DOritnetaion PASSED" << endl;
+    } else {
+        cout << "ellipse2DOritnetaion FAILED" << endl;
+    }
 }
 
 void testAllGeometry(){
     testPointPairOptimize();
     testLocateObject();
+    testEllipse2DOrientation();
 }
 
 #endif //MSER_3D_TESTGEOMETRY_H

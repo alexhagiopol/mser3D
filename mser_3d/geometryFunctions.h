@@ -8,6 +8,7 @@
 #include "mserClasses.h"
 #include "boost/optional.hpp"
 #include <gtsam/geometry/OrientedPlane3.h>
+#include <gtsam/geometry/Point2.h>
 #include <gtsam/geometry/Point3.h>
 #include <gtsam/geometry/SimpleCamera.h>
 #include <gtsam/inference/Symbol.h>
@@ -167,18 +168,16 @@ void inferObject(std::vector<SimpleCamera>& cameras, std::vector<mserMeasurement
     ellipse_dim_result.print("ellipse dim");
 }
 
+//Returns orientation of 2D ellipse given center point and major axis point
 double ellipse2DOrientation(Point2& center, Point2& majorAxisPoint, OptionalJacobian<1,2> H1 = boost::none, OptionalJacobian<1,2> H2 = boost::none){
     //Math reference: https://en.wikipedia.org/wiki/Atan2
     //C++ atan2(y,x) reference: http://en.cppreference.com/w/c/numeric/math/atan2
     double y = majorAxisPoint.y() - center.y();
     double x = majorAxisPoint.x() - center.x();
     double orientation = atan2(y,x);
-
-    if (H1 || H2){
-        Matrix12 H;
-        
-    }
-
+    if (H1) *H1 << y/(x*x + y*y), -1*x/(x*x + y*y); //derivative wrt center point
+    if (H2) *H2 << -1*y/(x*x + y*y), x/(x*x + y*y);//derivative wrt axis point
+    return orientation;
 }
 
 /*
