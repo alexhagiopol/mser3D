@@ -153,9 +153,7 @@ void inferObject(std::vector<SimpleCamera>& cameras, std::vector<mserMeasurement
         ellipse_pose_graph.add(PriorFactor<Pose2>(1,measurements[i].first,pose2Noise));
         ellipse_dim_graph.add(PriorFactor<Point2>(1,measurements[i].second,point2Noise));
     }
-    Values initial_cam_pose;
-    Values initial_ellipse_pose;
-    Values initial_ellipse_dim;
+    Values initial_cam_pose, initial_ellipse_pose, initial_ellipse_dim;
     initial_cam_pose.insert(1,cameras[0].pose());
     initial_ellipse_pose.insert(1,measurements[0].first);
     initial_ellipse_dim.insert(1, measurements[0].second);
@@ -179,6 +177,71 @@ double ellipse2DOrientation(Point2& center, Point2& majorAxisPoint, OptionalJaco
     if (H2) *H2 << -1*y/(x*x + y*y), x/(x*x + y*y);//derivative wrt axis point
     return orientation;
 }
+
+std::vector<Point3> convertObjectToPoint3s(mserObject& object, OptionalJacobian<9,8> H = boost::none){
+    Matrix36 centerH;
+    Point3 objectCenter = object.first.translation(centerH);
+    Matrix33 majTempRotH,
+             majTempPtH,
+             majAxisCtrH,
+             majAxisTempH,
+             minTempRotH,
+             minTempPtH,
+             minAxisCtrH,
+             minAxisTempH;
+    Point3 majorTemp = object.first.rotation().rotate(Point3(object.second.x(),0,0),majTempRotH,majTempPtH);
+    Point3 minorTemp = object.first.rotation().rotate(Point3(0,object.second.y(),0),minTempRotH,minTempPtH);
+    Point3 majAxisTip = objectCenter.add(majorTemp,majAxisCtrH,majAxisTempH);
+    Point3 minAxisTip = objectCenter.add(minorTemp,minAxisCtrH,minAxisTempH);
+    std::vector<Point3> pointRepresentation;
+    pointRepresentation.push_back(objectCenter);
+    pointRepresentation.push_back(majAxisTip);
+    pointRepresentation.push_back(minAxisTip);
+    /*
+    cout << "centerH\n" << centerH << endl;
+    cout << "majTempRotH\n" << majTempRotH << endl;
+    cout << "majTempPtH\n" << majTempPtH << endl;
+    cout << "majAxisCtrH\n" << majAxisCtrH << endl;
+    cout << "majAxisTempH\n" << majAxisTempH << endl;
+    cout << "minTempRotH\n" << minTempRotH << endl;
+    cout << "minTempPtH\n" << minTempPtH << endl;
+    cout << "minAxisCtrH\n" << minAxisCtrH << endl;
+    cout << "minAxisTempH\n" << minAxisTempH << endl;
+    */
+    //TODO: Jacobian from above matrices.
+    return pointRepresentation;
+}
+
+mserMeasurement convertPoint3sToMeasurement(SimpleCamera& camera, std::vector<Point3>& points, OptionalJacobian<5,5> Dcal = boost::none, OptionalJacobian<5,6> Dpose = boost::none, OptionalJacobian<5,9> Dpoints = boost::none){
+    Point3 objectCenter = points[0];
+    Point3 majorAxisTip = points[1];
+    Point3 minorAxisTip = points[2];
+    Matrix26 centerDpose, majorDpose, minorDpose;
+    Matrix23 centerDpoint, majorDpoint, minorDpoint;
+    Matrix25 centerDcal, majorDcal, minorDcal;
+    Point2 projectedObjectCenter = camera.project(objectCenter,centerDpose, centerDpoint, centerDcal);
+    Point2 projectedMajorAxisTip = camera.project(majorAxisTip, majorDpose, majorDpoint, majorDcal);
+    Point2 projectedMinorAxisTip = camera.project(minorAxisTip, minorDpose, minorDpoint, minorDcal);
+    Matrix12 oriCtrH, oriMaAxH;
+    double orientation = ellipse2DOrientation(projectedObjectCenter, projectedMajorAxisTip,oriCtrH, oriMaAxH);
+    Matrix12 majordistanceDmajoraxis, majordistanceDcenter, minordistanceDminoraxis, minordistanceDcenter;
+    double majorAxis = projectedMajorAxisTip.distance(projectedObjectCenter,majordistanceDmajoraxis,majordistanceDcenter);
+    double minorAxis = projectedMinorAxisTip.distance(projectedObjectCenter,minordistanceDminoraxis,minordistanceDcenter);
+    Point2 axes(majorAxis,minorAxis);
+    Pose2 pose(projectedObjectCenter.x(),projectedObjectCenter.y(),orientation);
+    mserMeasurement measurement(pose,axes);
+    return measurement;
+}
+
+/*
+mserMeasurement mserMeasurementFunction(SimpleCamera& camera, mserObject& object, OptionalJacobian<5,11> H1 = boost::none, OptionalJacobian<5, 8> H2 = boost::none){
+//Dimension of H1 Jacobian is 5x11 because mserMeasurement has dimension 5 while a camera has dimension 11 (5 calibration parameters + 6 pose parameters)
+
+}
+*/
+
+
+
 
 /*
 Values naiveMSEROptimizationExampleExpressions(){

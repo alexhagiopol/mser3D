@@ -62,16 +62,103 @@ void testEllipse2DOrientation(){
     tested.insert(2, H2);
     tested.insert(3, orientation);
     if (correct.equals(tested, 0.00001)){
-        cout << "ellipse2DOritnetaion PASSED" << endl;
+        cout << "ellipse2DOrientation PASSED" << endl;
     } else {
-        cout << "ellipse2DOritnetaion FAILED" << endl;
+        cout << "ellipse2DOrientation FAILED" << endl;
+        correct.print();
+        tested.print();
     }
 }
+
+void testMserMeasurementFunction(){
+
+    //object parameters
+    Point3 objectCenter(0,0,0);
+    Rot3 objectOrientation(1,0,0,
+                           0,1,0,
+                           0,0,1);
+    Point2 objectAxes(3,1);
+    Pose3 objectPose(objectOrientation, objectCenter);
+    mserObject object(objectPose,objectAxes);
+
+    //compute 3D points from object Pose and object axes
+    Point3 majorAxisTip = objectOrientation.rotate(Point3(objectAxes.x(),0,0)) + objectCenter;
+    Point3 minorAxisTip = objectOrientation.rotate(Point3(0,objectAxes.y(),0)) + objectCenter;
+
+
+    //We now have a representation of the mser Object as a set of three 3D points.
+    //next step is to project each point into 2D by making a camera
+    Cal3_S2::shared_ptr K(new Cal3_S2(500.0, 500.0, 0.1, 640/2, 480/2));
+    Point3 cameraPosition(0,0,10);// = objectCenter + Point3(0,0,100);
+    Point3 up = Point3(0,1,0);
+    SimpleCamera camera = SimpleCamera::Lookat(cameraPosition, objectCenter, up, *K);
+    Point2 projectedObjectCenter = camera.project(objectCenter);
+    Point2 projectedMajorAxisTip = camera.project(majorAxisTip);
+    Point2 projectedMinorAxisTip = camera.project(minorAxisTip);
+    //projectedObjectCenter.print();
+    //projectedMajorAxisTip.print();
+    //projectedMinorAxisTip.print();
+}
+
+void testConvertObjectToPoint3s(){
+    //object parameters
+    Point3 objectCenter(0,0,0);
+    Rot3 objectOrientation(1,0,0,
+                           0,1,0,
+                           0,0,1);
+    Point2 objectAxes(3,1);
+    Pose3 objectPose(objectOrientation, objectCenter);
+    mserObject object(objectPose,objectAxes);
+    Point3 majorAxisTip(3,0,0);
+    Point3 minorAxisTip(0,1,0);
+    Matrix98 H;
+    std::vector<Point3> pointVector = convertObjectToPoint3s(object,H);
+    Values correctPoints, returnedPoints;
+    correctPoints.insert(1,objectCenter);
+    correctPoints.insert(2,majorAxisTip);
+    correctPoints.insert(3,minorAxisTip);
+    returnedPoints.insert(1,pointVector[0]);
+    returnedPoints.insert(2,pointVector[1]);
+    returnedPoints.insert(3,pointVector[2]);
+    if (correctPoints.equals(returnedPoints, 0.00001)){
+        cout << "convertObjectToPoint3s PASSED" << endl;
+    } else {
+        cout << "convertObjectToPoint3s FAILED" << endl;
+        correctPoints.print();
+        returnedPoints.print();
+    }
+}
+
+void testConvertPoint3sToMeasurement(){
+    //object parameters
+    Point3 objectCenter(0,0,0);
+    Rot3 objectOrientation(1,0,0,
+                           0,1,0,
+                           0,0,1);
+    Point2 objectAxes(3,1);
+    Pose3 objectPose(objectOrientation, objectCenter);
+    mserObject object(objectPose,objectAxes);
+    Point3 majorAxisTip(3,0,0);
+    Point3 minorAxisTip(0,1,0);
+    Matrix98 H;
+    std::vector<Point3> pointVector = convertObjectToPoint3s(object,H);
+    Cal3_S2::shared_ptr K(new Cal3_S2(500.0, 500.0, 0.1, 640/2, 480/2));
+    Point3 cameraPosition(0,0,10);// = objectCenter + Point3(0,0,100);
+    Point3 up = Point3(0,1,0);
+    SimpleCamera camera = SimpleCamera::Lookat(cameraPosition, objectCenter, up, *K);
+    mserMeasurement returnedMeasurement = convertPoint3sToMeasurement(camera, pointVector);
+    gtsam::traits<mserMeasurement>::Print(returnedMeasurement);
+}
+
+
 
 void testAllGeometry(){
     testPointPairOptimize();
     testLocateObject();
     testEllipse2DOrientation();
+    testMserMeasurementFunction();
+    testConvertObjectToPoint3s();
+    testConvertPoint3sToMeasurement();
 }
 
 #endif //MSER_3D_TESTGEOMETRY_H
