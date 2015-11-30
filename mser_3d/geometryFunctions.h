@@ -178,7 +178,7 @@ double ellipse2DOrientation(Point2& center, Point2& majorAxisPoint, OptionalJaco
     return orientation;
 }
 
-std::vector<Point3> convertObjectToPoint3sInObjectFrame(mserObject& object, OptionalJacobian<6,8> Dobject = boost::none){
+std::vector<Point3> convertObjectToObjectPoint3s(mserObject& object, OptionalJacobian<6,8> Dobject = boost::none){
     //Point3 center(object.first.x(),object.first.y(),object.first.z());
     Point3 majAxisTip(object.second.x(),0,0);
     Point3 minAxisTip(0,object.second.y(),0);
@@ -195,7 +195,7 @@ std::vector<Point3> convertObjectToPoint3sInObjectFrame(mserObject& object, Opti
     return pointsInObjectFrame;
 }
 
-std::vector<Point3> convertPoint3sInObjectFrameToPoint3sInWorldFrame(mserObject& object, std::vector<Point3> pointsInObjectFrame, OptionalJacobian<9,8> Dobject = boost::none, OptionalJacobian<9,6> Dpoints = boost::none) {
+std::vector<Point3> convertObjectPoint3sToWorldPoint3s(mserObject& object, std::vector<Point3> pointsInObjectFrame, OptionalJacobian<9,8> Dobject = boost::none, OptionalJacobian<9,6> Dpoints = boost::none) {
     Matrix36 centerDpose, majAxisDpose, minAxisDpose; //Matrices to store results from optional jacobians
     Matrix33 majAxisDpoint, minAxisDpoint; //Matrices to store results from optional jacobians
     Point3 objectCenter = object.first.translation(centerDpose);
@@ -208,7 +208,6 @@ std::vector<Point3> convertPoint3sInObjectFrameToPoint3sInWorldFrame(mserObject&
     pointRepresentation.push_back(objectCenter);
     pointRepresentation.push_back(majAxisInWorldFrame);
     pointRepresentation.push_back(minAxisInWorldFrame);
-
     //cout << "centerDpose\n" << centerDpose << endl;
     //cout << "majAxisDpose\n" << majAxisDpose << endl;
     //cout << "majAxisDpoint\n" << majAxisDpoint << endl;
@@ -236,6 +235,29 @@ std::vector<Point3> convertPoint3sInObjectFrameToPoint3sInWorldFrame(mserObject&
     return pointRepresentation;
 }
 
+mserMeasurement convertPoint3sToMeasurement(SimpleCamera& camera, std::vector<Point3>& points, OptionalJacobian<5,5> Dcal = boost::none, OptionalJacobian<5,6> Dpose = boost::none, OptionalJacobian<5,9> Dpoints = boost::none){
+    Point3 objectCenter = points[0];
+    Point3 majorAxisTip = points[1];
+    Point3 minorAxisTip = points[2];
+    Matrix26 centerDpose, majorDpose, minorDpose;
+    Matrix23 centerDpoint, majorDpoint, minorDpoint;
+    Matrix25 centerDcal, majorDcal, minorDcal;
+    Point2 projectedObjectCenter = camera.project(objectCenter,centerDpose, centerDpoint, centerDcal);
+    Point2 projectedMajorAxisTip = camera.project(majorAxisTip, majorDpose, majorDpoint, majorDcal);
+    Point2 projectedMinorAxisTip = camera.project(minorAxisTip, minorDpose, minorDpoint, minorDcal);
+    Matrix12 oriCtrH, oriMaAxH;
+    double orientation = ellipse2DOrientation(projectedObjectCenter, projectedMajorAxisTip,oriCtrH, oriMaAxH);
+    Matrix12 majordistanceDmajoraxis, majordistanceDcenter, minordistanceDminoraxis, minordistanceDcenter;
+    double majorAxis = projectedMajorAxisTip.distance(projectedObjectCenter,majordistanceDmajoraxis,majordistanceDcenter);
+    double minorAxis = projectedMinorAxisTip.distance(projectedObjectCenter,minordistanceDminoraxis,minordistanceDcenter);
+    Point2 axes(majorAxis,minorAxis);
+    Pose2 pose(projectedObjectCenter.x(),projectedObjectCenter.y(),orientation);
+    mserMeasurement measurement(pose,axes);
+    return measurement;
+}
+
+
+/*
 std::vector<Point3> convertObjectToPoint3s(mserObject& object, OptionalJacobian<9,8> H = boost::none){
     Matrix36 centerDpose, majAxisDpose, minAxisDpose;
     Matrix33 majAxisDpoint, minAxisDpoint;
@@ -260,27 +282,7 @@ std::vector<Point3> convertObjectToPoint3s(mserObject& object, OptionalJacobian<
     //TODO: Jacobian from above matrices.
     return pointRepresentation;
 }
-
-mserMeasurement convertPoint3sToMeasurement(SimpleCamera& camera, std::vector<Point3>& points, OptionalJacobian<5,5> Dcal = boost::none, OptionalJacobian<5,6> Dpose = boost::none, OptionalJacobian<5,9> Dpoints = boost::none){
-    Point3 objectCenter = points[0];
-    Point3 majorAxisTip = points[1];
-    Point3 minorAxisTip = points[2];
-    Matrix26 centerDpose, majorDpose, minorDpose;
-    Matrix23 centerDpoint, majorDpoint, minorDpoint;
-    Matrix25 centerDcal, majorDcal, minorDcal;
-    Point2 projectedObjectCenter = camera.project(objectCenter,centerDpose, centerDpoint, centerDcal);
-    Point2 projectedMajorAxisTip = camera.project(majorAxisTip, majorDpose, majorDpoint, majorDcal);
-    Point2 projectedMinorAxisTip = camera.project(minorAxisTip, minorDpose, minorDpoint, minorDcal);
-    Matrix12 oriCtrH, oriMaAxH;
-    double orientation = ellipse2DOrientation(projectedObjectCenter, projectedMajorAxisTip,oriCtrH, oriMaAxH);
-    Matrix12 majordistanceDmajoraxis, majordistanceDcenter, minordistanceDminoraxis, minordistanceDcenter;
-    double majorAxis = projectedMajorAxisTip.distance(projectedObjectCenter,majordistanceDmajoraxis,majordistanceDcenter);
-    double minorAxis = projectedMinorAxisTip.distance(projectedObjectCenter,minordistanceDminoraxis,minordistanceDcenter);
-    Point2 axes(majorAxis,minorAxis);
-    Pose2 pose(projectedObjectCenter.x(),projectedObjectCenter.y(),orientation);
-    mserMeasurement measurement(pose,axes);
-    return measurement;
-}
+ */
 
 /*
 mserMeasurement mserMeasurementFunction(SimpleCamera& camera, mserObject& object, OptionalJacobian<5,11> H1 = boost::none, OptionalJacobian<5, 8> H2 = boost::none){
