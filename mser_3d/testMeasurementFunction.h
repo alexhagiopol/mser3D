@@ -6,8 +6,33 @@
 #define MSER_3D_TESTMEASUREMENTFUNCTION_H
 
 #include "measurementFunction.h"
+#include <gtsam/slam/expressions.h>
+#include <gtsam/nonlinear/ExpressionFactorGraph.h>
+#include <gtsam/nonlinear/DoglegOptimizer.h>
+#include <gtsam/nonlinear/Values.h>
+#include <gtsam/inference/Symbol.h>
 
-void testAllMeasurementFunction(){
+using namespace std;
+using namespace gtsam;
+using namespace noiseModel;
+
+void testExpressionsOptimization(){
+    Point3 objectCenter(0,0,0);
+    Rot3 objectOrientation(1,0,0,
+                           0,1,0,
+                           0,0,1);
+    Point2 objectAxes(3,1);
+    Pose3 objectPose(objectOrientation, objectCenter);
+
+
+
+    Cal3_S2::shared_ptr K(new Cal3_S2(500.0, 500.0, 0.1, 640/2, 480/2)); //camera parameters
+    Isotropic::shared_ptr measurementNoise = Isotropic::Sigma(5, 1.0); // one pixel in every dimension
+    mserObject object(objectPose,objectAxes); //ground truth object
+
+}
+
+void testMeasurementFunction(){
     //object parameters
     Point3 objectCenter(0,0,0);
     Rot3 objectOrientation(1,0,0,
@@ -32,10 +57,14 @@ void testAllMeasurementFunction(){
         cout << "MEASUREMENT FUNCTION TEST #1 PASSED" << endl;
     } else {
         cout << "MEASUREMENT FUNCTION TEST #1 FAILED" << endl;
-        gtsam::traits<mserMeasurement>::Print(correctMeasurement,"CORRECT");
-        gtsam::traits<mserMeasurement>::Print(returnedMeasurement,"RETURNED");
+        gtsam::traits<mserMeasurement>::Print(correctMeasurement, "CORRECT");
+        gtsam::traits<mserMeasurement>::Print(returnedMeasurement, "RETURNED");
     }
+}
 
+void testAllMeasurementFunction(){
+    testMeasurementFunction();
+    testExpressionsOptimization();
 }
 
 #endif //MSER_3D_TESTMEASUREMENTFUNCTION_H
