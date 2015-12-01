@@ -16,7 +16,9 @@ using namespace std;
 using namespace gtsam;
 using namespace noiseModel;
 
+
 void testExpressionsOptimization(){
+    /*
     Point3 objectCenter(0,0,0);
     Rot3 objectOrientation(1,0,0,
                            0,1,0,
@@ -29,8 +31,9 @@ void testExpressionsOptimization(){
     Cal3_S2::shared_ptr K(new Cal3_S2(500.0, 500.0, 0.1, 640/2, 480/2)); //camera parameters
     Isotropic::shared_ptr measurementNoise = Isotropic::Sigma(5, 1.0); // one pixel in every dimension
     mserObject object(objectPose,objectAxes); //ground truth object
-
+    */
 }
+
 
 void testMeasurementFunction(){
     //object parameters
