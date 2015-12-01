@@ -193,11 +193,11 @@ std::vector<Point3> convertObjectToPoint3s(mserObject& object, OptionalJacobian<
     pointRepresentation.push_back(objectCenter);
     pointRepresentation.push_back(majAxisTip);
     pointRepresentation.push_back(minAxisTip);
-    cout << "centerDpose\n" << centerDpose << endl;
-    cout << "majAxisDpose\n" << majAxisDpose << endl;
-    cout << "majAxisDpoint\n" << majAxisDpoint << endl;
-    cout << "minAxisDpose\n" << minAxisDpose << endl;
-    cout << "minAxisDpoint\n" << minAxisDpoint << endl;
+    //cout << "centerDpose\n" << centerDpose << endl;
+    //cout << "majAxisDpose\n" << majAxisDpose << endl;
+    //cout << "majAxisDpoint\n" << majAxisDpoint << endl;
+    //cout << "minAxisDpose\n" << minAxisDpose << endl;
+    //cout << "minAxisDpoint\n" << minAxisDpoint << endl;
     //if (H) *H << ;
     //TODO: Jacobian from above matrices.
     return pointRepresentation;

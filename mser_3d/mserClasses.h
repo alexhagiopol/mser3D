@@ -27,7 +27,7 @@ namespace gtsam { //required to keep GCC from complaining
         }
 
         static bool Equals(const mserObject &o1, const mserObject &o2, double tol = 1e-8) {
-            return ((o1.first.equals(o2.first)) && (o1.second.equals(o2.second)));
+            return ((o1.first.equals(o2.first, tol)) && (o1.second.equals(o2.second, tol)));
         }
     };
 
@@ -45,7 +45,7 @@ namespace gtsam { //required to keep GCC from complaining
         }
 
         static bool Equals(const mserMeasurement &m1, const mserMeasurement &m2, double tol = 1e-8) {
-            return ((m1.first.equals(m2.first)) && (m1.second.equals(m2.second)));
+            return ((m1.first.equals(m2.first, tol)) && (m1.second.equals(m2.second, tol)));
         }
     };
 

@@ -148,7 +148,15 @@ void testConvertWorldPoint3sToMeasurement(){
     Point3 up = Point3(0,1,0);
     SimpleCamera camera = SimpleCamera::Lookat(cameraPosition, objectCenter, up, *K);
     mserMeasurement returnedMeasurement = convertWorldPoint3sToMeasurement(camera, pointVector);
-    gtsam::traits<mserMeasurement>::Print(returnedMeasurement);
+    mserMeasurement correctMeasurement(Pose2(320,240,0),Point2(150,50)); //hand calculated measurement
+
+    if (gtsam::traits<mserMeasurement>::Equals(correctMeasurement,returnedMeasurement,0.001)){
+        cout << "testConvertWorldPoint3sToMeasurement PASSED" << endl;
+    } else {
+        cout << "testConvertWorldPoint3sToMeasurement FAILED" << endl;
+        gtsam::traits<mserMeasurement>::Print(correctMeasurement,"CORRECT");
+        gtsam::traits<mserMeasurement>::Print(returnedMeasurement,"RETURNED");
+    }
 }
 
 

@@ -21,60 +21,64 @@
 using namespace gtsam;
 using namespace std;
 
-std::vector<Point3> convertObjectToObjectPoint3s(mserObject& object, OptionalJacobian<6,8> Dobject = boost::none){
-    //Point3 center(object.first.x(),object.first.y(),object.first.z());
-    Point3 majAxisTip(object.second.x(),0,0);
-    Point3 minAxisTip(0,object.second.y(),0);
-    std::vector<Point3> pointsInObjectFrame;
-    //pointsInObjectFrame.push_back(center);
-    pointsInObjectFrame.push_back(majAxisTip);
-    pointsInObjectFrame.push_back(minAxisTip);
+struct pointsPose{ //note: Point3s are in *object frame*
+    Point3 majAxisTip;
+    Point3 minAxisTip;
+    Pose3 objectPose;
+};
+
+pointsPose convertObjectToObjectPointsPose(mserObject& object, OptionalJacobian<12,8> Dobject = boost::none){
+    pointsPose myPointsPose;
+    myPointsPose.majAxisTip = Point3(object.second.x(),0,0);
+    myPointsPose.minAxisTip = Point3(0,object.second.y(),0);
+    myPointsPose.objectPose = object.first;
     if (Dobject) *Dobject << 0,0,0,0,0,0,1,0,
                              0,0,0,0,0,0,0,0,
                              0,0,0,0,0,0,0,0,
                              0,0,0,0,0,0,0,0,
                              0,0,0,0,0,0,0,1,
-                             0,0,0,0,0,0,0,0;
-    return pointsInObjectFrame;
+                             0,0,0,0,0,0,0,0,
+                             1,0,0,0,0,0,0,0,
+                             0,1,0,0,0,0,0,0,
+                             0,0,1,0,0,0,0,0,
+                             0,0,0,1,0,0,0,0,
+                             0,0,0,0,1,0,0,0,
+                             0,0,0,0,0,1,0,0;
+    return myPointsPose;
 }
 
-std::vector<Point3> convertObjectPoint3sToWorldPoint3s(mserObject& object, std::vector<Point3> pointsInObjectFrame, OptionalJacobian<9,8> Dobject = boost::none, OptionalJacobian<9,6> Dpoints = boost::none) {
+std::vector<Point3> convertObjectPointsPoseToWorldPoint3s(pointsPose& objectPointsPose, OptionalJacobian<9,12> Dpointspose = boost::none){
     Matrix36 centerDpose, majAxisDpose, minAxisDpose; //Matrices to store results from optional jacobians
     Matrix33 majAxisDpoint, minAxisDpoint; //Matrices to store results from optional jacobians
-    Point3 objectCenter = object.first.translation(centerDpose);
-    Point3 majAxisInObjectFrame = pointsInObjectFrame[0];
-    Point3 minAxisInObjectFrame = pointsInObjectFrame[1];
+    Point3 objectCenter = objectPointsPose.objectPose.translation(centerDpose);
+    Point3 majAxisInObjectFrame = objectPointsPose.majAxisTip;
+    Point3 minAxisInObjectFrame = objectPointsPose.minAxisTip;
 
-    Point3 majAxisInWorldFrame = object.first.transform_from(majAxisInObjectFrame,majAxisDpose,majAxisDpoint);
-    Point3 minAxisInWorldFrame = object.first.transform_from(minAxisInObjectFrame,minAxisDpose,minAxisDpoint);
+    Point3 majAxisInWorldFrame = objectPointsPose.objectPose.transform_from(majAxisInObjectFrame,majAxisDpose,majAxisDpoint);
+    Point3 minAxisInWorldFrame = objectPointsPose.objectPose.transform_from(minAxisInObjectFrame,minAxisDpose,minAxisDpoint);
     std::vector<Point3> pointRepresentation;
     pointRepresentation.push_back(objectCenter);
     pointRepresentation.push_back(majAxisInWorldFrame);
     pointRepresentation.push_back(minAxisInWorldFrame);
-    //cout << "centerDpose\n" << centerDpose << endl;
-    //cout << "majAxisDpose\n" << majAxisDpose << endl;
-    //cout << "majAxisDpoint\n" << majAxisDpoint << endl;
-    //cout << "minAxisDpose\n" << minAxisDpose << endl;
-    //cout << "minAxisDpoint\n" << minAxisDpoint << endl;
-    if (Dobject) *Dobject <<    centerDpose(0,0),   centerDpose(0,1),   centerDpose(0,2),   centerDpose(0,3),   centerDpose(0,4),   centerDpose(0,4), 0, 0,
-                                centerDpose(1,0),   centerDpose(1,1),   centerDpose(1,2),   centerDpose(1,3),   centerDpose(1,4),   centerDpose(1,4), 0, 0,
-                                centerDpose(2,0),   centerDpose(2,1),   centerDpose(2,2),   centerDpose(2,3),   centerDpose(2,4),   centerDpose(2,4), 0, 0,
-                                majAxisDpose(0,0),  majAxisDpose(0,1),  majAxisDpose(0,2),  majAxisDpose(0,3),  majAxisDpose(0,4),  majAxisDpose(0,4), 0, 0,
-                                majAxisDpose(1,0),  majAxisDpose(1,1),  majAxisDpose(1,2),  majAxisDpose(1,3),  majAxisDpose(1,4),  majAxisDpose(1,4), 0, 0,
-                                majAxisDpose(2,0),  majAxisDpose(2,1),  majAxisDpose(2,2),  majAxisDpose(2,3),  majAxisDpose(2,4),  majAxisDpose(2,4), 0, 0,
-                                minAxisDpose(0,0),  minAxisDpose(0,1),  minAxisDpose(0,2),  minAxisDpose(0,3),  minAxisDpose(0,4),  minAxisDpose(0,4), 0, 0,
-                                minAxisDpose(1,0),  minAxisDpose(1,1),  minAxisDpose(1,2),  minAxisDpose(1,3),  minAxisDpose(1,4),  minAxisDpose(1,4), 0, 0,
-                                minAxisDpose(2,0),  minAxisDpose(2,1),  minAxisDpose(2,2),  minAxisDpose(2,3),  minAxisDpose(2,4),  minAxisDpose(2,4), 0, 0;
-    if (Dpoints) *Dpoints <<                0,                  0,                  0,                  0,                  0,                  0,
-                                            0,                  0,                  0,                  0,                  0,                  0,
-                                            0,                  0,                  0,                  0,                  0,                  0,
-                           majAxisDpoint(0,0), majAxisDpoint(0,1), majAxisDpoint(0,2),                  0,                  0,                  0,
-                           majAxisDpoint(1,0), majAxisDpoint(1,1), majAxisDpoint(1,2),                  0,                  0,                  0,
-                           majAxisDpoint(2,0), majAxisDpoint(2,1), majAxisDpoint(2,2),                  0,                  0,                  0,
-                                            0,                  0,                  0, minAxisDpoint(0,0), minAxisDpoint(0,1), minAxisDpoint(0,2),
-                                            0,                  0,                  0, minAxisDpoint(1,0), minAxisDpoint(1,1), minAxisDpoint(1,2),
-                                            0,                  0,                  0, minAxisDpoint(2,0), minAxisDpoint(2,1), minAxisDpoint(2,2);
-
+    if (Dpointspose){
+        Eigen::MatrixXd zeros33 = Eigen::MatrixXd::Zero(3,3);
+        Eigen::MatrixXd topLeft = Eigen::MatrixXd::Zero(3,6);
+        Eigen::MatrixXd middleLeft(3,6);
+        Eigen::MatrixXd bottomLeft(3,6);
+        Eigen::MatrixXd left(9,6);
+        Eigen::MatrixXd right(9,6);
+        Eigen::MatrixXd Dpointspose_(9,12);
+        middleLeft << majAxisDpoint, zeros33;
+        bottomLeft << zeros33, minAxisDpoint;
+        left << topLeft,
+                middleLeft,
+                bottomLeft;
+        right << centerDpose,
+                 majAxisDpose,
+                 minAxisDpose;
+        Dpointspose_ << left, right;
+        *Dpointspose << Dpointspose_;
+    }
     return pointRepresentation;
 }
 
@@ -124,7 +128,7 @@ std::vector<Point2> convertWorldPoint3sToCameraPoint2s(SimpleCamera& camera, std
     return cameraPoint2s;
 }
 
-mserMeasurement convertCameraPoint2sToMeasurement(std::vector<Point2> cameraPoint2s, OptionalJacobian<5,6> Dpoints = boost::none){
+mserMeasurement convertCameraPoint2sToMeasurement(std::vector<Point2>& cameraPoint2s, OptionalJacobian<5,6> Dpoints = boost::none){
     Point2 measurementCenter = cameraPoint2s[0]; //Jacobian for this is 2x2 identity matrix
     Matrix12 thetaDcenter, thetaDmajor, A1Dmajor, A1Dcenter, A2Dminor, A2Dcenter;
     double theta = ellipse2DOrientation(measurementCenter, cameraPoint2s[1], thetaDcenter, thetaDmajor);
@@ -140,6 +144,45 @@ mserMeasurement convertCameraPoint2sToMeasurement(std::vector<Point2> cameraPoin
                        A1Dcenter(0,0),    A1Dcenter(0,1),    A1Dmajor(0,0),    A1Dmajor(0,1),             0,             0,
                        A2Dcenter(0,0),    A2Dcenter(0,1),                0,                0, A2Dminor(0,0), A2Dminor(0,1);
     }
+    return measurement;
+}
+
+mserMeasurement measurementFunction(SimpleCamera& camera, mserObject& object, OptionalJacobian<5,6> Dpose = boost::none, OptionalJacobian<5,5> Dcal = boost::none, OptionalJacobian<5,8> Dobject = boost::none){
+    //Part 1: object -> Point3s in object Frame
+    Eigen::MatrixXd objectpointsposeDobject12_8(12,8);
+    pointsPose objectPointsPose = convertObjectToObjectPointsPose(object, objectpointsposeDobject12_8);
+
+    //Part 2: Point3s in object frame -> Point3s in world frame
+    Eigen::MatrixXd worldpointsDobjectpointspose9_12(9,12);
+    std::vector<Point3> worldPoints = convertObjectPointsPoseToWorldPoint3s(objectPointsPose, worldpointsDobjectpointspose9_12);
+
+    //Part 3: Point3s in world frame -> Point2s in camera frame
+    Matrix66 campointsDpose66;
+    Matrix65 campointsDcal65;
+    Matrix69 campointsDworldpoints69;
+    std::vector<Point2> cameraPoints = convertWorldPoint3sToCameraPoint2s(camera, worldPoints, campointsDpose66, campointsDcal65, campointsDworldpoints69);
+
+    //Part 4: Point2s in camera frame -> measurement
+    Matrix56 msmtDcampoints56;
+    mserMeasurement measurement = convertCameraPoint2sToMeasurement(cameraPoints, msmtDcampoints56);
+
+    //Provide Jacobians
+    if (Dpose) *Dpose << msmtDcampoints56*campointsDpose66;
+    if (Dcal) *Dcal << msmtDcampoints56*campointsDcal65;
+    if (Dobject) *Dobject << msmtDcampoints56*campointsDworldpoints69*worldpointsDobjectpointspose9_12*objectpointsposeDobject12_8;
+
+    /*
+    //Print out Jacobians for debugging
+    cout << "objectpointsposeDobject12_8\n" << objectpointsposeDobject12_8 << endl;
+    cout << "worldpointsDobjectpointspose9_12\n" << worldpointsDobjectpointspose9_12 << endl;
+    cout << "campointsDpose66\n" << campointsDpose66 << endl;
+    cout << "campointsDcal65\n" << campointsDcal65 << endl;
+    cout << "campointsDworldpoints69\n" << campointsDworldpoints69 << endl;
+    cout << "msmtDcampoints56\n" << msmtDcampoints56 << endl;
+    cout << "Dpose\n" << *Dpose << endl;
+    cout << "Dcal\n" << *Dcal << endl;
+    cout << "Dobject\n" << *Dobject << endl;
+    */
     return measurement;
 }
 
