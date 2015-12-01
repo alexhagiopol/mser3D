@@ -4,6 +4,7 @@
 
 #ifndef MSER_3D_TESTGEOMETRY_H
 #define MSER_3D_TESTGEOMETRY_H
+#include "measurementFunction.h"
 #include "geometryFunctions.h"
 #include "mserClasses.h"
 #include <gtsam/nonlinear/Values.h>
@@ -129,7 +130,7 @@ void testConvertObjectToPoint3s(){
     }
 }
 
-void testConvertPoint3sToMeasurement(){
+void testConvertWorldPoint3sToMeasurement(){
     //object parameters
     Point3 objectCenter(0,0,0);
     Rot3 objectOrientation(1,0,0,
@@ -146,7 +147,7 @@ void testConvertPoint3sToMeasurement(){
     Point3 cameraPosition(0,0,10);// = objectCenter + Point3(0,0,100);
     Point3 up = Point3(0,1,0);
     SimpleCamera camera = SimpleCamera::Lookat(cameraPosition, objectCenter, up, *K);
-    mserMeasurement returnedMeasurement = convertPoint3sToMeasurement(camera, pointVector);
+    mserMeasurement returnedMeasurement = convertWorldPoint3sToMeasurement(camera, pointVector);
     gtsam::traits<mserMeasurement>::Print(returnedMeasurement);
 }
 
@@ -158,7 +159,7 @@ void testAllGeometry(){
     testEllipse2DOrientation();
     testMserMeasurementFunction();
     testConvertObjectToPoint3s();
-    testConvertPoint3sToMeasurement();
+    testConvertWorldPoint3sToMeasurement();
 }
 
 #endif //MSER_3D_TESTGEOMETRY_H
