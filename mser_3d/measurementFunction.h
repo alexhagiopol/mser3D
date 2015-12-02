@@ -198,7 +198,6 @@ typedef Expression<SimpleCamera> SimpleCamera_;
 inline mserMeasurement_ measurementFunctionExp(const SimpleCamera_ &camera_, const mserObject_ &object_) {
     mserMeasurement (*f)(const SimpleCamera&, const mserObject&, OptionalJacobian<5,11>, OptionalJacobian<5,8>) = &measurementFunction;
     return mserMeasurement_(f, camera_, object_);
-    //return mserMeasurement_(&measurementFunction, camera_, object_, OptionalJacobian<5, 11>, OptionalJacobian<5, 8>);
 }
 
 std::vector<mserMeasurement> createIdealMeasurements(std::vector<SimpleCamera>& cameras, mserObject& object){
@@ -226,13 +225,11 @@ Values expressionsOptimization(mserObject& object, mserObject& initialGuess){
 
     for (size_t i = 0; i < poses.size(); ++i) {
         const SimpleCamera_ c(cameras[i]); //expression for the camera created here
-        for (size_t j = 0; j < 1; j++){ //I know this is not needed but I want to look *exactly* like the example. We only have 1 measurement per camera pose.
-            mserMeasurement measurement = measurements[i];
-            // Below an expression for the prediction of the measurement:
-            mserObject_ o('o',0);
-            mserMeasurement_ prediction = measurementFunctionExp(c,o);
-            graph.addExpressionFactor(prediction,measurement,measurementNoise);
-        }
+        mserMeasurement measurement = measurements[i];
+        // Below an expression for the prediction of the measurement:
+        mserObject_ o('o',0);
+        mserMeasurement_ prediction = measurementFunctionExp(c,o);
+        graph.addExpressionFactor(prediction,measurement,measurementNoise);
     }
     // Add prior on object to constrain scale, again with ExpressionFactor
     Isotropic::shared_ptr objectNoise = Isotropic::Sigma(8, 0.1);
