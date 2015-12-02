@@ -47,6 +47,37 @@ void testExpressionsOptimization(){
     }
 }
 
+void testExpressionsOptimizationWithBadInitialGuess(){
+    //Make correct object
+    Point3 objectCenter(0,0,0);
+    Rot3 objectOrientation(1,0,0,
+                           0,1,0,
+                           0,0,1);
+    Point2 objectAxes(3,1);
+    Pose3 objectPose(objectOrientation, objectCenter);
+    mserObject groundTruthObject(objectPose,objectAxes); //ground truth object
+
+    //Make initial guess
+    Point3 initialGuessCenter(0.2,-0.5,0.5);
+    Rot3 initialGuessOrientation = objectOrientation.yaw(0.5);
+    Point2 initialGuessAxes(1.7,0.5);
+    Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
+    mserObject initialGuess(initialGuessPose, initialGuessAxes);
+
+    //Check correctness
+    Values correct;
+    correct.insert(Symbol('o',0),groundTruthObject);
+    Values result = expressionsOptimization(groundTruthObject, initialGuess);
+
+    if (correct.equals(result,0.1)){
+        cout << "EXPRESSIONS OPTIMIZATION W/ BAD GUESS PASSED" << endl;
+    } else {
+        cout << "EXPRESSIONS OPTIMIZATION W/ BAD GUESS FAILED" << endl;
+        correct.print("CORRECT OBJECT");
+        result.print("RETURNED OBJECT");
+    }
+}
+
 void testMeasurementFunction(){
     //Make object
     Point3 objectCenter(0,0,0);
@@ -81,6 +112,7 @@ void testMeasurementFunction(){
 void testAllMeasurementFunction(){
     testMeasurementFunction();
     testExpressionsOptimization();
+    testExpressionsOptimizationWithBadInitialGuess();
 }
 
 #endif //MSER_3D_TESTMEASUREMENTFUNCTION_H
