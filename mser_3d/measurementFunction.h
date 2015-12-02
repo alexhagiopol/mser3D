@@ -148,21 +148,21 @@ mserMeasurement convertCameraPoint2sToMeasurement(std::vector<Point2>& cameraPoi
 }
 
 mserMeasurement measurementFunction(const SimpleCamera& camera, const mserObject& object, OptionalJacobian<5,11> Dcamera = boost::none, OptionalJacobian<5,8> Dobject = boost::none){
-    //Part 1: object -> Point3s in object Frame
+    //Part 1: object -> 2X Point3 in object Frame + 1X Pose3
     Eigen::MatrixXd objectpointsposeDobject12_8(12,8);
     pointsPose objectPointsPose = convertObjectToObjectPointsPose(object, objectpointsposeDobject12_8);
 
-    //Part 2: Point3s in object frame -> Point3s in world frame
+    //Part 2: 2X Point3s in object frame + Pose 3 -> 3X Point3s in world frame
     Eigen::MatrixXd worldpointsDobjectpointspose9_12(9,12);
     std::vector<Point3> worldPoints = convertObjectPointsPoseToWorldPoint3s(objectPointsPose, worldpointsDobjectpointspose9_12);
 
-    //Part 3: Point3s in world frame -> Point2s in camera frame
+    //Part 3: 3X Point3s in world frame -> 3X Point2s in camera frame
     Matrix66 campointsDpose66;
     Matrix65 campointsDcal65;
     Matrix69 campointsDworldpoints69;
     std::vector<Point2> cameraPoints = convertWorldPoint3sToCameraPoint2s(camera, worldPoints, campointsDpose66, campointsDcal65, campointsDworldpoints69);
 
-    //Part 4: Point2s in camera frame -> measurement
+    //Part 4: 3X Point2s in camera frame -> 1X measurement
     Matrix56 msmtDcampoints56;
     mserMeasurement measurement = convertCameraPoint2sToMeasurement(cameraPoints, msmtDcampoints56);
 
@@ -231,7 +231,7 @@ Values expressionsOptimization(mserObject& object, mserObject& initialGuess){
         mserMeasurement_ prediction = measurementFunctionExp(c,o);
         graph.addExpressionFactor(prediction,measurement,measurementNoise);
     }
-    // Add prior on object to constrain scale, again with ExpressionFactor
+    // Add prior on object to constrain scale, again with ExpressionFactor[
     Isotropic::shared_ptr objectNoise = Isotropic::Sigma(8, 0.1);
     graph.addExpressionFactor(mserObject_('o', 0), initialGuess, objectNoise); //use initial guess as prior
 
