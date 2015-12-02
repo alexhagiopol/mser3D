@@ -210,8 +210,7 @@ std::vector<mserMeasurement> createIdealMeasurements(std::vector<SimpleCamera>& 
     return measurements;
 }
 
-Values expressionsOptimization(mserObject& object){
-    //Cal3_S2 K(500.0, 500.0, 0.1, 640/2, 480/2); //camera parameters
+Values expressionsOptimization(mserObject& object, mserObject& initialGuess){
     Isotropic::shared_ptr measurementNoise = Isotropic::Sigma(5, 1.0); // one pixel in every dimension
 
     //Ground truth object is passed to this function. Create vectors with measurements, cameras, and camera poses.
@@ -225,16 +224,6 @@ Values expressionsOptimization(mserObject& object){
     // Create a factor graph
     ExpressionFactorGraph graph;
 
-    // Specify uncertainty on first pose prior. Same as example.
-    // Vector6 sigmas; sigmas << Vector3(0.3,0.3,0.3), Vector3(0.1,0.1,0.1);
-    // Diagonal::shared_ptr poseNoise = Diagonal::Sigmas(sigmas);
-
-    //Pose3_ x0('x',0);
-    //graph.addExpressionFactor(x0, poses[0], poseNoise);
-
-    // We create a constant Expression for the calibration here
-    //Cal3_S2_ cK(K);
-
     for (size_t i = 0; i < poses.size(); ++i) {
         const SimpleCamera_ c(cameras[i]); //expression for the camera created here
         for (size_t j = 0; j < 1; j++){ //I know this is not needed but I want to look *exactly* like the example. We only have 1 measurement per camera pose.
@@ -245,26 +234,16 @@ Values expressionsOptimization(mserObject& object){
             graph.addExpressionFactor(prediction,measurement,measurementNoise);
         }
     }
-    // Add prior on first point to constrain scale, again with ExpressionFactor
+    // Add prior on object to constrain scale, again with ExpressionFactor
     Isotropic::shared_ptr objectNoise = Isotropic::Sigma(8, 0.1);
-    graph.addExpressionFactor(mserObject_('o', 0), object, objectNoise);
+    graph.addExpressionFactor(mserObject_('o', 0), initialGuess, objectNoise); //use initial guess as prior
 
     // Create perturbed initial
     Values initial;
-    /*
-    Pose3 delta(Rot3::Rodrigues(-0.1, 0.2, 0.25), Point3(0.05, -0.10, 0.20));
-    for (size_t i = 0; i < poses.size(); ++i){
-        initial.insert(Symbol('x', i), poses[i].compose(delta));
-    }
-     */
-
-    initial.insert(Symbol('o', 0), object);
-
-
-
-    cout << "initial error = " << graph.error(initial) << endl;
+    initial.insert(Symbol('o', 0), initialGuess);
+    //cout << "initial error = " << graph.error(initial) << endl;
     Values result = DoglegOptimizer(graph, initial).optimize();
-    cout << "final error = " << graph.error(result) << endl;
+    //cout << "final error = " << graph.error(result) << endl;
     return result;
 }
 
