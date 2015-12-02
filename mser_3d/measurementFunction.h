@@ -27,7 +27,7 @@ struct pointsPose{ //note: Point3s are in *object frame*
     Pose3 objectPose;
 };
 
-pointsPose convertObjectToObjectPointsPose(mserObject& object, OptionalJacobian<12,8> Dobject = boost::none){
+pointsPose convertObjectToObjectPointsPose(const mserObject& object, OptionalJacobian<12,8> Dobject = boost::none){
     pointsPose myPointsPose;
     myPointsPose.majAxisTip = Point3(object.second.x(),0,0);
     myPointsPose.minAxisTip = Point3(0,object.second.y(),0);
@@ -82,7 +82,7 @@ std::vector<Point3> convertObjectPointsPoseToWorldPoint3s(pointsPose& objectPoin
     return pointRepresentation;
 }
 
-std::vector<Point2> convertWorldPoint3sToCameraPoint2s(SimpleCamera& camera, std::vector<Point3>& points, OptionalJacobian<6,6> Dpose = boost::none, OptionalJacobian<6,5> Dcal = boost::none, OptionalJacobian<6,9> Dpoints = boost::none){
+std::vector<Point2> convertWorldPoint3sToCameraPoint2s(const SimpleCamera& camera, std::vector<Point3>& points, OptionalJacobian<6,6> Dpose = boost::none, OptionalJacobian<6,5> Dcal = boost::none, OptionalJacobian<6,9> Dpoints = boost::none){
     Point3 objectCenter = points[0];
     Point3 majorAxisTip = points[1];
     Point3 minorAxisTip = points[2];
@@ -147,7 +147,7 @@ mserMeasurement convertCameraPoint2sToMeasurement(std::vector<Point2>& cameraPoi
     return measurement;
 }
 
-mserMeasurement measurementFunction(SimpleCamera& camera, mserObject& object, OptionalJacobian<5,6> Dpose = boost::none, OptionalJacobian<5,5> Dcal = boost::none, OptionalJacobian<5,8> Dobject = boost::none){
+mserMeasurement measurementFunction(const SimpleCamera& camera, const mserObject& object, OptionalJacobian<5,11> Dcamera = boost::none, OptionalJacobian<5,8> Dobject = boost::none){
     //Part 1: object -> Point3s in object Frame
     Eigen::MatrixXd objectpointsposeDobject12_8(12,8);
     pointsPose objectPointsPose = convertObjectToObjectPointsPose(object, objectpointsposeDobject12_8);
@@ -167,8 +167,13 @@ mserMeasurement measurementFunction(SimpleCamera& camera, mserObject& object, Op
     mserMeasurement measurement = convertCameraPoint2sToMeasurement(cameraPoints, msmtDcampoints56);
 
     //Provide Jacobians
-    if (Dpose) *Dpose << msmtDcampoints56*campointsDpose66;
-    if (Dcal) *Dcal << msmtDcampoints56*campointsDcal65;
+    //if (Dpose) *Dpose << msmtDcampoints56*campointsDpose66;
+    //if (Dcal) *Dcal << msmtDcampoints56*campointsDcal65;
+    if (Dcamera) {
+        Eigen::MatrixXd Dcamera_(5,11);
+        Dcamera_ << msmtDcampoints56*campointsDpose66, msmtDcampoints56*campointsDcal65;
+        *Dcamera << Dcamera_;
+    }
     if (Dobject) *Dobject << msmtDcampoints56*campointsDworldpoints69*worldpointsDobjectpointspose9_12*objectpointsposeDobject12_8;
 
     /*
@@ -184,6 +189,80 @@ mserMeasurement measurementFunction(SimpleCamera& camera, mserObject& object, Op
     cout << "Dobject\n" << *Dobject << endl;
     */
     return measurement;
+}
+
+typedef Expression<mserObject> mserObject_;
+typedef Expression<mserMeasurement> mserMeasurement_;
+typedef Expression<SimpleCamera> SimpleCamera_;
+
+inline mserMeasurement_ measurementFunctionExp(const SimpleCamera_ &camera_, const mserObject_ &object_) {
+    mserMeasurement (*f)(const SimpleCamera&, const mserObject&, OptionalJacobian<5,11>, OptionalJacobian<5,8>) = &measurementFunction;
+    return mserMeasurement_(f, camera_, object_);
+    //return mserMeasurement_(&measurementFunction, camera_, object_, OptionalJacobian<5, 11>, OptionalJacobian<5, 8>);
+}
+
+std::vector<mserMeasurement> createIdealMeasurements(std::vector<SimpleCamera>& cameras, mserObject& object){
+    std::vector<mserMeasurement> measurements;
+    for (size_t i = 0; i < cameras.size(); i++){
+        mserMeasurement measurement = measurementFunction(cameras[i], object);
+        measurements.push_back(measurement);
+    }
+    return measurements;
+}
+
+Values expressionsOptimization(mserObject& object){
+    Cal3_S2 K(500.0, 500.0, 0.1, 640/2, 480/2); //camera parameters
+    Isotropic::shared_ptr measurementNoise = Isotropic::Sigma(5, 1.0); // one pixel in every dimension
+
+    //Ground truth object is passed to this function. Create vectors with measurements, cameras, and camera poses.
+    std::vector<SimpleCamera> cameras = alexCreateCameras(20,object.first.translation(),20); //make a bunch of cameras to pass to measurement function
+    std::vector<mserMeasurement> measurements = createIdealMeasurements(cameras, object); //synthetic measurements directly from measurement function
+    std::vector<Pose3> poses;
+    for (size_t i = 0; i < cameras.size(); i++){
+        poses.push_back(cameras[i].pose());
+    }
+
+    // Create a factor graph
+    ExpressionFactorGraph graph;
+
+    // Specify uncertainty on first pose prior. Same as example.
+    Vector6 sigmas; sigmas << Vector3(0.3,0.3,0.3), Vector3(0.1,0.1,0.1);
+    Diagonal::shared_ptr poseNoise = Diagonal::Sigmas(sigmas);
+
+    Pose3_ x0('x',0);
+    graph.addExpressionFactor(x0, poses[0], poseNoise);
+
+    // We create a constant Expression for the calibration here
+    Cal3_S2_ cK(K);
+
+    for (size_t i = 0; i < poses.size(); ++i) {
+        const SimpleCamera_ c(cameras[i]); //expression for the camera created here
+        for (size_t j = 0; j < 1; j++){ //I know this is not needed but I want to look *exactly* like the example. We only have 1 measurement per camera pose.
+            mserMeasurement measurement = measurements[i];
+            // Below an expression for the prediction of the measurement:
+            mserObject_ o('o',0);
+            mserMeasurement_ prediction = measurementFunctionExp(c,o);
+            graph.addExpressionFactor(prediction,measurement,measurementNoise);
+        }
+    }
+    // Add prior on first point to constrain scale, again with ExpressionFactor
+    Isotropic::shared_ptr objectNoise = Isotropic::Sigma(8, 0.1);
+    graph.addExpressionFactor(mserObject_('o', 0), object, objectNoise);
+
+    // Create perturbed initial
+    Values initial;
+    Pose3 delta(Rot3::Rodrigues(-0.1, 0.2, 0.25), Point3(0.05, -0.10, 0.20));
+    for (size_t i = 0; i < poses.size(); ++i){
+        initial.insert(Symbol('x', i), poses[i].compose(delta));
+    }
+    for (size_t j = 0; j < 1; j++){
+        initial.insert(Symbol('o', 0), object);
+    }
+
+    cout << "initial error = " << graph.error(initial) << endl;
+    Values result = DoglegOptimizer(graph, initial).optimize();
+    cout << "final error = " << graph.error(result) << endl;
+    return result;
 }
 
 #endif //MSER_3D_MEASUREMENTFUNCTION_H

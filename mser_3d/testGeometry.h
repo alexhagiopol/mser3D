@@ -150,6 +150,7 @@ void testConvertWorldPoint3sToMeasurement(){
     mserMeasurement returnedMeasurement = convertWorldPoint3sToMeasurement(camera, pointVector);
     mserMeasurement correctMeasurement(Pose2(320,240,0),Point2(150,50)); //hand calculated measurement
 
+
     if (gtsam::traits<mserMeasurement>::Equals(correctMeasurement,returnedMeasurement,0.001)){
         cout << "testConvertWorldPoint3sToMeasurement PASSED" << endl;
     } else {
@@ -157,6 +158,15 @@ void testConvertWorldPoint3sToMeasurement(){
         gtsam::traits<mserMeasurement>::Print(correctMeasurement,"CORRECT");
         gtsam::traits<mserMeasurement>::Print(returnedMeasurement,"RETURNED");
     }
+    /*
+    if (mserMeasurement::Equals(correctMeasurement,returnedMeasurement,0.001)){
+        cout << "testConvertWorldPoint3sToMeasurement PASSED" << endl;
+    } else {
+        cout << "testConvertWorldPoint3sToMeasurement FAILED" << endl;
+        mserMeasurement::Print(correctMeasurement,"CORRECT");
+        mserMeasurement::Print(returnedMeasurement,"RETURNED");
+    }
+     */
 }
 
 

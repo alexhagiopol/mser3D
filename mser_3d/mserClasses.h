@@ -31,6 +31,30 @@ namespace gtsam { //required to keep GCC from complaining
         }
     };
 
+    /*
+    class mserMeasurement{
+    public:
+        Pose2 first;
+        Point2 second;
+        mserMeasurement(Pose2 pose,Point2 point) {
+            first = pose;
+            second = point;
+        }
+        static void Print(const mserMeasurement &m, const string &s = "") {
+            cout << s << " (";
+            m.first.print();
+            cout << ",";
+            m.second.print();
+            cout << ")" << endl;
+            //cout << s << "(" << m.first << "," << m.second << ")" << endl;
+        }
+        static bool Equals(mserMeasurement& m1, mserMeasurement& m2, double tol){
+            return ((m1.first.equals(m2.first, tol)) && (m1.second.equals(m2.second, tol)));
+        }
+
+    };
+    */
+
     typedef ProductManifold<Pose2, Point2> mserMeasurement;
 
     template<>
@@ -48,6 +72,7 @@ namespace gtsam { //required to keep GCC from complaining
             return ((m1.first.equals(m2.first, tol)) && (m1.second.equals(m2.second, tol)));
         }
     };
+
 
     typedef ProductManifold<Point2,Point2> MyPoint2Pair;
 
