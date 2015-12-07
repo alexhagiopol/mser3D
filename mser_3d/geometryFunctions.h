@@ -140,32 +140,6 @@ Values locateObject(Point3 target, Point3 guess, int numCams, double radius){
     return result;
 }
 
-void inferObject(std::vector<SimpleCamera>& cameras, std::vector<mserMeasurement>& measurements, mserObject& object){
-    //Orientation optimization
-    NonlinearFactorGraph cam_pose_graph;
-    NonlinearFactorGraph ellipse_pose_graph;
-    NonlinearFactorGraph ellipse_dim_graph;
-    for (size_t i = 0; i < measurements.size(); i++){
-        noiseModel::Diagonal::shared_ptr pose3Noise = noiseModel::Isotropic::Sigma(6,0.1);
-        noiseModel::Diagonal::shared_ptr pose2Noise = noiseModel::Isotropic::Sigma(3,0.1);
-        noiseModel::Diagonal::shared_ptr point2Noise = noiseModel::Isotropic::Sigma(2,0.1);
-        cam_pose_graph.add(PriorFactor<Pose3>(1,cameras[i].pose(), pose3Noise));
-        ellipse_pose_graph.add(PriorFactor<Pose2>(1,measurements[i].first,pose2Noise));
-        ellipse_dim_graph.add(PriorFactor<Point2>(1,measurements[i].second,point2Noise));
-    }
-    Values initial_cam_pose, initial_ellipse_pose, initial_ellipse_dim;
-    initial_cam_pose.insert(1,cameras[0].pose());
-    initial_ellipse_pose.insert(1,measurements[0].first);
-    initial_ellipse_dim.insert(1, measurements[0].second);
-    Values cam_pose_result = LevenbergMarquardtOptimizer(cam_pose_graph,initial_cam_pose).optimize();
-    Values ellipse_pose_result = LevenbergMarquardtOptimizer(ellipse_pose_graph,initial_ellipse_pose).optimize();
-    Values ellipse_dim_result = LevenbergMarquardtOptimizer(ellipse_dim_graph,initial_ellipse_dim).optimize();
-
-    cam_pose_result.print("cam pose");
-    ellipse_pose_result.print("ellipse pose");
-    ellipse_dim_result.print("ellipse dim");
-}
-
 //Returns orientation of 2D ellipse given center point and major axis point
 double ellipse2DOrientation(Point2& center, Point2& majorAxisPoint, OptionalJacobian<1,2> H1 = boost::none, OptionalJacobian<1,2> H2 = boost::none){
     //Math reference: https://en.wikipedia.org/wiki/Atan2
@@ -178,85 +152,4 @@ double ellipse2DOrientation(Point2& center, Point2& majorAxisPoint, OptionalJaco
     return orientation;
 }
 
-std::vector<Point3> convertObjectToPoint3s(mserObject& object, OptionalJacobian<9,8> H = boost::none){
-    Matrix36 centerDpose, majAxisDpose, minAxisDpose;
-    Matrix33 majAxisDpoint, minAxisDpoint;
-    Point3 objectCenter = object.first.translation(centerDpose);
-    Point3 majAxisInObjectFrame(object.second.x(),0,0);
-    Point3 minAxisInObjectFrame(0,object.second.y(),0);
-
-
-
-    Point3 majAxisTip = object.first.transform_from(majAxisInObjectFrame,majAxisDpose,majAxisDpoint);
-    Point3 minAxisTip = object.first.transform_from(minAxisInObjectFrame,minAxisDpose,minAxisDpoint);
-    std::vector<Point3> pointRepresentation;
-    pointRepresentation.push_back(objectCenter);
-    pointRepresentation.push_back(majAxisTip);
-    pointRepresentation.push_back(minAxisTip);
-    //cout << "centerDpose\n" << centerDpose << endl;
-    //cout << "majAxisDpose\n" << majAxisDpose << endl;
-    //cout << "majAxisDpoint\n" << majAxisDpoint << endl;
-    //cout << "minAxisDpose\n" << minAxisDpose << endl;
-    //cout << "minAxisDpoint\n" << minAxisDpoint << endl;
-    //if (H) *H << ;
-    //TODO: Jacobian from above matrices.
-    return pointRepresentation;
-}
-
-mserMeasurement convertWorldPoint3sToMeasurement(SimpleCamera& camera, std::vector<Point3>& points, OptionalJacobian<5,5> Dcal = boost::none, OptionalJacobian<5,6> Dpose = boost::none, OptionalJacobian<5,9> Dpoints = boost::none){
-    Point3 objectCenter = points[0];
-    Point3 majorAxisTip = points[1];
-    Point3 minorAxisTip = points[2];
-    Matrix26 centerDpose, majorDpose, minorDpose;
-    Matrix23 centerDpoint, majorDpoint, minorDpoint;
-    Matrix25 centerDcal, majorDcal, minorDcal;
-    Point2 projectedObjectCenter = camera.project(objectCenter,centerDpose, centerDpoint, centerDcal);
-    Point2 projectedMajorAxisTip = camera.project(majorAxisTip, majorDpose, majorDpoint, majorDcal);
-    Point2 projectedMinorAxisTip = camera.project(minorAxisTip, minorDpose, minorDpoint, minorDcal);
-    Matrix12 oriCtrH, oriMaAxH;
-    double orientation = ellipse2DOrientation(projectedObjectCenter, projectedMajorAxisTip,oriCtrH, oriMaAxH);
-    Matrix12 majordistanceDmajoraxis, majordistanceDcenter, minordistanceDminoraxis, minordistanceDcenter;
-    double majorAxis = projectedMajorAxisTip.distance(projectedObjectCenter,majordistanceDmajoraxis,majordistanceDcenter);
-    double minorAxis = projectedMinorAxisTip.distance(projectedObjectCenter,minordistanceDminoraxis,minordistanceDcenter);
-    Point2 axes(majorAxis,minorAxis);
-    Pose2 pose(projectedObjectCenter.x(),projectedObjectCenter.y(),orientation);
-    mserMeasurement measurement(pose,axes);
-    return measurement;
-}
-
-/*
-mserMeasurement mserMeasurementFunction(SimpleCamera& camera, mserObject& object, OptionalJacobian<5,11> H1 = boost::none, OptionalJacobian<5, 8> H2 = boost::none){
-//Dimension of H1 Jacobian is 5x11 because mserMeasurement has dimension 5 while a camera has dimension 11 (5 calibration parameters + 6 pose parameters)
-
-}
-*/
-
-
-
-
-/*
-Values naiveMSEROptimizationExampleExpressions(){
-    int numCams = 20;
-    double radius = 10.0;
-    Point3 target = Point3(0.0,0.0,0.0);
-    std::vector<SimpleCamera> cameras = alexCreateCameras(radius, target, numCams);
-    std::vector<mserMeasurement> measurements;
-    int success = produceMSERMeasurements(cameras, target, measurements);
-    typedef Expression<mserObject> mserObject_;
-    typedef Expression<mserMeasurement> mserMeasurement_;
-    vector<Point3> points = createPoints();
-    vector<Pose3> poses = createPoses();
-    vector<mserObject>
-    Cal3_S2::shared_ptr K(new Cal3_S2(50.0, 50.0, 0.0, 50.0, 50.0));
-    //measurement noise
-    noiseModel::Isotropic::shared_ptr measurementNoise = noiseModel::Isotropic::Sigma(2, 1.0); // one pixel in u and v
-    vector<Point3> points = createPoints();
-    ExpressionFactorGraph graph;
-    //pose noise
-    Vector6 sigmas; sigmas << Vector3(0.3,0.3,0.3), Vector3(0.1,0.1,0.1);
-    Diagonal::shared_ptr poseNoise = Diagonal::Sigmas(sigmas);
-    mserObject_ x0('x',0);
-    graph.addExpressionFactor(x0, poses[0], poseNoise);
-}
-*/
 #endif //MSER_3D_GEOMETRYFUNCTIONS_H

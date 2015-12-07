@@ -1,9 +1,9 @@
-//#include "testVisualization.h"
+#include "testVisualization.h"
 #include "testGeometry.h"
 #include "testMeasurementFunction.h"
 
 int main() {
-    //testAllVisualization();
+    testAllVisualization();
     testAllGeometry();
     testAllMeasurementFunction();
     return 0;

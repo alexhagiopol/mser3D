@@ -73,8 +73,8 @@ void testExpressionsOptimizationWithBadInitialGuess(){
         cout << "EXPRESSIONS OPTIMIZATION W/ BAD GUESS PASSED" << endl;
     } else {
         cout << "EXPRESSIONS OPTIMIZATION W/ BAD GUESS FAILED" << endl;
-        correct.print("CORRECT OBJECT");
-        result.print("RETURNED OBJECT");
+        correct.print("CORRECT OBJECT\n");
+        result.print("RETURNED OBJECT\n");
     }
 }
 

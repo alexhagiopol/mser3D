@@ -43,7 +43,7 @@ void testProduceMSERMeasurements(){
         cout << "MSER measurements FAILED" << endl;
     }
 }
-
+/*
 void testBasicMSEROptimization(){ //work in progress
     int numCams = 20;
     double radius = 10.0;
@@ -59,15 +59,11 @@ void testBasicMSEROptimization(){ //work in progress
         traits<mserObject>::Print(object); //not ready yet
     }
 }
-
+*/
 
 void testAllVisualization(){
-    testLocateObject();
-    testPointPairOptimize();
-    pointPairOptimize();
     testGraphics();
     testProduceMSERMeasurements();
-    testBasicMSEROptimization();
 }
 
 
