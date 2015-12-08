@@ -8,6 +8,7 @@
 #include "Visualizer.h"
 #include "geometryFunctions.h"
 #include "mserClasses.h"
+#include "measurementFunction.h"
 #include <gtsam/base/Manifold.h> //required for MSER object
 
 using namespace gtsam;
@@ -69,17 +70,19 @@ void testMserObjectDrawing(){
                            0,0,1);
     Point2 objectAxes(3,1);
     Pose3 objectPose(objectOrientation, objectCenter);
-    mserObject groundTruthObject(objectPose,objectAxes); //ground truth object
-
+    mserObject groundTruthObject(objectPose,objectAxes);
     //Make initial guess
-    Point3 initialGuessCenter(0.2,-0.5,0.5);
+    Point3 initialGuessCenter(0.2,1.5,-0.5);
     Rot3 initialGuessOrientation = objectOrientation.yaw(0.5);
     Point2 initialGuessAxes(1.7,0.5);
     Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
     mserObject initialGuess(initialGuessPose, initialGuessAxes);
-
+    //Optimize
+    Values result = expressionsOptimization(groundTruthObject, initialGuess);
+    mserObject returnedObject = result.at<mserObject>(Symbol('o',0)); //retrieve object
     std::vector<mserObject> objects;
     objects.push_back(groundTruthObject);
+    objects.push_back(returnedObject);
     objects.push_back(initialGuess);
     drawMserObjects(objects);
 }

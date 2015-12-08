@@ -746,7 +746,7 @@ int drawMserObjects(const std::vector<mserObject>& objects){
 
     //Set up random float generator
     random_device rd;
-    mt19937 eng(rd());
+    mt19937 eng(0);
     uniform_real_distribution<float> distr(0, 1);
 
     //More OpenGL setup

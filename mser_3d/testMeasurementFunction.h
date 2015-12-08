@@ -75,6 +75,9 @@ void testExpressionsOptimizationWithBadInitialGuess(){
         correct.print("CORRECT OBJECT\n");
         result.print("RETURNED OBJECT\n");
     }
+
+    mserObject returnedObject = result.at<mserObject>(Symbol('o',0));
+    gtsam::traits<mserObject>::Print(returnedObject);
 }
 
 void testMeasurementFunction(){
