@@ -42,8 +42,8 @@ void testExpressionsOptimization(){
         cout << "EXPRESSIONS OPTIMIZATION PASSED" << endl;
     } else {
         cout << "EXPRESSIONS OPTIMIZATION FAILED" << endl;
-        correct.print("CORRECT OBJECT");
-        result.print("RETURNED OBJECT");
+        correct.print("CORRECT OBJECT\n");
+        result.print("RETURNED OBJECT\n");
     }
 }
 
@@ -68,7 +68,6 @@ void testExpressionsOptimizationWithBadInitialGuess(){
     Values correct;
     correct.insert(Symbol('o',0),groundTruthObject);
     Values result = expressionsOptimization(groundTruthObject, initialGuess);
-
     if (correct.equals(result,0.1)){
         cout << "EXPRESSIONS OPTIMIZATION W/ BAD GUESS PASSED" << endl;
     } else {

@@ -61,9 +61,33 @@ void testBasicMSEROptimization(){ //work in progress
 }
 */
 
+void testMserObjectDrawing(){
+    //Make correct object
+    Point3 objectCenter(0,0,0);
+    Rot3 objectOrientation(1,0,0,
+                           0,1,0,
+                           0,0,1);
+    Point2 objectAxes(3,1);
+    Pose3 objectPose(objectOrientation, objectCenter);
+    mserObject groundTruthObject(objectPose,objectAxes); //ground truth object
+
+    //Make initial guess
+    Point3 initialGuessCenter(0.2,-0.5,0.5);
+    Rot3 initialGuessOrientation = objectOrientation.yaw(0.5);
+    Point2 initialGuessAxes(1.7,0.5);
+    Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
+    mserObject initialGuess(initialGuessPose, initialGuessAxes);
+
+    std::vector<mserObject> objects;
+    objects.push_back(groundTruthObject);
+    objects.push_back(initialGuess);
+    drawMserObjects(objects);
+}
+
 void testAllVisualization(){
-    testGraphics();
-    testProduceMSERMeasurements();
+    //testGraphics();
+    //testProduceMSERMeasurements();
+    testMserObjectDrawing();
 }
 
 
