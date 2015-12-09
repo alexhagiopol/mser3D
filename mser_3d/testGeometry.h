@@ -73,8 +73,8 @@ void testEllipse2DOrientation(){
 
 
 void testAllGeometry(){
-    testPointPairOptimize();
-    testLocateObject();
+    //testPointPairOptimize();
+    //testLocateObject();
     testEllipse2DOrientation();
 }
 

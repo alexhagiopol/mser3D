@@ -553,7 +553,7 @@ int produceMSERMeasurements(std::vector<gtsam::SimpleCamera>& cameras, Point3& t
     return 0;
 }
 
-int drawEllipses(std::vector<gtsam::SimpleCamera>& cameras, std::vector<mserMeasurement>& measurements) {
+int drawMserMeasurements(std::vector<gtsam::SimpleCamera>& cameras, std::vector<mserMeasurement>& measurements) {
     GLFWwindow *window;
     // Initialise GLFW
     if (!glfwInit()) {
@@ -767,7 +767,7 @@ int drawMserObjects(const std::vector<mserObject>& objects){
 
     // Camera matrix
     glm::mat4 View = glm::lookAt(
-            glm::vec3(3, -3, 10), //camera position
+            glm::vec3(0, 10, 40), //camera position
             glm::vec3(0, 0, 0), // and looks at the target
             glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
     );
@@ -826,7 +826,7 @@ int drawMserObjects(const std::vector<mserObject>& objects){
             g_color_buffer_data[i+8] = cubeB;
         }
     }
-
+    //Draw axes
     int axisLength = 10;
     Point3 worldCenter(0,0,0);
     Point3 xAxisTip(axisLength,0,0);
@@ -943,7 +943,7 @@ int drawMserObjects(const std::vector<mserObject>& objects){
     Mat flipped(768, 1024, CV_8UC3); //we have to flip because OpenCV and OpenGL use different xy conventions
     cv::flip(img, flipped, 0);
     char fileName[80];
-    sprintf(fileName, "/home/alex/mser/mser_3d/output/ellipse.jpg"); //format filename
+    sprintf(fileName, "/home/alex/mser/mser_3d/output/drawMserObjects.jpg"); //format filename
     imwrite(fileName, flipped); //save to output folder
 }
 

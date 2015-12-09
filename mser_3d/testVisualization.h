@@ -34,7 +34,7 @@ void testProduceMSERMeasurements(){
     std::vector<SimpleCamera> cameras = alexCreateCameras(radius, target, numCams);
     std::vector<mserMeasurement> measurements;
     int success = produceMSERMeasurements(cameras, target, measurements);
-    drawEllipses(cameras, measurements);
+    drawMserMeasurements(cameras, measurements);
     if (success == 0){
         for (size_t i  = 0; i < measurements.size(); i++ ){
             //traits<mserMeasurement>::Print(measurements[i]);
@@ -77,6 +77,17 @@ void testMserObjectDrawing(){
     Point2 initialGuessAxes(1.7,0.5);
     Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
     mserObject initialGuess(initialGuessPose, initialGuessAxes);
+    //Get measurements as well
+    std::vector<SimpleCamera> cameras = alexCreateCameras(15,groundTruthObject.first.translation(),20); //make a bunch of cameras to pass to measurement function
+    std::vector<mserMeasurement> measurements = createIdealMeasurements(cameras, groundTruthObject); //synthetic measurements directly from measurement function
+    //std::vector<Pose3> poses;
+    std::vector<mserObject> measurementsAsObjects; //needed to draw both measurements and resulting optimize object on same screen
+    for (size_t i = 0; i < cameras.size(); i++){
+        //poses.push_back(cameras[i].pose());
+        mserObject temporary(cameras[i].pose(),measurements[i].second/30);
+        measurementsAsObjects.push_back(temporary);
+    }
+
     //Optimize
     Values result = expressionsOptimization(groundTruthObject, initialGuess);
     mserObject returnedObject = result.at<mserObject>(Symbol('o',0)); //retrieve object
@@ -84,6 +95,7 @@ void testMserObjectDrawing(){
     objects.push_back(groundTruthObject);
     objects.push_back(returnedObject);
     objects.push_back(initialGuess);
+    objects.insert(objects.end(),measurementsAsObjects.begin(),measurementsAsObjects.end());
     drawMserObjects(objects);
 }
 
