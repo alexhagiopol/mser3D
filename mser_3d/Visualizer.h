@@ -32,7 +32,7 @@ using namespace glm;
 using namespace std;
 using namespace gtsam;
 #include "common/shader.hpp" //shader.hpp needs the GLM namespace, else you will get "xyz does not name a type" errors.
-
+#include "common/controls.hpp"
 int produceRandomCubeImages(int numFrames){
     GLFWwindow* window;
     // Initialise GLFW
@@ -881,60 +881,54 @@ int drawMserObjects(const std::vector<mserObject>& objects){
     glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the screen
-    glUseProgram(programID); // Use our shader
-    glUniformMatrix4fv(MatrixID, 1, GL_FALSE,&MVP[0][0]); // Send our transformation to the currently bound shader in the "MVP" uniform
+    //while loop start
+    do{
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the screen
+        glUseProgram(programID); // Use our shader
 
-    /*
-    glLineWidth(20.5);
-    //glColor3f(1.0, 0.0, 0.0);
-    glBegin(GL_LINES);
-    //x axis
-    glColor3f(1.0, 0.0, 0.0);
-    glVertex3f(0.0, 0.0, 0.0);
-    glVertex3f(1.0, 0.0, 0.0);
-    // draw line for y axis
-    glColor3f(0.0, 1.0, 0.0);
-    glVertex3f(0.0, 0.0, 0.0);
-    glVertex3f(0.0, 1.0, 0.0);
-    // draw line for Z axis
-    glColor3f(0.0, 0.0, 1.0);
-    glVertex3f(0.0, 0.0, 0.0);
-    glVertex3f(0.0, 0.0, 1.0);
-    glEnd();
-    glEnd();
-    */
-    // 1st attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glVertexAttribPointer(
-            0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
-            3,                  // size
-            GL_FLOAT,           // type
-            GL_FALSE,           // normalized?
-            0,                  // stride
-            (void *) 0            // array buffer offset
-    );
-    // 2nd attribute buffer : colors
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
-    glVertexAttribPointer(
-            1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-            3,                                // size
-            GL_FLOAT,                         // type
-            GL_FALSE,                         // normalized?
-            0,                                // stride
-            (void *) 0                          // array buffer offset
-    );
-    glDrawArrays(GL_LINES, 360 * 3 * objects.size(), 360 * 3 * objects.size() + 3*6);
-    glDrawArrays(GL_TRIANGLES, 0, 360 * 3 * objects.size() /*+ 3*3*/); // Draw the triangle ! 12*3 indices starting at 0 -> 12 triangles
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
+        // Compute the MVP matrix from keyboard and mouse input
+        computeMatricesFromInputs(window);
+        glm::mat4 ProjectionMatrix = getProjectionMatrix();
+        glm::mat4 ViewMatrix = getViewMatrix();
+        glm::mat4 ModelMatrix = glm::mat4(1.0);
+        glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+        glUniformMatrix4fv(MatrixID, 1, GL_FALSE,&MVP[0][0]); // Send our transformation to the currently bound shader in the "MVP" uniform
+
+        // 1st attribute buffer : vertices
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+        glVertexAttribPointer(
+                0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+                3,                  // size
+                GL_FLOAT,           // type
+                GL_FALSE,           // normalized?
+                0,                  // stride
+                (void *) 0            // array buffer offset
+        );
+        // 2nd attribute buffer : colors
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+        glVertexAttribPointer(
+                1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+                3,                                // size
+                GL_FLOAT,                         // type
+                GL_FALSE,                         // normalized?
+                0,                                // stride
+                (void *) 0                          // array buffer offset
+        );
+        glDrawArrays(GL_LINES, 360 * 3 * objects.size(), 360 * 3 * objects.size() + 3*6);
+        glDrawArrays(GL_TRIANGLES, 0, 360 * 3 * objects.size() /*+ 3*3*/); // Draw the triangle ! 12*3 indices starting at 0 -> 12 triangles
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
 
 
 
-    glfwSwapBuffers(window); // Swap buffers
-    glfwPollEvents();
+        glfwSwapBuffers(window); // Swap buffers
+        glfwPollEvents();
+    }while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
+           glfwWindowShouldClose(window) == 0 );
+    //while loop and
 
     Mat img(768, 1024, CV_8UC3); //store image data here to output to a file
     glPixelStorei(GL_PACK_ALIGNMENT, (img.step & 3) ? 1 : 4); //use fast 4-byte alignment (default anyway) if possible
