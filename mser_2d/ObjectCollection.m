@@ -1,33 +1,32 @@
-classdef objectFarm < handle
+classdef ObjectCollection < handle
     properties
         objects; %objects data structure
         frames;
     end
     methods        
         %constructor
-        function OF = objectFarm(r,c,n)
-            OF.frames = cast(zeros(r,c,n),'UINT8');
+        function OC = ObjectCollection(r,c,n)
+            OC.frames = cast(zeros(r,c,n),'UINT8');
         end
         
         %add object
-        function addObject(OF, object)
-            OF.objects = [OF.objects, object];
+        function addObject(OC, object)
+            OC.objects = [OC.objects, object];
         end
         
         %add GRAYSCALE image to retrieve later
-        function addImage(OF, n, I)
-            OF.frames(:,:,n) = I; 
+        function addImage(OC, n, I)
+            OC.frames(:,:,n) = I; 
         end
         
         %Produce an image with the MSERs painted on. Must pass original
         %grayscale due to VL feat requirements
-        function Q = getImage(OF,I,f)
+        function Q = getImage(OC,I,f)
             %uses syntax from alex11_ransac_tracking.m
             S = 128*ones(size(I,1),size(I,2),'uint8'); %grayscale result
             Q = 128*ones(size(I,1),size(I,2),3,'uint8'); %color result
-            %ugh, linear time search...need a hash table solution...
-            for i = 1:length(OF.objects)
-                obj = OF.objects(i);
+            for i = 1:length(OC.objects)
+                obj = OC.objects(i);
                 if obj.last_seen == f
                     mserS=vl_erfill(I,obj.getLatestMSER().getSeed());       
                     %Convert region from grayscale dimensions to RGB dimensions
@@ -48,14 +47,14 @@ classdef objectFarm < handle
         %perform object matching for member objects in a given frame to
         %non-member objects in a given objectFarm
         %TODO: lookback_num = number of frames to look back in; 0 is default
-        function matchObjects(OF, prev_f, new_f, threshold, other_farm)
+        function matchObjects(OC, prev_f, new_f, threshold, other_farm)
             prev_ellipses = [];
             current_ellipses = [];
             %find objects in previous frame(s) and extract their ellipse
             %info
             %ugh, linear time search...need a hash table solution...
-            for i = 1:length(OF.objects)
-                obj = OF.objects(i);
+            for i = 1:length(OC.objects)
+                obj = OC.objects(i);
                 if obj.last_seen == prev_f || obj.last_seen == prev_f - 1 || obj.last_seen == prev_f - 2 || obj.last_seen == prev_f - 3 || obj.last_seen == prev_f - 4 || obj.last_seen == prev_f - 5
                     ellipse = [obj.getLatestMSER().getEllipse();i]; %associate index of object with its ellipse to retrieve later
                     prev_ellipses = [prev_ellipses,ellipse];
@@ -67,12 +66,12 @@ classdef objectFarm < handle
                 ellipse = [obj.getLatestMSER().getEllipse();i]; %associate index of object with its ellipse to retrieve later
                 current_ellipses = [current_ellipses,ellipse];
             end
-            match_summary = OF.matchEllipses(prev_ellipses, current_ellipses);
-            OF.absorbMSERs(other_farm, match_summary, prev_f, new_f, threshold);
+            match_summary = OC.matchEllipses(prev_ellipses, current_ellipses);
+            OC.absorbMSERs(other_farm, match_summary, prev_f, new_f, threshold);
         end
         
         %return match information based on ellipse matching
-        function match_summary = matchEllipses(OF, prevEllipses, newEllipses, prev_f, new_f)
+        function match_summary = matchEllipses(OC, prevEllipses, newEllipses, prev_f, new_f)
             numPrevRegions = size(prevEllipses,2);
             numNewRegions = size(newEllipses,2);
             %matches is a matrix that contains the score
@@ -125,7 +124,7 @@ classdef objectFarm < handle
         
         %Takes matched MSER info and adds it to existing objects. Takes new
         %MSER info and makes new objects. 
-        function absorbMSERs(OF, other_farm, match_summary, prev_f, new_f, threshold)
+        function absorbMSERs(OC, other_farm, match_summary, prev_f, new_f, threshold)
             %{
             match_summary explanation:
             prev regions object index:   8,   6,    9,   4,   3
@@ -139,15 +138,15 @@ classdef objectFarm < handle
             for i = 1:size(match_summary,2)
                 if match_summary(3,i) > threshold
                     matched_new_objects(match_summary(2,i)) = 1;
-                    OF.objects(match_summary(1,i)).addMSER(other_farm.objects(match_summary(2,i)).getLatestMSER());
-                    OF.objects(match_summary(1,i)).updateLastFrame(new_f);
+                    OC.objects(match_summary(1,i)).addMSER(other_farm.objects(match_summary(2,i)).getLatestMSER());
+                    OC.objects(match_summary(1,i)).updateLastFrame(new_f);
                 end
             end
             
             %add new objects corresponding to unmatched MSERs
             for i = 1:length(matched_new_objects)
                 if matched_new_objects(i) == 0
-                    OF.addObject(other_farm.objects(i));
+                    OC.addObject(other_farm.objects(i));
                 end
             end
         end
@@ -167,12 +166,12 @@ classdef objectFarm < handle
         
         %Shows all tracks of MSERs of size > min_size. Opens new figure for
         %each tack.
-        function showTracks(OF, min_size,rSize,cSize,fig_num_start) 
+        function showTracks(OC, min_size,rSize,cSize,fig_num_start) 
             close all;
             fig_num = fig_num_start;
             %look at all objects
-            for o = 1:length(OF.objects)
-                obj = OF.objects(o);
+            for o = 1:length(OC.objects)
+                obj = OC.objects(o);
                 %if object meets track length criteria
                 if length(obj.msers) > min_size
                     bwcanvas = 255*ones(rSize,cSize,'uint8'); 
@@ -183,7 +182,7 @@ classdef objectFarm < handle
                     figure(fig_num);                      
                     for m = 1:length(obj.msers)
                         mser = obj.msers(m);
-                        pixels = vl_erfill(OF.frames(:,:,mser.getFrameNum()), mser.getSeed());
+                        pixels = vl_erfill(OC.frames(:,:,mser.getFrameNum()), mser.getSeed());
                         brightLevel = brightLevel - brightChange;
                         bwcanvas(pixels) = brightLevel;                         
                     end
@@ -211,7 +210,7 @@ classdef objectFarm < handle
         
         %Same concept as showTracks() except it makes a cool video of the
         %MSER tracks in motion
-        function makeTrackVideo(OF, min_size,rSize,cSize,fig_num)
+        function makeTrackVideo(OC, min_size,rSize,cSize,fig_num)
             %% Set up video output
             writer = VideoWriter('Object_Tracks','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
             writer.FrameRate = 7;
@@ -220,8 +219,8 @@ classdef objectFarm < handle
             set(two_pane_fig, 'Position', [0,0,2100,700]);
             %% Look at every object   
             obj_num = 1;
-            for o = 1:length(OF.objects)
-                obj = OF.objects(o);
+            for o = 1:length(OC.objects)
+                obj = OC.objects(o);
                 %if object meets track length criteria
                 if length(obj.msers) > min_size 
                     left_display = 255*zeros(rSize,cSize,3,'uint8');
@@ -230,7 +229,7 @@ classdef objectFarm < handle
                     bright_change = floor(255 / size(obj.msers,2));                                         
                     for m = 1:length(obj.msers)
                         mser = obj.msers(m);
-                        mser_pixels = vl_erfill(OF.frames(:,:,mser.getFrameNum()), mser.getSeed());
+                        mser_pixels = vl_erfill(OC.frames(:,:,mser.getFrameNum()), mser.getSeed());
                         bright_level = bright_level - bright_change;
                         
                         tempR = right_display(:,:,1);
@@ -243,7 +242,7 @@ classdef objectFarm < handle
                         right_display(:,:,2) = tempG;
                         right_display(:,:,3) = tempB;
                         
-                        orig_bwimage = OF.frames(:,:,mser.getFrameNum());
+                        orig_bwimage = OC.frames(:,:,mser.getFrameNum());
                         tempR = orig_bwimage;
                         tempG = orig_bwimage;
                         tempB = orig_bwimage;
@@ -272,7 +271,7 @@ classdef objectFarm < handle
                         
                         hold on;
                         %vl_plotframe(vl_ertr(mser.data(1:5)), 'r.');                          
-                        title(['Current track #',num2str(obj_num),' over ',num2str(length(obj.msers)),' frames. Current video frame #',num2str(mser.getFrameNum()),' out of ',num2str(size(OF.frames,3)),' video frames.']);
+                        title(['Current track #',num2str(obj_num),' over ',num2str(length(obj.msers)),' frames. Current video frame #',num2str(mser.getFrameNum()),' out of ',num2str(size(OC.frames,3)),' video frames.']);
                         set(gca,'FontSize',16,'fontWeight','bold');
                         %% Produce and write video frame 
                         frame = frame2im(getframe(two_pane_fig));
@@ -284,20 +283,20 @@ classdef objectFarm < handle
             close(writer);
         end
         
-        function mser_counts  = computeTrackLengths(OF)
-            disp(['Number of tracks = ',num2str(length(OF.objects))]);
-            mser_counts = ones(1,length(OF.objects));
-            for i = 1:length(OF.objects)
-                obj = OF.objects(i);
+        function mser_counts  = computeTrackLengths(OC)
+            disp(['Number of tracks = ',num2str(length(OC.objects))]);
+            mser_counts = ones(1,length(OC.objects));
+            for i = 1:length(OC.objects)
+                obj = OC.objects(i);
                 mser_counts(i) = size(obj.msers,2);
             end            
         end
         
-        function good_tracks_per_frame = computeGoodTracksPerFrame(OF, threshold)
-            good_tracks_per_frame = zeros(1,size(OF.frames,3));
-            for i = 1:size(OF.frames,3)
-                for j = 1:length(OF.objects)
-                    obj = OF.objects(j);
+        function good_tracks_per_frame = computeGoodTracksPerFrame(OC, threshold)
+            good_tracks_per_frame = zeros(1,size(OC.frames,3));
+            for i = 1:size(OC.frames,3)
+                for j = 1:length(OC.objects)
+                    obj = OC.objects(j);
                     if size(obj.msers,2) > threshold
                         for k = 1:size(obj.msers,2)
                             if obj.msers(k).getFrameNum() == i

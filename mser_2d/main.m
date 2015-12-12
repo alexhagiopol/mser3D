@@ -2,14 +2,13 @@
 clc
 %clear
 close all
-run('../vlfeat-0.9.19/toolbox/vl_setup') % start up vl_feat
+run('../vlfeat-0.9.20/toolbox/vl_setup') % start up vl_feat
 vl_version verbose
-import gtsam.*
 
 %% Import video
 
 disp('Starting Video Import');
-readerobj = VideoReader('../videos_input/through_the_cracks_jing.mov', 'tag', 'myreader1');
+readerobj = VideoReader('through_the_cracks_jing.mov', 'tag', 'myreader1');
 vidFrames = read(readerobj);
 N = get(readerobj, 'NumberOfFrames');
 disp('Video Import Finished');
@@ -40,17 +39,17 @@ I=rgb2gray(C);
 [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
 numRegs = size(BrightEllipses,2);
 %Create object farm!
-mainOF = objectFarm(size(I,1),size(I,2),stop - start + 1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
-mainOF.addImage(f,I);
+mainOC = ObjectCollection(size(I,1),size(I,2),stop - start + 1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
+mainOC.addImage(f,I);
 %Create objects!
 for i = 1:numRegs
     myMSER = MSER(BrightEllipses(:,i),Bright(i),f); %store MSER info
     color = randi([0,255],3,1); %generate random color
     %Object ID: 1.012 = frame #1, region #12. That's why we divide by 1000.
-    myObject = worldObject(myMSER,f+i/1000,f,color); %create new object for each mser
-    mainOF.addObject(myObject); %add to big data structure
+    myObject = Object(myMSER,f+i/1000,f,color); %create new object for each mser
+    mainOC.addObject(myObject); %add to big data structure
 end
-prevIm = mainOF.getImage(I,f);
+prevIm = mainOC.getImage(I,f);
 
 %% Process rest of frames + make video
 for f=start + 1:stop
@@ -59,20 +58,20 @@ for f=start + 1:stop
     C = imresize(C,0.5);
     I=rgb2gray(C);
     [Bright, BrightEllipses] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0); %Set to compute dark on bright!!!
-    mainOF.addImage(f,I);
+    mainOC.addImage(f,I);
     numRegs = size(Bright,1); %number of regions
-    tempOF = objectFarm(size(I,1),size(I,2),1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
+    tempOC = ObjectCollection(size(I,1),size(I,2),1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
     %Create objects!
     for i = 1:numRegs
         myMSER = MSER(BrightEllipses(:,i),Bright(i),f); %store MSER info
         color = randi([0,255],3,1); %generate random color
         %Object ID: 1.012 = frame #1, region #12. That's why we divide by 1000.
-        myObject = worldObject(myMSER,f+i/1000,f,color); %create new object for each mser
-        tempOF.addObject(myObject); %add to big data structure
+        myObject = Object(myMSER,f+i/1000,f,color); %create new object for each mser
+        tempOC.addObject(myObject); %add to big data structure
     end
     %Perform matching
-    mainOF.matchObjects(f-1,f,threshold,tempOF);
-    newIm = mainOF.getImage(I,f);
+    mainOC.matchObjects(f-1,f,threshold,tempOC);
+    newIm = mainOC.getImage(I,f);
     
     %% Display results
     %Show raw image, prev frame, new frame
@@ -82,7 +81,7 @@ for f=start + 1:stop
     title(['Original Frame # ',num2str(f), '                          MSER Previous Frame                           MSER Current Frame ']);
     set(gca,'FontSize',13);    
     %Get matches between current and past frame in matrix form
-    matches = mainOF.getMatchCoords(f);
+    matches = mainOC.getMatchCoords(f);
     %Change from XY elipses to RC ellipses
     if size(matches,2) > 0
         matchesTrans = [vl_ertr(matches(1:5,:));vl_ertr(matches(6:10,:))];
@@ -104,11 +103,12 @@ for f=start + 1:stop
 end
 close(writer);
 
-%% Compute and display statistics
+%% Show MSER tracks in stills and videos. WARNING: These two commands could take hours!
+mainOC.showTracks(3,size(I,1),size(I,2),2);
+mainOC.makeTrackVideo(5,size(I,1),size(I,2),2);
 
-%mainOF.showTracks(3,size(I,1),size(I,2),2);
-%mainOF.makeTrackVideo(5,size(I,1),size(I,2),2); 
-mser_counts = mainOF.computeTrackLengths();
+%% Compute and display statistics
+mser_counts = mainOC.computeTrackLengths();
 stdev = std(mser_counts);
 avg = mean(mser_counts);
 maxi = max(mser_counts);
@@ -130,7 +130,7 @@ line([avg + stdev,avg + stdev],[0,450],'Color',[1,0,0],'LineStyle','--');
 
 fig2 = figure;
 set(fig2, 'Position', [0,0,1500,500]);
-tracks_per_frame = mainOF.computeGoodTracksPerFrame(round(stdev + avg));
+tracks_per_frame = mainOC.computeGoodTracksPerFrame(round(stdev + avg));
 plot(tracks_per_frame,'b*');
 ylim([0,18]);
 ylabel('Number of Good Tracks');
