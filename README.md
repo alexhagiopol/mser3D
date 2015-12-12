@@ -20,8 +20,8 @@ Prerequisites
  2. VL Feat: Download and copy folder into the top level directory of this project.
  3. GTSAM: Download and install according to its instructions.
  4. Extra video drivers/software for the Linux version of Matlab:
-  a. sudo add-apt-repository ppa:mc3man/trusty-media 
-  b. sudo apt-get install ffmpeg gstreamer0.10-ffmpeg
-  c. sudo apt-get install libgstreamer0.10-dev gstreamer-tools gstreamer0.10-tools gstreamer0.10-doc
-  d. sudo apt-getinstall gstreamer0.10-plugins-base gstreamer0.10-plugins-good gstreamer0.10-plugins-ugly gstreamer0.10-plugins-bad gstreamer0.10-plugins-bad-multiverse
+  - a. sudo add-apt-repository ppa:mc3man/trusty-media 
+  - b. sudo apt-get install ffmpeg gstreamer0.10-ffmpeg
+  - c. sudo apt-get install libgstreamer0.10-dev gstreamer-tools gstreamer0.10-tools gstreamer0.10-doc
+  - d. sudo apt-getinstall gstreamer0.10-plugins-base gstreamer0.10-plugins-good gstreamer0.10-plugins-ugly gstreamer0.10-plugins-bad gstreamer0.10-plugins-bad-multiverse
 5. Datasets: Download this folder https://drive.google.com/folderview?id=0B_huqLwo5sS1TG9veVBSQ285Ums&usp=sharing and add it to the top level mser directory.
