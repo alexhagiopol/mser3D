@@ -212,7 +212,7 @@ classdef ObjectCollection < handle
         %MSER tracks in motion
         function makeTrackVideo(OC, min_size,rSize,cSize,fig_num)
             %% Set up video output
-            writer = VideoWriter('Object_Tracks','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
+            writer = VideoWriter('Object_Tracks_Movie','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
             writer.FrameRate = 7;
             open(writer);
             two_pane_fig = figure(fig_num);

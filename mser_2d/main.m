@@ -8,7 +8,7 @@ vl_version verbose
 %% Import video
 
 disp('Starting Video Import');
-readerobj = VideoReader('through_the_cracks_jing.mov', 'tag', 'myreader1');
+readerobj = VideoReader('../datasets/through_the_cracks_jing.mov', 'tag', 'myreader1');
 vidFrames = read(readerobj);
 N = get(readerobj, 'NumberOfFrames');
 disp('Video Import Finished');
@@ -23,7 +23,7 @@ MaxArea = 0.03; %0.09 %VL Feat tuning constant
 threshold = -1; %-1 %Score threshold needed for two regions to be considered to come from the same object. A higher score indicates higher similarity.
 
 %% Set up video output
-writer = VideoWriter('Naive_Tracking','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
+writer = VideoWriter('Naive_Tracking_Movie','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
 writer.FrameRate = 10;
 open(writer);
 three_pane_fig = figure(1);

@@ -24,3 +24,4 @@ Prerequisites
   b. sudo apt-get install ffmpeg gstreamer0.10-ffmpeg
   c. sudo apt-get install libgstreamer0.10-dev gstreamer-tools gstreamer0.10-tools gstreamer0.10-doc
   d. sudo apt-getinstall gstreamer0.10-plugins-base gstreamer0.10-plugins-good gstreamer0.10-plugins-ugly gstreamer0.10-plugins-bad gstreamer0.10-plugins-bad-multiverse
+5. Datasets: Download this folder https://drive.google.com/folderview?id=0B_huqLwo5sS1TG9veVBSQ285Ums&usp=sharing and add it to the top level mser directory.
