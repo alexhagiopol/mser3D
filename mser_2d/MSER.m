@@ -4,8 +4,8 @@ classdef MSER < handle
     end
     methods
         %initialize
-        function M = MSER(ellipse,seed,frame)
-            M.data = [ellipse;seed;frame];            
+        function M = MSER(ellipse,seed,frame,Ravg,Gavg,Bavg)
+            M.data = [ellipse;seed;frame;Ravg;Gavg;Bavg];            
         end
         %return info
         function ellipse = getEllipse(M)
@@ -16,6 +16,9 @@ classdef MSER < handle
         end
         function num = getFrameNum(M)
             num = M.data(7);
+        end
+        function avg = getAvgColor(M)
+            avg = M.data(8:10);
         end
     end    
 end

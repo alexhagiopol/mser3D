@@ -283,6 +283,37 @@ classdef ObjectCollection < handle
             close(writer);
         end
         
+        %Write the measurements made in CSV 
+        function exportMserMeasurementsInGroups(OC, min_size, filename)            
+            rowNumber = 0;
+            dlmwrite(filename,[-1,-1]); %use this as a way to clear the file
+            for o = 1:length(OC.objects)
+                obj = OC.objects(o);
+                if length(obj.msers) > min_size
+                    obj = OC.objects(o);
+                    vectorToWrite = zeros(1,5+6*length(obj.msers));
+                    %dlmwrite(filename,o,'delimiter',',','roffset',rowNumber,'coffset',0,'-append'); %use o as an object ID in CSV file
+                    %dlmwrite(filename,length(obj.msers),'delimiter',',','roffset',rowNumber,'coffset',1,'-append'); %write how many msers we will send per line
+                    vectorToWrite(1) = o;
+                    vectorToWrite(2) = length(obj.msers);
+                    for m = 1:length(obj.msers)
+                        colNumber = 3 + m*6 - 6; %each mser data group is 6 numbers long
+                        mser = obj.msers(m);                        
+                        frameNum = mser.getFrameNum();
+                        %dlmwrite(filename,frameNum,'delimiter',',','roffset',rowNumber,'coffset',colNumber,'-append')
+                        %dlmwrite(filename,mser.getEllipse,'delimiter',',','roffset',rowNumber,'coffset',colNumber + 1,'-append')
+                        vectorToWrite(colNumber) = frameNum;
+                        vectorToWrite(colNumber + 1: colNumber + 5) = vl_ertr(mser.getEllipse); %vl_ertr necessary to go from XY to RC system
+                    end
+                    vectorToWrite(end - 2: end) = obj.getColor';
+                    %dlmwrite(filename,obj.getColor,'delimiter',',','roffset',rowNumber,'coffset',colNumber + 6,'-append')
+                    dlmwrite(filename,vectorToWrite,'delimiter',',','-append');
+                    rowNumber = rowNumber + 1;
+                    disp(['Wrote object #',num2str(o),' to ',filename]);
+                end                
+            end
+        end
+        
         function mser_counts  = computeTrackLengths(OC)
             disp(['Number of tracks = ',num2str(length(OC.objects))]);
             mser_counts = ones(1,length(OC.objects));

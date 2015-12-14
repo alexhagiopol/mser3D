@@ -28,5 +28,9 @@ classdef Object < handle
         function updateLastFrame(O, frame_num)
             O.last_seen = frame_num;
         end
+        
+        function color = getColor(O)
+            color = O.color;
+        end
     end    
 end
