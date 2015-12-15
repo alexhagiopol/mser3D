@@ -36,7 +36,7 @@ void testExpressionsOptimization(){
     //Check correctness
     Values correct;
     correct.insert(Symbol('o',0),groundTruthObject);
-    Values result = expressionsOptimization(groundTruthObject, initialGuess);
+    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess);
 
     if (correct.equals(result,0.1)){
         cout << "EXPRESSIONS OPTIMIZATION PASSED" << endl;
@@ -58,15 +58,16 @@ void testExpressionsOptimizationWithBadInitialGuess(){
     mserObject groundTruthObject(objectPose,objectAxes); //ground truth object
 
     //Make initial guess
-    Point3 initialGuessCenter(0.2,1.5,-0.5);    Rot3 initialGuessOrientation = objectOrientation.yaw(0.5);
-    Point2 initialGuessAxes(1.7,0.5);
+    Point3 initialGuessCenter(0.2,0.2,-0.2);
+    Rot3 initialGuessOrientation = objectOrientation.yaw(0.2);
+    Point2 initialGuessAxes(2.7,0.5);
     Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
     mserObject initialGuess(initialGuessPose, initialGuessAxes);
 
     //Check correctness
     Values correct;
     correct.insert(Symbol('o',0),groundTruthObject);
-    Values result = expressionsOptimization(groundTruthObject, initialGuess);
+    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess);
     if (correct.equals(result,0.1)){
         cout << "EXPRESSIONS OPTIMIZATION W/ BAD GUESS PASSED" << endl;
     } else {

@@ -209,7 +209,7 @@ std::vector<mserMeasurement> createIdealMeasurements(std::vector<SimpleCamera>& 
     return measurements;
 }
 
-Values expressionsOptimization(mserObject& object, mserObject& initialGuess){
+Values expressionsOptimizationSynthetic(mserObject& object, mserObject& initialGuess){
     Isotropic::shared_ptr measurementNoise = Isotropic::Sigma(5, 1.0); // one pixel in every dimension
 
     //Ground truth object is passed to this function. Create vectors with measurements, cameras, and camera poses.
@@ -233,6 +233,41 @@ Values expressionsOptimization(mserObject& object, mserObject& initialGuess){
     }
     // Add prior on object to constrain scale, again with ExpressionFactor[
     Isotropic::shared_ptr objectNoise = Isotropic::Sigma(8, 0.1);
+    graph.addExpressionFactor(mserObject_('o', 0), initialGuess, objectNoise); //use initial guess as prior
+
+    // Create perturbed initial
+    Values initial;
+    initial.insert(Symbol('o', 0), initialGuess);
+    //cout << "initial error = " << graph.error(initial) << endl;
+    Values result = DoglegOptimizer(graph, initial).optimize();
+    //cout << "final error = " << graph.error(result) << endl;
+    return result;
+}
+
+Values expressionsOptimizationRealWorld(mserObject& initialGuess, std::vector<mserMeasurement>& measurements, std::vector<SimpleCamera>& cameras){
+    Isotropic::shared_ptr measurementNoise = Isotropic::Sigma(5, 0.1); // one pixel in every dimension
+
+    //Ground truth object is passed to this function. Create vectors with measurements, cameras, and camera poses.
+    //std::vector<SimpleCamera> cameras = alexCreateCameras(20,object.first.translation(),20); //make a bunch of cameras to pass to measurement function
+    //std::vector<mserMeasurement> measurements = createIdealMeasurements(cameras, object); //synthetic measurements directly from measurement function
+    std::vector<Pose3> poses;
+    for (size_t i = 0; i < cameras.size(); i++){
+        poses.push_back(cameras[i].pose());
+    }
+
+    // Create a factor graph
+    ExpressionFactorGraph graph;
+
+    for (size_t i = 0; i < poses.size(); ++i) {
+        const SimpleCamera_ c(cameras[i]); //expression for the camera created here
+        mserMeasurement measurement = measurements[i];
+        // Below an expression for the prediction of the measurement:
+        mserObject_ o('o',0);
+        mserMeasurement_ prediction = measurementFunctionExp(c,o);
+        graph.addExpressionFactor(prediction,measurement,measurementNoise);
+    }
+    // Add prior on object to constrain scale, again with ExpressionFactor[
+    Isotropic::shared_ptr objectNoise = Isotropic::Sigma(8, 0.2);
     graph.addExpressionFactor(mserObject_('o', 0), initialGuess, objectNoise); //use initial guess as prior
 
     // Create perturbed initial

@@ -301,7 +301,7 @@ classdef ObjectCollection < handle
                         frameNum = mser.getFrameNum();
                        
                         vectorToWrite(colNumber) = frameNum;
-                        ellipse = vl_ertr(mser.getEllipse);
+                        ellipse = mser.getEllipse; %vl_ertr(mser.getEllipse);
                         mserMeasurement = OC.covarianceEllipseToMserMeasurement(ellipse);                        
                         vectorToWrite(colNumber + 1: colNumber + 5) =  mserMeasurement; %vl_ertr necessary to go from XY to RC system
                     end

@@ -631,19 +631,19 @@ int drawMserMeasurements(std::vector<gtsam::SimpleCamera>& cameras, std::vector<
             // Object vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
             float rad_angle = (i/9) * M_PI / 180;
             float next_rad_angle = (i/9 + 1) * M_PI / 180;
-            float ellipse_x_radius = measurements[m].second.x() / 40;
-            float ellipse_y_radius = measurements[m].second.y() / 40;
+            float ellipse_x_radius = measurements[m].second.x();
+            float ellipse_y_radius = measurements[m].second.y();
             cout << ellipse_x_radius << " " << ellipse_y_radius << endl;
-
-            g_vertex_buffer_data[i] = cameras[m].pose().x();
-            g_vertex_buffer_data[i+1] = cameras[m].pose().y();
-            g_vertex_buffer_data[i+2] = cameras[m].pose().z();
-            g_vertex_buffer_data[i+3] = cameras[m].pose().x() + cos(rad_angle) * ellipse_x_radius;
-            g_vertex_buffer_data[i+4] = cameras[m].pose().y() + sin(rad_angle) * ellipse_y_radius;
-            g_vertex_buffer_data[i+5] = cameras[m].pose().z();
-            g_vertex_buffer_data[i+6] = cameras[m].pose().x() + cos(next_rad_angle) * ellipse_x_radius;
-            g_vertex_buffer_data[i+7] = cameras[m].pose().y() + sin(next_rad_angle) * ellipse_y_radius;
-            g_vertex_buffer_data[i+8] = cameras[m].pose().z();
+            Pose3 pose = cameras[m].pose();
+            g_vertex_buffer_data[i] = pose.x();
+            g_vertex_buffer_data[i+1] = pose.y();
+            g_vertex_buffer_data[i+2] = pose.z();
+            g_vertex_buffer_data[i+3] = pose.x() + cos(rad_angle) * ellipse_x_radius;
+            g_vertex_buffer_data[i+4] = pose.y() + sin(rad_angle) * ellipse_y_radius;
+            g_vertex_buffer_data[i+5] = pose.z();
+            g_vertex_buffer_data[i+6] = pose.x() + cos(next_rad_angle) * ellipse_x_radius;
+            g_vertex_buffer_data[i+7] = pose.y() + sin(next_rad_angle) * ellipse_y_radius;
+            g_vertex_buffer_data[i+8] = pose.z();
 
             //Set color of object
             glClearColor(1.0, 1.0, 1.0, 1.0);
@@ -713,7 +713,7 @@ int drawMserMeasurements(std::vector<gtsam::SimpleCamera>& cameras, std::vector<
     imwrite(fileName, flipped); //save to output folder
 }
 
-int drawMserObjects(const std::vector<mserObject>& objects){
+int drawMserObjects(const std::vector<mserObject>& objects, const std::vector<Vector3>& colors){
     GLFWwindow *window;
     // Initialise GLFW
     if (!glfwInit()) {
@@ -784,18 +784,19 @@ int drawMserObjects(const std::vector<mserObject>& objects){
     //float cubeB = 1.0;
 
     for (int o = 0; o < objects.size(); o++){
-        float cubeR = distr(eng);
-        float cubeG = distr(eng);
-        float cubeB = distr(eng);
+        float cubeR = (float) colors[o][0]/255;
+        float cubeG = (float) colors[o][1]/255;
+        float cubeB = (float) colors[o][2]/255;
         for (int i = 0 + o*360*9; i < 360*9 + o*360*9; i+=9) {
             // Object vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
             float rad_angle = (i/9) * M_PI / 180;
             float next_rad_angle = (i/9 + 1) * M_PI / 180;
             float ellipse_x_radius = objects[o].second.x();// / 40;
             float ellipse_y_radius = objects[o].second.y();// / 40;
-            cout << ellipse_x_radius << " " << ellipse_y_radius << endl;
+            //cout << ellipse_x_radius << " " << ellipse_y_radius << endl;
 
-            Point3 centerInWorldFrame(objects[o].first.x(),objects[o].first.y(),objects[o].first.z());
+            double scaleFactor = 100;
+            Point3 centerInWorldFrame(objects[o].first.x()/scaleFactor,objects[o].first.y()/scaleFactor,objects[o].first.z());
             Point3 axisTipInObjectFrame(cos(rad_angle) * ellipse_x_radius,sin(rad_angle) * ellipse_y_radius,0);
             Point3 nextAxisTipInObjectFrame(cos(next_rad_angle) * ellipse_x_radius,sin(next_rad_angle) * ellipse_y_radius,0);
             Rot3 objectRot = objects[o].first.rotation();

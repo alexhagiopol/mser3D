@@ -45,7 +45,7 @@ std::vector<Pose3> alexCreatePoses(double radius, Point3 target, int numPoses){
 }
 
 std::vector<SimpleCamera> alexCreateCameras(double radius, Point3 target, int numCams){
-    Cal3_S2::shared_ptr K(new Cal3_S2(500.0, 500.0, 0.1, 640/2, 480/2)); //made up calibration for now; replace with Jing's calibration later
+    Cal3_S2::shared_ptr K(new Cal3_S2(500.0, 500.0, 0.1, 640/2, 360/2)); //made up calibration for now; replace with Jing's calibration later
     std::vector<SimpleCamera> cameras;
     double theta = 0.0;
     Point3 up = Point3(0,0,1);
