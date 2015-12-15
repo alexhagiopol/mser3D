@@ -292,26 +292,67 @@ classdef ObjectCollection < handle
                 if length(obj.msers) > min_size
                     obj = OC.objects(o);
                     vectorToWrite = zeros(1,5+6*length(obj.msers));
-                    %dlmwrite(filename,o,'delimiter',',','roffset',rowNumber,'coffset',0,'-append'); %use o as an object ID in CSV file
-                    %dlmwrite(filename,length(obj.msers),'delimiter',',','roffset',rowNumber,'coffset',1,'-append'); %write how many msers we will send per line
+                    
                     vectorToWrite(1) = o;
                     vectorToWrite(2) = length(obj.msers);
                     for m = 1:length(obj.msers)
                         colNumber = 3 + m*6 - 6; %each mser data group is 6 numbers long
                         mser = obj.msers(m);                        
                         frameNum = mser.getFrameNum();
-                        %dlmwrite(filename,frameNum,'delimiter',',','roffset',rowNumber,'coffset',colNumber,'-append')
-                        %dlmwrite(filename,mser.getEllipse,'delimiter',',','roffset',rowNumber,'coffset',colNumber + 1,'-append')
+                       
                         vectorToWrite(colNumber) = frameNum;
-                        vectorToWrite(colNumber + 1: colNumber + 5) = vl_ertr(mser.getEllipse); %vl_ertr necessary to go from XY to RC system
+                        ellipse = vl_ertr(mser.getEllipse);
+                        mserMeasurement = OC.covarianceEllipseToMserMeasurement(ellipse);                        
+                        vectorToWrite(colNumber + 1: colNumber + 5) =  mserMeasurement; %vl_ertr necessary to go from XY to RC system
                     end
                     vectorToWrite(end - 2: end) = obj.getColor';
-                    %dlmwrite(filename,obj.getColor,'delimiter',',','roffset',rowNumber,'coffset',colNumber + 6,'-append')
+                    
                     dlmwrite(filename,vectorToWrite,'delimiter',',','-append');
                     rowNumber = rowNumber + 1;
                     disp(['Wrote object #',num2str(o),' to ',filename]);
                 end                
             end
+        end
+        
+        function mserMeasurement = covarianceEllipseToMserMeasurement(OC, ellipse)
+            %Source: http://www.visiondummy.com/2014/04/draw-error-ellipse-representing-covariance-matrix/
+            %Not sure abour XY/RC issue here
+            % Calculate the eigenvectors and eigenvalues
+            covariance = [ellipse(3),ellipse(4);ellipse(4),ellipse(5)];
+            [eigenvec, eigenval ] = eig(covariance);
+
+            % Get the index of the largest eigenvector
+            [largest_eigenvec_ind_c, r] = find(eigenval == max(max(eigenval)));
+            largest_eigenvec = eigenvec(:, largest_eigenvec_ind_c);
+
+            % Get the largest eigenvalue
+            largest_eigenval = max(max(eigenval));
+
+            % Get the smallest eigenvector and eigenvalue
+            if(largest_eigenvec_ind_c == 1)
+                smallest_eigenval = max(eigenval(:,2));
+                smallest_eigenvec = eigenvec(:,2);
+            else
+                smallest_eigenval = max(eigenval(:,1));
+                smallest_eigenvec = eigenvec(1,:);
+            end
+
+            % Calculate the angle between the x-axis and the largest eigenvector
+            angle = atan2(largest_eigenvec(2), largest_eigenvec(1));
+
+            % This angle is between -pi and pi.
+            % Let's shift it such that the angle is between 0 and 2pi
+            if(angle < 0)
+                angle = angle + 2*pi;
+            end
+
+            % Get the 95% confidence interval error ellipse
+            chisquare_val = 2.4477;
+            phi = angle;
+            a=chisquare_val*sqrt(largest_eigenval);
+            b=chisquare_val*sqrt(smallest_eigenval);
+            mserMeasurement = [ellipse(1),ellipse(2),a,b,phi];  
+ 
         end
         
         function mser_counts  = computeTrackLengths(OC)
