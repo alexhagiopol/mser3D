@@ -1,5 +1,5 @@
-//#include "testVisualization.h"
-//#include "testGeometry.h"
+#include "testVisualization.h"
+#include "testGeometry.h"
 #include "testMeasurementFunction.h"
 #include "Visualizer.h"
 #include <fstream>
@@ -125,9 +125,9 @@ std::pair<std::vector<mserObject>,std::vector<Vector3>> inferObjectsFromRealMser
 }
 
 int main() {
-    //testAllVisualization();
-    //testAllGeometry();
-    //testAllMeasurementFunction();
+    testAllVisualization();
+    testAllGeometry();
+    testAllMeasurementFunction();
     std::vector<mserTrack> tracks = getMserTracksFromCSV();
     std::vector<Pose3> poses = getPosesFromBAL();
     std::pair<std::vector<mserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);

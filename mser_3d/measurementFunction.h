@@ -47,22 +47,21 @@ pointsPose convertObjectToObjectPointsPose(const mserObject& object, OptionalJac
     return myPointsPose;
 }
 
-std::vector<Point3> convertObjectPointsPoseToWorldPoint3s(pointsPose& objectPointsPose, OptionalJacobian<9,12> Dpointspose = boost::none){
+std::vector<Point3> convertObjectPointsPoseToWorldPoint3s(const pointsPose& objectPointsPose, OptionalJacobian<9,12> Dpointspose = boost::none){
     Matrix36 centerDpose, majAxisDpose, minAxisDpose; //Matrices to store results from optional jacobians
     Matrix33 majAxisDpoint, minAxisDpoint; //Matrices to store results from optional jacobians
-    Point3 objectCenter = objectPointsPose.objectPose.translation(centerDpose);
-    Point3 majAxisInObjectFrame = objectPointsPose.majAxisTip;
-    Point3 minAxisInObjectFrame = objectPointsPose.minAxisTip;
-
-    Point3 majAxisInWorldFrame = objectPointsPose.objectPose.transform_from(majAxisInObjectFrame,majAxisDpose,majAxisDpoint);
-    Point3 minAxisInWorldFrame = objectPointsPose.objectPose.transform_from(minAxisInObjectFrame,minAxisDpose,minAxisDpoint);
-    std::vector<Point3> pointRepresentation;
-    pointRepresentation.push_back(objectCenter);
-    pointRepresentation.push_back(majAxisInWorldFrame);
-    pointRepresentation.push_back(minAxisInWorldFrame);
+    const Point3 objectCenter = objectPointsPose.objectPose.translation(centerDpose);
+    const Point3 majAxisInObjectFrame = objectPointsPose.majAxisTip;
+    const Point3 minAxisInObjectFrame = objectPointsPose.minAxisTip;
+    const Point3 majAxisInWorldFrame = objectPointsPose.objectPose.transform_from(majAxisInObjectFrame,majAxisDpose,majAxisDpoint);
+    const Point3 minAxisInWorldFrame = objectPointsPose.objectPose.transform_from(minAxisInObjectFrame,minAxisDpose,minAxisDpoint);
+    const std::vector<Point3> pointRepresentation = {objectCenter, majAxisInWorldFrame, minAxisInWorldFrame};
+    //pointRepresentation.push_back(objectCenter);
+    //pointRepresentation.push_back(majAxisInWorldFrame);
+    //pointRepresentation.push_back(minAxisInWorldFrame);
     if (Dpointspose){
-        Eigen::MatrixXd zeros33 = Eigen::MatrixXd::Zero(3,3);
-        Eigen::MatrixXd topLeft = Eigen::MatrixXd::Zero(3,6);
+        const Eigen::MatrixXd zeros33 = Eigen::MatrixXd::Zero(3,3);
+        const Eigen::MatrixXd topLeft = Eigen::MatrixXd::Zero(3,6);
         Eigen::MatrixXd middleLeft(3,6);
         Eigen::MatrixXd bottomLeft(3,6);
         Eigen::MatrixXd left(9,6);
