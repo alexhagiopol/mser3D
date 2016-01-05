@@ -13,7 +13,7 @@ N = get(readerobj, 'NumberOfFrames');
 disp('Video Import Finished');
 
 %% Set tuning constants 
-visualization = false;
+visualization = true;
 start = 1; %start at custom frame number. Default = 1.
 stop = N;  %end at custom frame number. Default = N.
 MinDiversity = 0.7; %VL Feat tuning constant
@@ -24,7 +24,7 @@ threshold = -1; %-1 %Score threshold needed for two regions to be considered to 
 
 %% Set up video output
 if visualization
-    writer = VideoWriter('Naive_Tracking_Movie','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
+    writer = VideoWriter('Alex_Tracking_Movie','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
     writer.FrameRate = 10;
     open(writer);
     three_pane_fig = figure(1);
@@ -113,12 +113,11 @@ for f=start + 1:stop
             end
         end         
         
-        %EllipsesTrans = vl_ertr(EllipsesValues);
-        %vl_plotframe(EllipsesTrans, 'w.');
+        %%Plot MSER Measurements as unit test to ensure mserMeasurement objects make sense
         for i = 1:size(EllipsesValues,2)
             ellipse = vl_ertr(EllipsesValues(:,i)); %crucial to use vl_ertr
             mserMeasurement = mainOC.covarianceEllipseToMserMeasurement(ellipse);
-            %% Plot returned ellipse as test
+            % Plot returned ellipse as test
             % Get the 95% confidence interval error ellipse
             chisquare_val = 2.4477;
             theta_grid = linspace(0,2*pi);
@@ -138,10 +137,9 @@ for f=start + 1:stop
             %let's rotate the ellipse to some angle phi
             r_ellipse = [ellipse_x_r;ellipse_y_r]' * R;            
             
-            % Draw the error ellipse
-            %plot(100,100,'r*');
+            % Draw the error ellipse            
             plot(r_ellipse(:,1) + X0,r_ellipse(:,2) + Y0,'r.')   
-            %hold on;            
+            text(X0,Y0,'MSMT TEST','Color',[1.0,0,0]);            
         end
         
         %% Produce and write video frame 
@@ -162,8 +160,8 @@ mainOC.exportMserMeasurementsInGroups(7,'/home/alex/mser/mser_2d/mserMeasurement
 
 if visualization
     %% Show MSER tracks in stills and videos. WARNING: These two commands could take hours!
-    mainOC.showTracks(3,size(I,1),size(I,2),2);
-    mainOC.makeTrackVideo(5,size(I,1),size(I,2),2);
+    %mainOC.showTracks(3,size(I,1),size(I,2),2);
+    %mainOC.makeTrackVideo(5,size(I,1),size(I,2),2);
     
     %% Compute and display statistics
     mser_counts = mainOC.computeTrackLengths();
