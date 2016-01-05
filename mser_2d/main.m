@@ -14,6 +14,7 @@ disp('Video Import Finished');
 
 %% Set tuning constants 
 visualization = true;
+resize = false;
 start = 1; %start at custom frame number. Default = 1.
 stop = N;  %end at custom frame number. Default = N.
 MinDiversity = 0.7; %VL Feat tuning constant
@@ -34,7 +35,9 @@ end
 f = start;
 % Read image from video and resize + grayscale
 C = vidFrames(:,:,:,f);
-C = imresize(C,0.5);
+if resize
+    C = imresize(C,0.5);
+end
 I=rgb2gray(C);
 %Detect MSERs
 [SeedValues, EllipsesValues] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
@@ -63,7 +66,9 @@ prevIm = mainOC.getImage(I,f);
 for f=start + 1:stop
     %% Read image, resize, grayscale, make data structures, & detect MSERs
     C = vidFrames(:,:,:,f);
-    C = imresize(C,0.5);
+    if resize
+        C = imresize(C,0.5);
+    end
     I=rgb2gray(C);
     [SeedValues, EllipsesValues] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0); %Set to compute dark on bright!!!
     mainOC.addImage(f,I);

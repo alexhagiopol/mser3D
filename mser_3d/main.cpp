@@ -134,9 +134,11 @@ int main() {
     //std::pair<std::vector<mserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
     //drawMserObjects(pair.first,pair.second);
 
+
     //Extract video frames and store in memory
     cv::VideoCapture capture("/home/alex/mser/datasets/through_the_cracks_jing.mov");
     std::vector<cv::Mat> allVideoFrames;
+    int f = 0;
     if (!capture.isOpened()) {
         cerr << "The video file could not be opened successfully!!!" << endl;
     } else {
@@ -144,7 +146,10 @@ int main() {
         while (readSuccess == true) {
             cv::Mat videoFrame;
             readSuccess = capture.read(videoFrame);
+            if (f > 13) { //remove first 14 frames because Matlab and OpenCV don't open the same video in the same way :(
             allVideoFrames.push_back(videoFrame);
+            }
+            f++;
         }
     }
     capture.release();
@@ -152,7 +157,7 @@ int main() {
     //Draw mserMeasurement ellipses on each video frame
     for (int t = 0; t < tracks.size(); t++){
         for (int f = 0; f < tracks[t].frameNumbers.size(); f++){
-            int frameNum = tracks[t].frameNumbers[f];
+            int frameNum = tracks[t].frameNumbers[f] - 1;
             mserMeasurement msmt = tracks[t].measurements[f];
             cv::Point center = cv::Point(msmt.first.x(),msmt.first.y());
             cv::Size axes = cv::Size(msmt.second.x(),msmt.second.y());
