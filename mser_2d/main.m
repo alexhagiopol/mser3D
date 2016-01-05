@@ -90,9 +90,11 @@ for f=start + 1:stop
     if visualization
         %% Display results
         %Show raw image, prev frame, new frame
-        hold on;
+        %figure;
+        %hold on;
         frames = [C,prevIm,newIm];
-        imshow(frames)
+        imshow(frames)       
+        hold on;
         title(['Original Frame # ',num2str(f), '                          MSER Previous Frame                           MSER Current Frame ']);
         set(gca,'FontSize',13);    
         %Get matches between current and past frame in matrix form
@@ -109,15 +111,48 @@ for f=start + 1:stop
                     line([matchesTrans(1,i),matchesTrans(6,i)],[matchesTrans(2,i),matchesTrans(7,i)],'Color',[1, 1, 1]);
                 end
             end
+        end         
+        
+        %EllipsesTrans = vl_ertr(EllipsesValues);
+        %vl_plotframe(EllipsesTrans, 'w.');
+        for i = 1:size(EllipsesValues,2)
+            ellipse = vl_ertr(EllipsesValues(:,i)); %crucial to use vl_ertr
+            mserMeasurement = mainOC.covarianceEllipseToMserMeasurement(ellipse);
+            %% Plot returned ellipse as test
+            % Get the 95% confidence interval error ellipse
+            chisquare_val = 2.4477;
+            theta_grid = linspace(0,2*pi);
+            phi = mserMeasurement(5);
+            X0=mserMeasurement(1);
+            Y0=mserMeasurement(2);
+            a=mserMeasurement(3);
+            b=mserMeasurement(4);
+
+            % the ellipse in x and y coordinates 
+            ellipse_x_r  = a*cos( theta_grid );
+            ellipse_y_r  = b*sin( theta_grid );
+
+            %Define a rotation matrix
+            R = [ cos(phi) sin(phi); -sin(phi) cos(phi) ];
+
+            %let's rotate the ellipse to some angle phi
+            r_ellipse = [ellipse_x_r;ellipse_y_r]' * R;            
+            
+            % Draw the error ellipse
+            %plot(100,100,'r*');
+            plot(r_ellipse(:,1) + X0,r_ellipse(:,2) + Y0,'r.')   
+            %hold on;            
         end
+        
         %% Produce and write video frame 
         frame = frame2im(getframe(three_pane_fig));
-        writeVideo(writer,frame);    
-        prevIm = newIm;
-        %pause;  
+        writeVideo(writer,frame); 
+        %hold on;
+        prevIm = newIm; 
     else
         disp(['Frame #',num2str(f),' done'])
     end
+    %pause
 end
 if visualization
     close(writer);

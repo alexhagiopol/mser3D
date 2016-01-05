@@ -301,8 +301,36 @@ classdef ObjectCollection < handle
                         frameNum = mser.getFrameNum();
                        
                         vectorToWrite(colNumber) = frameNum;
-                        ellipse = mser.getEllipse; %vl_ertr(mser.getEllipse);
-                        mserMeasurement = OC.covarianceEllipseToMserMeasurement(ellipse);                        
+                        ellipse = vl_ertr(mser.getEllipse); %crucial to use vl_ertr 
+                        mserMeasurement = OC.covarianceEllipseToMserMeasurement(ellipse);
+                        
+                        %{
+                        %% Plot returned ellipse as test
+                        % Get the 95% confidence interval error ellipse
+                            chisquare_val = 2.4477;
+                            theta_grid = linspace(0,2*pi);
+                            phi = mserMeasurement(5);
+                            X0=mserMeasurement(1);
+                            Y0=mserMeasurement(2);
+                            a=mserMeasurement(3);
+                            b=mserMeasurement(4);
+
+                            % the ellipse in x and y coordinates 
+                            ellipse_x_r  = a*cos( theta_grid );
+                            ellipse_y_r  = b*sin( theta_grid );
+
+                            %Define a rotation matrix
+                            R = [ cos(phi) sin(phi); -sin(phi) cos(phi) ];
+
+                            %let's rotate the ellipse to some angle phi
+                            r_ellipse = [ellipse_x_r;ellipse_y_r]' * R;
+
+                            % Draw the error ellipse
+                            plot(r_ellipse(:,1) + X0,r_ellipse(:,2) + Y0,'-')
+                            hold on;
+                        %% Continue with function...           
+                        %}
+                        
                         vectorToWrite(colNumber + 1: colNumber + 5) =  mserMeasurement; %vl_ertr necessary to go from XY to RC system
                     end
                     vectorToWrite(end - 2: end) = obj.getColor';
@@ -352,7 +380,7 @@ classdef ObjectCollection < handle
             a=chisquare_val*sqrt(largest_eigenval);
             b=chisquare_val*sqrt(smallest_eigenval);
             mserMeasurement = [ellipse(1),ellipse(2),a,b,phi];  
- 
+        
         end
         
         function mser_counts  = computeTrackLengths(OC)
