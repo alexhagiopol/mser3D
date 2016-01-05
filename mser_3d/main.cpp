@@ -95,11 +95,11 @@ std::vector<Pose3> getPosesFromBAL(){
 std::pair<std::vector<mserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(std::vector<mserTrack>& tracks, std::vector<Pose3>& VOposes){
     std::vector<mserObject> objects;
     std::vector<Vector3> colors;
-    Cal3_S2::shared_ptr K(new Cal3_S2(50.0, 50.0, 0.1, 640/2, 360/2));
+    Cal3_S2::shared_ptr K(new Cal3_S2(50.0, 50.0, 0.1, 1280/2, 720/2));
     for (int t = 0; t < 60; t++){
         std::vector<mserMeasurement> measurements = tracks[t].measurements;
         std::cout << "#" << t << " has " << measurements.size() << " measurements" << std::endl;
-        if ((t != 17) && (t != 33)){
+        if ((t != 14) && (t != 18) && (t != 22)&& (t != 23)){
             std::vector<SimpleCamera> cameras;
             for (int m = 0; m < measurements.size(); m++){
                 SimpleCamera camera(VOposes[tracks[t].frameNumbers[m]],*K);
@@ -125,15 +125,11 @@ std::pair<std::vector<mserObject>,std::vector<Vector3>> inferObjectsFromRealMser
     return pair;
 }
 
-int main() {
-    //testAllVisualization();
-    //testAllGeometry();
-    //testAllMeasurementFunction();
+void testPrintSuperimposedMeasurementImages(){
     std::vector<mserTrack> tracks = getMserTracksFromCSV();
     std::vector<Pose3> poses = getPosesFromBAL();
     //std::pair<std::vector<mserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
     //drawMserObjects(pair.first,pair.second);
-
 
     //Extract video frames and store in memory
     cv::VideoCapture capture("/home/alex/mser/datasets/through_the_cracks_jing.mov");
@@ -147,7 +143,7 @@ int main() {
             cv::Mat videoFrame;
             readSuccess = capture.read(videoFrame);
             if (f > 13) { //remove first 14 frames because Matlab and OpenCV don't open the same video in the same way :(
-            allVideoFrames.push_back(videoFrame);
+                allVideoFrames.push_back(videoFrame);
             }
             f++;
         }
@@ -181,6 +177,34 @@ int main() {
         sprintf(imgFileName, imgFileName,f);
         cv::imwrite(imgFileName, videoFrame);
     }
+}
+
+void testDisplayPoses(){
+    std::vector<Pose3> poses = getPosesFromBAL();
+    std::vector<mserObject> dummyObjects;
+    Vector3 color = Vector3(0,0,0);
+    std::vector<Vector3> colors;
+    for (int p = 0; p < poses.size(); p++){
+        poses[p].print();
+        Point2 axes = Point2(0.5,0.5);
+        mserObject dummyObject = mserObject(poses[p],axes);
+        dummyObjects.push_back(dummyObject);
+        colors.push_back(color);
+    }
+    drawMserObjects(dummyObjects,colors);
+}
+
+int main() {
+    //testAllVisualization();
+    //testAllGeometry();
+    //testAllMeasurementFunction();
+    testPrintSuperimposedMeasurementImages();
+    testDisplayPoses();
+    //Display camera poses using dummy mserObjects
+
+    //std::pair<std::vector<mserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
+    //drawMserObjects(pair.first,pair.second);
+
 
     return 0;
 }

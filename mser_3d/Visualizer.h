@@ -389,7 +389,7 @@ int drawMserObjects(const std::vector<mserObject>& objects, const std::vector<Ve
             float ellipse_y_radius = objects[o].second.y();// / 40;
             //cout << ellipse_x_radius << " " << ellipse_y_radius << endl;
 
-            double scaleFactor = 100;
+            double scaleFactor = 1;
             Point3 centerInWorldFrame(objects[o].first.x()/scaleFactor,objects[o].first.y()/scaleFactor,objects[o].first.z());
             Point3 axisTipInObjectFrame(cos(rad_angle) * ellipse_x_radius,sin(rad_angle) * ellipse_y_radius,0);
             Point3 nextAxisTipInObjectFrame(cos(next_rad_angle) * ellipse_x_radius,sin(next_rad_angle) * ellipse_y_radius,0);
