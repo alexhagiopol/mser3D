@@ -2,12 +2,13 @@
 #include "testGeometry.h"
 #include "testMeasurementFunction.h"
 #include "Visualizer.h"
+#include <opencv2/opencv.hpp>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-
+#include <sys/stat.h>
 
 typedef std::vector<double> record_t;
 typedef std::vector<record_t> data_t;
@@ -15,8 +16,8 @@ struct mserTrack{
     int colorR; //colors to be assigned to final object
     int colorG;
     int colorB;
-    std::vector<int> frameNumbers;
-    std::vector<mserMeasurement> measurements;
+    std::vector<int> frameNumbers; //must have same length as measurements
+    std::vector<mserMeasurement> measurements; //must have same length as frame numbers
 };
 
 std::istream& operator >> (std::istream& ins, record_t& record){
@@ -125,13 +126,57 @@ std::pair<std::vector<mserObject>,std::vector<Vector3>> inferObjectsFromRealMser
 }
 
 int main() {
-    testAllVisualization();
-    testAllGeometry();
-    testAllMeasurementFunction();
+    //testAllVisualization();
+    //testAllGeometry();
+    //testAllMeasurementFunction();
     std::vector<mserTrack> tracks = getMserTracksFromCSV();
     std::vector<Pose3> poses = getPosesFromBAL();
-    std::pair<std::vector<mserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
-    drawMserObjects(pair.first,pair.second);
+    //std::pair<std::vector<mserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
+    //drawMserObjects(pair.first,pair.second);
+
+    //Extract video frames and store in memory
+    cv::VideoCapture capture("/home/alex/mser/datasets/through_the_cracks_jing.mov");
+    std::vector<cv::Mat> allVideoFrames;
+    if (!capture.isOpened()) {
+        cerr << "The video file could not be opened successfully!!!" << endl;
+    } else {
+        bool readSuccess = true;
+        while (readSuccess == true) {
+            cv::Mat videoFrame;
+            readSuccess = capture.read(videoFrame);
+            allVideoFrames.push_back(videoFrame);
+        }
+    }
+    capture.release();
+
+    //Draw mserMeasurement ellipses on each video frame
+    for (int t = 0; t < tracks.size(); t++){
+        for (int f = 0; f < tracks[t].frameNumbers.size(); f++){
+            int frameNum = tracks[t].frameNumbers[f];
+            mserMeasurement msmt = tracks[t].measurements[f];
+            cv::Point center = cv::Point(msmt.first.x(),msmt.first.y());
+            cv::Size axes = cv::Size(msmt.second.x(),msmt.second.y());
+            double angle = msmt.first.theta()*180/M_PI; //opencv wants angles in degrees
+            cv::Scalar color = cv::Scalar(tracks[t].colorB,tracks[t].colorG,tracks[t].colorR);
+            int thickness = 5;
+            int startAngle = 0;
+            int endAngle = 360;//draw entire ellipse
+            cv::ellipse(allVideoFrames[frameNum],center,axes,angle,startAngle,endAngle,color,thickness);
+        }
+    }
+
+    //Store images to disk
+    string outputDir = "/home/alex/mser/mser_3d/unit_test_output/";
+    int imgDirectorySuccess = mkdir(outputDir.c_str(), 0777);
+    for (int f = 0; f < allVideoFrames.size(); f++){
+        char imgFileName[200];
+        cv::Mat videoFrame = allVideoFrames[f];
+        strcpy(imgFileName,outputDir.c_str());
+        strcat(imgFileName,"Frame%04i.bmp");
+        sprintf(imgFileName, imgFileName,f);
+        cv::imwrite(imgFileName, videoFrame);
+    }
+
     return 0;
 }
 
