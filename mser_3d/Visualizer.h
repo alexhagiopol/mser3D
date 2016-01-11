@@ -29,14 +29,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-
-
-
-
-//#include "opencv2/imgcodecs.hpp"
-//#include "opencv2/highgui/highgui.hpp"
-
 using namespace cv;
 using namespace glm;
 using namespace std;
@@ -44,7 +36,8 @@ using namespace gtsam;
 #include "common/shader.hpp" //shader.hpp needs the GLM namespace, else you will get "xyz does not name a type" errors.
 #include "common/controls.hpp"
 
-int produceMserMeasurements(std::vector<gtsam::SimpleCamera>& cameras, Point3& target, std::vector<MserMeasurement>& measurements){
+//Draw a virtual box, fly camera around the box, take mser measurements, teturn them
+int produceMserMeasurements(const std::vector<gtsam::SimpleCamera>& cameras, Point3& target, std::vector<MserMeasurement>& measurements){
     GLFWwindow* window;
     // Initialise GLFW
     if( !glfwInit() )
@@ -372,14 +365,13 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
     glm::mat4 MVP = Projection * View *
                     Model; // Our ModelViewProjection : multiplication of our 3 matrices. Remember, matrix multiplication is the other way around
 
-    int numVertices = 360*9*objects.size() + 3*6;
-    GLfloat g_vertex_buffer_data[numVertices]; //+9 for axes drawing
-    GLfloat g_color_buffer_data[numVertices];
+    //(objects.size ellipses)(360 triangles / ellipse)(3 points / triangle)(3 doubles / point) + (objects.size axes groups)(3 lines / axis group)(6 doubles / line) + (1 world axis group)(3 lines / world axis group)(6 doubles / world axis line)
+    int vertexDataSize = objects.size()*360*3*3 + objects.size()*3*6 + 1*3*6;
 
-    //float cubeR = 0.5;
-    //float cubeG = 0.5;
-    //float cubeB = 1.0;
+    GLfloat g_vertex_buffer_data[vertexDataSize];
+    GLfloat g_color_buffer_data[vertexDataSize];
 
+    //Draw 3D ellipses representing objects
     for (int o = 0; o < objects.size(); o++) {
         float cubeR, cubeG, cubeB;
         if (colors.size() == objects.size()){
@@ -399,7 +391,7 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
             float ellipse_y_radius = objects[o].second.y();// / 40;
             //cout << ellipse_x_radius << " " << ellipse_y_radius << endl;
 
-            double scaleFactor = 1;
+            double scaleFactor = 1; //use this to make things further apart, closer together for easier visualization
             Point3 centerInWorldFrame(objects[o].first.x()/scaleFactor,objects[o].first.y()/scaleFactor,objects[o].first.z());
             Point3 axisTipInObjectFrame(cos(rad_angle) * ellipse_x_radius,sin(rad_angle) * ellipse_y_radius,0);
             Point3 nextAxisTipInObjectFrame(cos(next_rad_angle) * ellipse_x_radius,sin(next_rad_angle) * ellipse_y_radius,0);
@@ -431,50 +423,150 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
             g_color_buffer_data[i+8] = cubeB;
         }
     }
-    //Draw axes
-    int axisLength = 10;
+
+    //Draw axes lines in objects' frames. RGB correspond to XYZ.
+    int objectAxisLength = 1;
+    int vertexDataNum = objects.size()*360*3*3; //start where variable i left off in the previous loop
+    for (int o = 0; o < objects.size(); o++) {
+        //Object frame:
+        Point3 objectCenterInObjectFrame(0,0,0);
+        Point3 objectXAxisTipInObjectFrame(objectAxisLength,0,0);
+        Point3 objectYAxisTipInObjectFrame(0,objectAxisLength,0);
+        Point3 objectZAxisTipInObjectFrame(0,0,objectAxisLength);
+        //World frame:
+        MserObject object = objects[o];
+        Point3 objectCenterInWorldFrame = objectCenterInObjectFrame + object.first.translation();
+        Point3 objectXAxisTipInWorldFrame = object.first.rotation()*objectXAxisTipInObjectFrame + objectCenterInWorldFrame;
+        Point3 objectYAxisTipInWorldFrame = object.first.rotation()*objectYAxisTipInObjectFrame + objectCenterInWorldFrame;
+        Point3 objectZAxisTipInWorldFrame = object.first.rotation()*objectZAxisTipInObjectFrame + objectCenterInWorldFrame;
+
+        //First line: X axis
+        //First point:
+        g_vertex_buffer_data[vertexDataNum + 0] = objectCenterInWorldFrame.x();
+        g_vertex_buffer_data[vertexDataNum + 1] = objectCenterInWorldFrame.y();
+        g_vertex_buffer_data[vertexDataNum + 2] = objectCenterInWorldFrame.z();
+        //Second point:
+        g_vertex_buffer_data[vertexDataNum + 3] = objectXAxisTipInWorldFrame.x();
+        g_vertex_buffer_data[vertexDataNum + 4] = objectXAxisTipInWorldFrame.y();
+        g_vertex_buffer_data[vertexDataNum + 5] = objectXAxisTipInWorldFrame.z();
+        //Second line: Y axis
+        //First point:
+        g_vertex_buffer_data[vertexDataNum + 6] = objectCenterInWorldFrame.x();
+        g_vertex_buffer_data[vertexDataNum + 7] = objectCenterInWorldFrame.y();
+        g_vertex_buffer_data[vertexDataNum + 8] = objectCenterInWorldFrame.z();
+        //Second point:
+        g_vertex_buffer_data[vertexDataNum + 9] = objectYAxisTipInWorldFrame.x();
+        g_vertex_buffer_data[vertexDataNum + 10] = objectYAxisTipInWorldFrame.y();
+        g_vertex_buffer_data[vertexDataNum + 11] = objectYAxisTipInWorldFrame.z();
+        //Third line: Z axis
+        //First point:
+        g_vertex_buffer_data[vertexDataNum + 12] = objectCenterInWorldFrame.x();
+        g_vertex_buffer_data[vertexDataNum + 13] = objectCenterInWorldFrame.y();
+        g_vertex_buffer_data[vertexDataNum + 14] = objectCenterInWorldFrame.z();
+        //Second point:
+        g_vertex_buffer_data[vertexDataNum + 15] = objectZAxisTipInWorldFrame.x();
+        g_vertex_buffer_data[vertexDataNum + 16] = objectZAxisTipInWorldFrame.y();
+        g_vertex_buffer_data[vertexDataNum + 17] = objectZAxisTipInWorldFrame.z();
+
+        //First line: X axis
+        //First point:
+        g_color_buffer_data[vertexDataNum + 0] = 1.0f;
+        g_color_buffer_data[vertexDataNum + 1] = 0.0f;
+        g_color_buffer_data[vertexDataNum + 2] = 0.0f;
+        //Second point:
+        g_color_buffer_data[vertexDataNum + 3] = 1.0f;
+        g_color_buffer_data[vertexDataNum + 4] = 0.0f;
+        g_color_buffer_data[vertexDataNum + 5] = 0.0f;
+
+        //Second line: Y axis
+        //First point:
+        g_color_buffer_data[vertexDataNum + 6] = 0.0f;
+        g_color_buffer_data[vertexDataNum + 7] = 1.0f;
+        g_color_buffer_data[vertexDataNum + 8] = 0.0f;
+        //Second point
+        g_color_buffer_data[vertexDataNum + 9] = 0.0f;
+        g_color_buffer_data[vertexDataNum + 10] = 1.0f;
+        g_color_buffer_data[vertexDataNum + 11] = 0.0f;
+
+        //Third line: Z axis
+        //First point:
+        g_color_buffer_data[vertexDataNum + 12] = 0.0f;
+        g_color_buffer_data[vertexDataNum + 13] = 0.0f;
+        g_color_buffer_data[vertexDataNum + 14] = 1.0f;
+        //Second point:
+        g_color_buffer_data[vertexDataNum + 15] = 0.0f;
+        g_color_buffer_data[vertexDataNum + 16] = 0.0f;
+        g_color_buffer_data[vertexDataNum + 17] = 1.0f;
+
+        vertexDataNum += 18; //increment data position
+    }
+
+    //Draw lines for world axes. RGB correspond to XYZ
+    int worldAxisLength = 10;
     Point3 worldCenter(0,0,0);
-    Point3 xAxisTip(axisLength,0,0);
-    Point3 yAxisTip(0,axisLength,0);
-    Point3 zAxisTip(0,0,axisLength);
-    g_vertex_buffer_data[numVertices - 18] = worldCenter.x();
-    g_vertex_buffer_data[numVertices - 17] = worldCenter.y();
-    g_vertex_buffer_data[numVertices - 16] = worldCenter.z();
-    g_vertex_buffer_data[numVertices - 15] = xAxisTip.x();
-    g_vertex_buffer_data[numVertices - 14] = xAxisTip.y();
-    g_vertex_buffer_data[numVertices - 13] = xAxisTip.z();
-    g_vertex_buffer_data[numVertices - 12] = worldCenter.x();
-    g_vertex_buffer_data[numVertices - 11] = worldCenter.y();
-    g_vertex_buffer_data[numVertices - 10] = worldCenter.z();
-    g_vertex_buffer_data[numVertices - 9] = yAxisTip.x();
-    g_vertex_buffer_data[numVertices - 8] = yAxisTip.y();
-    g_vertex_buffer_data[numVertices - 7] = yAxisTip.z();
-    g_vertex_buffer_data[numVertices - 6] = worldCenter.x();
-    g_vertex_buffer_data[numVertices - 5] = worldCenter.y();
-    g_vertex_buffer_data[numVertices - 4] = worldCenter.z();
-    g_vertex_buffer_data[numVertices - 3] = zAxisTip.x();
-    g_vertex_buffer_data[numVertices - 2] = zAxisTip.y();
-    g_vertex_buffer_data[numVertices - 1] = zAxisTip.z();
+    Point3 xAxisTip(worldAxisLength,0,0);
+    Point3 yAxisTip(0,worldAxisLength,0);
+    Point3 zAxisTip(0,0,worldAxisLength);
 
+    //First line: X axis
+    //First point:
+    g_vertex_buffer_data[vertexDataSize - 18] = worldCenter.x();
+    g_vertex_buffer_data[vertexDataSize - 17] = worldCenter.y();
+    g_vertex_buffer_data[vertexDataSize - 16] = worldCenter.z();
+    //Second point:
+    g_vertex_buffer_data[vertexDataSize - 15] = xAxisTip.x();
+    g_vertex_buffer_data[vertexDataSize - 14] = xAxisTip.y();
+    g_vertex_buffer_data[vertexDataSize - 13] = xAxisTip.z();
+    //Second line: Y axis
+    //First point:
+    g_vertex_buffer_data[vertexDataSize - 12] = worldCenter.x();
+    g_vertex_buffer_data[vertexDataSize - 11] = worldCenter.y();
+    g_vertex_buffer_data[vertexDataSize - 10] = worldCenter.z();
+    //Second point:
+    //First point:
+    g_vertex_buffer_data[vertexDataSize - 9] = yAxisTip.x();
+    g_vertex_buffer_data[vertexDataSize - 8] = yAxisTip.y();
+    g_vertex_buffer_data[vertexDataSize - 7] = yAxisTip.z();
+    //Third line: Z axis
+    //First point
+    g_vertex_buffer_data[vertexDataSize - 6] = worldCenter.x();
+    g_vertex_buffer_data[vertexDataSize - 5] = worldCenter.y();
+    g_vertex_buffer_data[vertexDataSize - 4] = worldCenter.z();
+    //Second point:
+    g_vertex_buffer_data[vertexDataSize - 3] = zAxisTip.x();
+    g_vertex_buffer_data[vertexDataSize - 2] = zAxisTip.y();
+    g_vertex_buffer_data[vertexDataSize - 1] = zAxisTip.z();
 
-    g_color_buffer_data[numVertices - 18] = 1.0f;
-    g_color_buffer_data[numVertices - 17] = 0.0f;
-    g_color_buffer_data[numVertices - 16] = 0.0f;
-    g_color_buffer_data[numVertices - 15] = 1.0f;
-    g_color_buffer_data[numVertices - 14] = 0.0f;
-    g_color_buffer_data[numVertices - 13] = 0.0f;
-    g_color_buffer_data[numVertices - 12] = 0.0f;
-    g_color_buffer_data[numVertices - 11] = 1.0f;
-    g_color_buffer_data[numVertices - 10] = 0.0f;
-    g_color_buffer_data[numVertices - 9] = 0.0f;
-    g_color_buffer_data[numVertices - 8] = 1.0f;
-    g_color_buffer_data[numVertices - 7] = 0.0f;
-    g_color_buffer_data[numVertices - 6] = 0.0f;
-    g_color_buffer_data[numVertices - 5] = 0.0f;
-    g_color_buffer_data[numVertices - 4] = 1.0f;
-    g_color_buffer_data[numVertices - 3] = 0.0f;
-    g_color_buffer_data[numVertices - 2] = 0.0f;
-    g_color_buffer_data[numVertices - 1] = 1.0f;
+    //First line: X axis
+    //First point:
+    g_color_buffer_data[vertexDataSize - 18] = 1.0f;
+    g_color_buffer_data[vertexDataSize - 17] = 0.0f;
+    g_color_buffer_data[vertexDataSize - 16] = 0.0f;
+    //Second point:
+    g_color_buffer_data[vertexDataSize - 15] = 1.0f;
+    g_color_buffer_data[vertexDataSize - 14] = 0.0f;
+    g_color_buffer_data[vertexDataSize - 13] = 0.0f;
+
+    //Second line: Y axis
+    //First point:
+    g_color_buffer_data[vertexDataSize - 12] = 0.0f;
+    g_color_buffer_data[vertexDataSize - 11] = 1.0f;
+    g_color_buffer_data[vertexDataSize - 10] = 0.0f;
+    //Second point:
+    g_color_buffer_data[vertexDataSize - 9] = 0.0f;
+    g_color_buffer_data[vertexDataSize - 8] = 1.0f;
+    g_color_buffer_data[vertexDataSize - 7] = 0.0f;
+
+    //Third line: Z axis
+    //First point:
+    g_color_buffer_data[vertexDataSize - 6] = 0.0f;
+    g_color_buffer_data[vertexDataSize - 5] = 0.0f;
+    g_color_buffer_data[vertexDataSize - 4] = 1.0f;
+    //Second point:
+    g_color_buffer_data[vertexDataSize - 3] = 0.0f;
+    g_color_buffer_data[vertexDataSize - 2] = 0.0f;
+    g_color_buffer_data[vertexDataSize - 1] = 1.0f;
+    // End lines for world axes
 
     //Place vertex info into a buffer
     glGenBuffers(1, &vertexbuffer);
@@ -488,16 +580,15 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
 
     //while loop start
     do{
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the screen
         glUseProgram(programID); // Use our shader
-
         // Compute the MVP matrix from keyboard and mouse input
         computeMatricesFromInputs(window);
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
         glm::mat4 ViewMatrix = getViewMatrix();
         glm::mat4 ModelMatrix = glm::mat4(1.0);
         glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
-
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE,&MVP[0][0]); // Send our transformation to the currently bound shader in the "MVP" uniform
 
         // 1st attribute buffer : vertices
@@ -522,13 +613,14 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
                 0,                                // stride
                 (void *) 0                          // array buffer offset
         );
-        glDrawArrays(GL_LINES, 360 * 3 * objects.size(), 360 * 3 * objects.size() + 3*6);
-        glDrawArrays(GL_TRIANGLES, 0, 360 * 3 * objects.size() /*+ 3*3*/); // Draw the triangle ! 12*3 indices starting at 0 -> 12 triangles
+
+        //MOST IMPORTANT DRAWING CODE IS HERE! We take what we stored in the vertex buffer and draw it.
+        //Note that here we count VERTICES (e.g. 3 points per triangle or 2 points per line) NOT DOUBLES
+        glDrawArrays(GL_TRIANGLES, 0, 360 * 3 * objects.size()); // Draw the 360 triangles per ellipse. Each triangle has 3 points. Hence 360*3*objects.size(). Start at index 0.
+        glDrawArrays(GL_LINES,360 * 3 * objects.size(), 360 * 3 * objects.size() + objects.size()*3*2); //Draw object.size # of axes groups. Each axes group has 3 lines. Each line has 2 points.
+        glDrawArrays(GL_LINES, 360 * 3 * objects.size() + objects.size()*3*2, 360 * 3 * objects.size() + objects.size()*3*2 + 3*2); //Draw world axes group. Group has 3 lines. Each line has 2 points.
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
-
-
-
         glfwSwapBuffers(window); // Swap buffers
         glfwPollEvents();
     }while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&

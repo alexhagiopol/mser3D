@@ -2,6 +2,7 @@
 #include "testGeometry.h"
 #include "testMeasurementFunction.h"
 #include "Visualizer.h"
+#include "MserTrack.h"
 #include <opencv2/opencv.hpp>
 #include <fstream>
 #include <iostream>
@@ -12,13 +13,6 @@
 
 typedef std::vector<double> record_t;
 typedef std::vector<record_t> data_t;
-struct mserTrack{
-    int colorR; //colors to be assigned to final object
-    int colorG;
-    int colorB;
-    std::vector<int> frameNumbers; //must have same length as measurements
-    std::vector<MserMeasurement> measurements; //must have same length as frame numbers
-};
 
 std::istream& operator >> (std::istream& ins, record_t& record){
     record.clear();
@@ -44,14 +38,14 @@ std::istream& operator >> (std::istream& ins, data_t& data){
     return ins;
 }
 
-std::vector<mserTrack> getMserTracksFromCSV(){
+std::vector<MserTrack> getMserTracksFromCSV(){
     std::ifstream infile("/home/alex/mser/mser_2d/MserMeasurements.csv");
     data_t data;
     infile >> data;
     infile.close();
-    std::vector<mserTrack> tracks;
+    std::vector<MserTrack> tracks;
     for (int r = 1; r < data.size(); r++){ //start at row 1 because row 0 does not contain data
-        mserTrack track;
+        MserTrack track;
         int numMSERS = data[r][1];
         for (int c = 2; c < 2 + 6*numMSERS; c = c + 6){
             int frameNum = (int) data[r][c];
@@ -92,7 +86,7 @@ std::vector<Pose3> getPosesFromBAL(){
     return poses;
 }
 
-std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(std::vector<mserTrack>& tracks, std::vector<Pose3>& VOposes){
+std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(std::vector<MserTrack>& tracks, std::vector<Pose3>& VOposes){
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
     Cal3_S2::shared_ptr K(new Cal3_S2(50.0, 50.0, 0.1, 1280/2, 720/2));
@@ -125,8 +119,9 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
     return pair;
 }
 
+//Write video images with superimposed MSER measurements to disk in order to test/verify
 void testPrintSuperimposedMeasurementImages(){
-    std::vector<mserTrack> tracks = getMserTracksFromCSV();
+    std::vector<MserTrack> tracks = getMserTracksFromCSV();
     std::vector<Pose3> poses = getPosesFromBAL();
     //std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
     //drawMserObjects(pair.first,pair.second);
@@ -179,6 +174,7 @@ void testPrintSuperimposedMeasurementImages(){
     }
 }
 
+//Draw all of the poses that we get from visual odometry
 void testDisplayPoses(){
     std::vector<Pose3> poses = getPosesFromBAL();
     std::vector<MserObject> dummyObjects;
@@ -186,7 +182,7 @@ void testDisplayPoses(){
     std::vector<Vector3> colors;
     for (int p = 0; p < poses.size(); p++){
         poses[p].print();
-        Point2 axes = Point2(0.5,0.5);
+        Point2 axes = Point2(0,0); //Hack: Draw "invisible" ellipse. Only axes will show.
         MserObject dummyObject = MserObject(poses[p],axes);
         dummyObjects.push_back(dummyObject);
         colors.push_back(color);

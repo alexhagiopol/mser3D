@@ -56,6 +56,4 @@ void testAllVisualization(){
     testMserObjectDrawing();
 }
 
-
-
 #endif //MSER_3D_TESTVISUALIZATION_H

@@ -89,7 +89,8 @@ add_executable(mser_3d
 	ColorFragmentShader.fragmentshader
 	Visualizer.cpp
 	MserObject.h
-	MserMeasurement.h)
+	MserMeasurement.h
+	MserTrack.h)
 
 #find_package(GTSAM REQUIRED) #CRAZY ISSUE adding this along with the other find_package statements breaks GLEW and GLFW linkage....
 #include_directories(${GTSAM_INCLUDE_DIRS}) #see above
