@@ -6,26 +6,10 @@
 #define MSER_3D_TESTGEOMETRY_H
 #include "measurementFunction.h"
 #include "geometryFunctions.h"
-#include "mserClasses.h"
 #include <gtsam/nonlinear/Values.h>
 
 using namespace gtsam;
 using namespace std;
-
-//Unit test for pointPairOptimize()
-void testPointPairOptimize(){
-    MyPoint2Pair pair1;
-    Vector4 d;
-    d << 1,2,3,4;
-    MyPoint2Pair expected(Point2(1,2),Point2(3,4));
-    MyPoint2Pair pair2 = pair1.retract(d);
-    if (gtsam::traits<MyPoint2Pair>::Equals(expected, pair2)){
-        std::cout << "Point2 Pair Example PASSED." << std::endl;
-    }
-    else{
-        std::cout << "Point2 Pair Example FAILED." << std::endl;
-    }
-}
 
 //Unit test for 3D object location
 void testLocateObject(){

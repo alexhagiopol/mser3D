@@ -17,7 +17,7 @@ struct mserTrack{
     int colorG;
     int colorB;
     std::vector<int> frameNumbers; //must have same length as measurements
-    std::vector<mserMeasurement> measurements; //must have same length as frame numbers
+    std::vector<MserMeasurement> measurements; //must have same length as frame numbers
 };
 
 std::istream& operator >> (std::istream& ins, record_t& record){
@@ -45,7 +45,7 @@ std::istream& operator >> (std::istream& ins, data_t& data){
 }
 
 std::vector<mserTrack> getMserTracksFromCSV(){
-    std::ifstream infile("/home/alex/mser/mser_2d/mserMeasurements.csv");
+    std::ifstream infile("/home/alex/mser/mser_2d/MserMeasurements.csv");
     data_t data;
     infile >> data;
     infile.close();
@@ -66,7 +66,7 @@ std::vector<mserTrack> getMserTracksFromCSV(){
             int B = data[r][end];
             Pose2 pose(x,y,theta);
             Point2 axes(a,b);
-            mserMeasurement measurement(pose,axes);
+            MserMeasurement measurement(pose,axes);
             track.frameNumbers.push_back(frameNum);
             track.measurements.push_back(measurement);
             track.colorR = R;
@@ -92,12 +92,12 @@ std::vector<Pose3> getPosesFromBAL(){
     return poses;
 }
 
-std::pair<std::vector<mserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(std::vector<mserTrack>& tracks, std::vector<Pose3>& VOposes){
-    std::vector<mserObject> objects;
+std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(std::vector<mserTrack>& tracks, std::vector<Pose3>& VOposes){
+    std::vector<MserObject> objects;
     std::vector<Vector3> colors;
     Cal3_S2::shared_ptr K(new Cal3_S2(50.0, 50.0, 0.1, 1280/2, 720/2));
     for (int t = 0; t < 60; t++){
-        std::vector<mserMeasurement> measurements = tracks[t].measurements;
+        std::vector<MserMeasurement> measurements = tracks[t].measurements;
         std::cout << "#" << t << " has " << measurements.size() << " measurements" << std::endl;
         if ((t != 14) && (t != 18) && (t != 22)&& (t != 23)){
             std::vector<SimpleCamera> cameras;
@@ -111,24 +111,24 @@ std::pair<std::vector<mserObject>,std::vector<Vector3>> inferObjectsFromRealMser
             Rot3 initialGuessOrientation = cameras[0].pose().rotation();
             Point2 initialGuessAxes(2,1); //another complete guess....need to use back project for better guess
             Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
-            mserObject initialGuess(initialGuessPose, initialGuessAxes);
+            MserObject initialGuess(initialGuessPose, initialGuessAxes);
 
             Values result = expressionsOptimizationRealWorld(initialGuess, measurements, cameras);
-            mserObject returnedObject = result.at<mserObject>(Symbol('o',0));
-            gtsam::traits<mserObject>::Print(returnedObject);
+            MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
+            gtsam::traits<MserObject>::Print(returnedObject);
             objects.push_back(returnedObject);
             gtsam::Vector3 trackColor(tracks[t].colorR,tracks[t].colorG,tracks[t].colorB);
             colors.push_back(trackColor);
         }
     }
-    std::pair<std::vector<mserObject>,std::vector<Vector3>> pair(objects,colors);
+    std::pair<std::vector<MserObject>,std::vector<Vector3>> pair(objects,colors);
     return pair;
 }
 
 void testPrintSuperimposedMeasurementImages(){
     std::vector<mserTrack> tracks = getMserTracksFromCSV();
     std::vector<Pose3> poses = getPosesFromBAL();
-    //std::pair<std::vector<mserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
+    //std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
     //drawMserObjects(pair.first,pair.second);
 
     //Extract video frames and store in memory
@@ -150,11 +150,11 @@ void testPrintSuperimposedMeasurementImages(){
     }
     capture.release();
 
-    //Draw mserMeasurement ellipses on each video frame
+    //Draw MserMeasurement ellipses on each video frame
     for (int t = 0; t < tracks.size(); t++){
         for (int f = 0; f < tracks[t].frameNumbers.size(); f++){
             int frameNum = tracks[t].frameNumbers[f] - 1;
-            mserMeasurement msmt = tracks[t].measurements[f];
+            MserMeasurement msmt = tracks[t].measurements[f];
             cv::Point center = cv::Point(msmt.first.x(),msmt.first.y());
             cv::Size axes = cv::Size(msmt.second.x(),msmt.second.y());
             double angle = msmt.first.theta()*180/M_PI; //opencv wants angles in degrees
@@ -181,13 +181,13 @@ void testPrintSuperimposedMeasurementImages(){
 
 void testDisplayPoses(){
     std::vector<Pose3> poses = getPosesFromBAL();
-    std::vector<mserObject> dummyObjects;
+    std::vector<MserObject> dummyObjects;
     Vector3 color = Vector3(0,0,0);
     std::vector<Vector3> colors;
     for (int p = 0; p < poses.size(); p++){
         poses[p].print();
         Point2 axes = Point2(0.5,0.5);
-        mserObject dummyObject = mserObject(poses[p],axes);
+        MserObject dummyObject = MserObject(poses[p],axes);
         dummyObjects.push_back(dummyObject);
         colors.push_back(color);
     }
@@ -200,9 +200,9 @@ int main() {
     //testAllMeasurementFunction();
     testPrintSuperimposedMeasurementImages();
     testDisplayPoses();
-    //Display camera poses using dummy mserObjects
+    //Display camera poses using dummy MserObjects
 
-    //std::pair<std::vector<mserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
+    //std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
     //drawMserObjects(pair.first,pair.second);
 
 

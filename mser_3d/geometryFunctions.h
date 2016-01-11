@@ -5,8 +5,6 @@
 #ifndef MSER_3D_GEOMETRYFUNCTIONS_H
 #define MSER_3D_GEOMETRYFUNCTIONS_H
 
-#include "mserClasses.h"
-#include "boost/optional.hpp"
 #include <gtsam/geometry/OrientedPlane3.h>
 #include <gtsam/geometry/Point2.h>
 #include <gtsam/geometry/Point3.h>
@@ -21,11 +19,15 @@
 #include <gtsam/slam/expressions.h>  //required for optimization with Expressions syntax
 #include <gtsam/slam/dataset.h>
 #include <gtsam/slam/GeneralSFMFactor.h>
-#include <math.h>
-#include <string>
-#include <random>
-#include <vector>
+
+#include "boost/optional.hpp"
+
 #include <iostream>
+#include <math.h>
+#include <random>
+#include <string>
+#include <vector>
+
 
 using namespace gtsam;
 using namespace std;
@@ -102,23 +104,6 @@ std::vector<gtsam::Pose3> createPoses() {
         poses.push_back(camera.pose());
     }
     return poses;
-}
-
-//Example optimization using a new object that consists of a pair of Point2 objects.
-//Essentially computes the average of a set of these objects to serve as unit test.
-//Uses standard GTSAM syntax i.e. no Expressions yet.
-Values pointPairOptimize(){
-    MyPoint2Pair p1(Point2(1,2),Point2(3,4));
-    MyPoint2Pair p2(Point2(10,20),Point2(30,40));
-    NonlinearFactorGraph graph;
-    noiseModel::Isotropic::shared_ptr pointNoise = noiseModel::Isotropic::Sigma(4, 0.1);
-    graph.add(PriorFactor<MyPoint2Pair>(1,p1,pointNoise));
-    graph.add(PriorFactor<MyPoint2Pair>(1,p2,pointNoise));
-    Values initial;
-    initial.insert(1, p1);
-    Values result = LevenbergMarquardtOptimizer(graph, initial).optimize();
-    result.print();
-    return result;
 }
 
 //Example optimization using 3D points. Given a set of data points

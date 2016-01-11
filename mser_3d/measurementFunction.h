@@ -5,8 +5,9 @@
 #ifndef MSER_3D_MEASUREMENTFUNCTION_H
 #define MSER_3D_MEASUREMENTFUNCTION_H
 
+#include "MserMeasurement.h"
+#include "MserObject.h"
 #include "geometryFunctions.h"
-#include "mserClasses.h"
 #include "boost/optional.hpp"
 #include <gtsam/geometry/OrientedPlane3.h>
 #include <gtsam/geometry/Point2.h>
@@ -27,7 +28,7 @@ struct pointsPose{ //note: Point3s are in *object frame*
     Pose3 objectPose;
 };
 
-pointsPose convertObjectToObjectPointsPose(const mserObject& object, OptionalJacobian<12,8> Dobject = boost::none){
+pointsPose convertObjectToObjectPointsPose(const MserObject& object, OptionalJacobian<12,8> Dobject = boost::none){
     pointsPose myPointsPose;
     myPointsPose.majAxisTip = Point3(object.second.x(),0,0);
     myPointsPose.minAxisTip = Point3(0,object.second.y(),0);
@@ -127,7 +128,7 @@ std::vector<Point2> convertWorldPoint3sToCameraPoint2s(const SimpleCamera& camer
     return cameraPoint2s;
 }
 
-mserMeasurement convertCameraPoint2sToMeasurement(std::vector<Point2>& cameraPoint2s, OptionalJacobian<5,6> Dpoints = boost::none){
+MserMeasurement convertCameraPoint2sToMeasurement(std::vector<Point2>& cameraPoint2s, OptionalJacobian<5,6> Dpoints = boost::none){
     Point2 measurementCenter = cameraPoint2s[0]; //Jacobian for this is 2x2 identity matrix
     Matrix12 thetaDcenter, thetaDmajor, A1Dmajor, A1Dcenter, A2Dminor, A2Dcenter;
     double theta = ellipse2DOrientation(measurementCenter, cameraPoint2s[1], thetaDcenter, thetaDmajor);
@@ -135,7 +136,7 @@ mserMeasurement convertCameraPoint2sToMeasurement(std::vector<Point2>& cameraPoi
     double A2 = cameraPoint2s[2].distance(measurementCenter, A2Dminor, A2Dcenter);
     Pose2 ellipsePose(measurementCenter.x(),measurementCenter.y(),theta);
     Point2 axisLengths(A1,A2);
-    mserMeasurement measurement(ellipsePose,axisLengths);
+    MserMeasurement measurement(ellipsePose,axisLengths);
     if (Dpoints){
         *Dpoints <<                 1,                 0,                0,                0,             0,             0,
                                     0,                 1,                0,                0,             0,             0,
@@ -146,7 +147,7 @@ mserMeasurement convertCameraPoint2sToMeasurement(std::vector<Point2>& cameraPoi
     return measurement;
 }
 
-mserMeasurement measurementFunction(const SimpleCamera& camera, const mserObject& object, OptionalJacobian<5,11> Dcamera = boost::none, OptionalJacobian<5,8> Dobject = boost::none){
+MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject& object, OptionalJacobian<5,11> Dcamera = boost::none, OptionalJacobian<5,8> Dobject = boost::none){
     //Part 1: object -> 2X Point3 in object Frame + 1X Pose3
     Eigen::MatrixXd objectpointsposeDobject12_8(12,8);
     pointsPose objectPointsPose = convertObjectToObjectPointsPose(object, objectpointsposeDobject12_8);
@@ -163,7 +164,7 @@ mserMeasurement measurementFunction(const SimpleCamera& camera, const mserObject
 
     //Part 4: 3X Point2s in camera frame -> 1X measurement
     Matrix56 msmtDcampoints56;
-    mserMeasurement measurement = convertCameraPoint2sToMeasurement(cameraPoints, msmtDcampoints56);
+    MserMeasurement measurement = convertCameraPoint2sToMeasurement(cameraPoints, msmtDcampoints56);
 
     //Provide Jacobians
     //if (Dpose) *Dpose << msmtDcampoints56*campointsDpose66;
@@ -190,30 +191,30 @@ mserMeasurement measurementFunction(const SimpleCamera& camera, const mserObject
     return measurement;
 }
 
-typedef Expression<mserObject> mserObject_;
-typedef Expression<mserMeasurement> mserMeasurement_;
+typedef Expression<MserObject> MserObject_;
+typedef Expression<MserMeasurement> MserMeasurement_;
 typedef Expression<SimpleCamera> SimpleCamera_;
 
-inline mserMeasurement_ measurementFunctionExp(const SimpleCamera_ &camera_, const mserObject_ &object_) {
-    mserMeasurement (*f)(const SimpleCamera&, const mserObject&, OptionalJacobian<5,11>, OptionalJacobian<5,8>) = &measurementFunction;
-    return mserMeasurement_(f, camera_, object_);
+inline MserMeasurement_ measurementFunctionExpr(const SimpleCamera_ &camera_, const MserObject_ &object_) {
+    MserMeasurement (*f)(const SimpleCamera&, const MserObject&, OptionalJacobian<5,11>, OptionalJacobian<5,8>) = &measurementFunction;
+    return MserMeasurement_(f, camera_, object_);
 }
 
-std::vector<mserMeasurement> createIdealMeasurements(std::vector<SimpleCamera>& cameras, mserObject& object){
-    std::vector<mserMeasurement> measurements;
+std::vector<MserMeasurement> createIdealMeasurements(std::vector<SimpleCamera>& cameras, MserObject& object){
+    std::vector<MserMeasurement> measurements;
     for (size_t i = 0; i < cameras.size(); i++){
-        mserMeasurement measurement = measurementFunction(cameras[i], object);
+        MserMeasurement measurement = measurementFunction(cameras[i], object);
         measurements.push_back(measurement);
     }
     return measurements;
 }
 
-Values expressionsOptimizationSynthetic(mserObject& object, mserObject& initialGuess){
+Values expressionsOptimizationSynthetic(MserObject& object, MserObject& initialGuess){
     Isotropic::shared_ptr measurementNoise = Isotropic::Sigma(5, 1.0); // one pixel in every dimension
 
     //Ground truth object is passed to this function. Create vectors with measurements, cameras, and camera poses.
     std::vector<SimpleCamera> cameras = alexCreateCameras(20,object.first.translation(),20); //make a bunch of cameras to pass to measurement function
-    std::vector<mserMeasurement> measurements = createIdealMeasurements(cameras, object); //synthetic measurements directly from measurement function
+    std::vector<MserMeasurement> measurements = createIdealMeasurements(cameras, object); //synthetic measurements directly from measurement function
     std::vector<Pose3> poses;
     for (size_t i = 0; i < cameras.size(); i++){
         poses.push_back(cameras[i].pose());
@@ -224,15 +225,15 @@ Values expressionsOptimizationSynthetic(mserObject& object, mserObject& initialG
 
     for (size_t i = 0; i < poses.size(); ++i) {
         const SimpleCamera_ c(cameras[i]); //expression for the camera created here
-        mserMeasurement measurement = measurements[i];
+        MserMeasurement measurement = measurements[i];
         // Below an expression for the prediction of the measurement:
-        mserObject_ o('o',0);
-        mserMeasurement_ prediction = measurementFunctionExp(c,o);
+        MserObject_ o('o',0);
+        MserMeasurement_ prediction = measurementFunctionExpr(c,o);
         graph.addExpressionFactor(prediction,measurement,measurementNoise);
     }
     // Add prior on object to constrain scale, again with ExpressionFactor[
     Isotropic::shared_ptr objectNoise = Isotropic::Sigma(8, 0.1);
-    graph.addExpressionFactor(mserObject_('o', 0), initialGuess, objectNoise); //use initial guess as prior
+    graph.addExpressionFactor(MserObject_('o', 0), initialGuess, objectNoise); //use initial guess as prior
 
     // Create perturbed initial
     Values initial;
@@ -243,12 +244,12 @@ Values expressionsOptimizationSynthetic(mserObject& object, mserObject& initialG
     return result;
 }
 
-Values expressionsOptimizationRealWorld(mserObject& initialGuess, std::vector<mserMeasurement>& measurements, std::vector<SimpleCamera>& cameras){
+Values expressionsOptimizationRealWorld(MserObject& initialGuess, std::vector<MserMeasurement>& measurements, std::vector<SimpleCamera>& cameras){
     Isotropic::shared_ptr measurementNoise = Isotropic::Sigma(5, 0.1); // one pixel in every dimension
 
     //Ground truth object is passed to this function. Create vectors with measurements, cameras, and camera poses.
     //std::vector<SimpleCamera> cameras = alexCreateCameras(20,object.first.translation(),20); //make a bunch of cameras to pass to measurement function
-    //std::vector<mserMeasurement> measurements = createIdealMeasurements(cameras, object); //synthetic measurements directly from measurement function
+    //std::vector<MserMeasurement> measurements = createIdealMeasurements(cameras, object); //synthetic measurements directly from measurement function
     std::vector<Pose3> poses;
     for (size_t i = 0; i < cameras.size(); i++){
         poses.push_back(cameras[i].pose());
@@ -259,15 +260,15 @@ Values expressionsOptimizationRealWorld(mserObject& initialGuess, std::vector<ms
 
     for (size_t i = 0; i < poses.size(); ++i) {
         const SimpleCamera_ c(cameras[i]); //expression for the camera created here
-        mserMeasurement measurement = measurements[i];
+        MserMeasurement measurement = measurements[i];
         // Below an expression for the prediction of the measurement:
-        mserObject_ o('o',0);
-        mserMeasurement_ prediction = measurementFunctionExp(c,o);
+        MserObject_ o('o',0);
+        MserMeasurement_ prediction = measurementFunctionExpr(c,o);
         graph.addExpressionFactor(prediction,measurement,measurementNoise);
     }
     // Add prior on object to constrain scale, again with ExpressionFactor[
     Isotropic::shared_ptr objectNoise = Isotropic::Sigma(8, 0.2);
-    graph.addExpressionFactor(mserObject_('o', 0), initialGuess, objectNoise); //use initial guess as prior
+    graph.addExpressionFactor(MserObject_('o', 0), initialGuess, objectNoise); //use initial guess as prior
 
     // Create perturbed initial
     Values initial;

@@ -6,23 +6,33 @@
 #ifndef MSER_3D_VISUALIZER_H
 #define MSER_3D_VISUALIZER_H
 
-#include "mserClasses.h"
+#include "MserMeasurement.h"
+#include "MserObject.h"
+
+#include <gtsam/geometry/SimpleCamera.h>
+
 #include <GL/glew.h> // Include GLEW
 #include <glfw3.h> // Include GLFW
 #include <glm/glm.hpp> // Include GLM
 #include <glm/gtc/matrix_transform.hpp>
+
 #include "opencv2/core/core.hpp"
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/nonfree/features2d.hpp"
-#include <random>
-#include <stdlib.h>
-#include <sstream>
+
 #include <iostream>
-#include <stdio.h>
-#include <gtsam/geometry/SimpleCamera.h>
 #include <math.h>
+#include <random>
+#include <sstream>
+#include <stdio.h>
+#include <stdlib.h>
+
+
+
+
+
 
 //#include "opencv2/imgcodecs.hpp"
 //#include "opencv2/highgui/highgui.hpp"
@@ -34,7 +44,7 @@ using namespace gtsam;
 #include "common/shader.hpp" //shader.hpp needs the GLM namespace, else you will get "xyz does not name a type" errors.
 #include "common/controls.hpp"
 
-int produceMSERMeasurements(std::vector<gtsam::SimpleCamera>& cameras, Point3& target, std::vector<mserMeasurement>& measurements){
+int produceMserMeasurements(std::vector<gtsam::SimpleCamera>& cameras, Point3& target, std::vector<MserMeasurement>& measurements){
     GLFWwindow* window;
     // Initialise GLFW
     if( !glfwInit() )
@@ -280,7 +290,7 @@ int produceMSERMeasurements(std::vector<gtsam::SimpleCamera>& cameras, Point3& t
             ellipse(gray, rr, Scalar(0,0,0),5);
             Pose2 ellipsePose = Pose2(rr.center.x,rr.center.y,rr.angle);
             Point2 ellipseAxes = Point2(rr.size.height,rr.size.width);
-            mserMeasurement msmt = mserMeasurement(ellipsePose,ellipseAxes);
+            MserMeasurement msmt = MserMeasurement(ellipsePose,ellipseAxes);
             measurements.push_back(msmt);
         }
         //imshow("mser",gray_flipped);
@@ -300,7 +310,7 @@ int produceMSERMeasurements(std::vector<gtsam::SimpleCamera>& cameras, Point3& t
     return 0;
 }
 
-int drawMserObjects(const std::vector<mserObject>& objects, const std::vector<Vector3>& colors = std::vector<Vector3>()){
+int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Vector3>& colors = std::vector<Vector3>()){
     GLFWwindow *window;
     // Initialise GLFW
     if (!glfwInit()) {
