@@ -39,7 +39,7 @@ std::istream& operator >> (std::istream& ins, data_t& data){
 }
 
 std::vector<MserTrack> getMserTracksFromCSV(){
-    std::ifstream infile("/home/alex/mser/mser_2d/MserMeasurements.csv");
+    std::ifstream infile("/home/alex/mser/mser_2d/mserMeasurements.csv");
     data_t data;
     infile >> data;
     infile.close();
@@ -89,31 +89,31 @@ std::vector<Pose3> getPosesFromBAL(){
 std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(std::vector<MserTrack>& tracks, std::vector<Pose3>& VOposes){
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
-    Cal3_S2::shared_ptr K(new Cal3_S2(50.0, 50.0, 0.1, 1280/2, 720/2));
-    for (int t = 0; t < 60; t++){
+    Cal3_S2::shared_ptr K(new Cal3_S2(470.0, 470.0, 0.1, 1280/2, 720/2));
+    for (int t = 0; t < 40 /*tracks.size()*/; t++){
         std::vector<MserMeasurement> measurements = tracks[t].measurements;
         std::cout << "#" << t << " has " << measurements.size() << " measurements" << std::endl;
-        if ((t != 14) && (t != 18) && (t != 22)&& (t != 23)){
-            std::vector<SimpleCamera> cameras;
-            for (int m = 0; m < measurements.size(); m++){
-                SimpleCamera camera(VOposes[tracks[t].frameNumbers[m]],*K);
-                cameras.push_back(camera);
-            }
-
-            //Make initial guess
-            Point3 initialGuessCenter = cameras[0].backproject_from_camera(Point2(measurements[0].first.x(),measurements[0].first.y()),5); //totally guessing this depth....
-            Rot3 initialGuessOrientation = cameras[0].pose().rotation();
-            Point2 initialGuessAxes(2,1); //another complete guess....need to use back project for better guess
-            Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
-            MserObject initialGuess(initialGuessPose, initialGuessAxes);
-
-            Values result = expressionsOptimizationRealWorld(initialGuess, measurements, cameras);
-            MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
-            gtsam::traits<MserObject>::Print(returnedObject);
-            objects.push_back(returnedObject);
-            gtsam::Vector3 trackColor(tracks[t].colorR,tracks[t].colorG,tracks[t].colorB);
-            colors.push_back(trackColor);
+        std::vector<SimpleCamera> cameras;
+        for (int m = 0; m < measurements.size(); m++){
+            SimpleCamera camera(VOposes[tracks[t].frameNumbers[m]],*K);
+            cameras.push_back(camera);
         }
+        //Make initial guess
+        Point3 other_initialGuessCenter = cameras[0].backproject(Point2(measurements[0].first.x(),measurements[0].first.y()),5); //totally guessing this depth....
+        Rot3 other_initialGuessOrientation = cameras[0].pose().rotation();
+        Pose3 other_initialGuessPose = Pose3(other_initialGuessOrientation, other_initialGuessCenter);
+        Point2 initialGuessAxes(2,1); //another complete guess....need to use back project for better guess
+        //Pose3 initialGuessPose = cameras[0].pose(); //(initialGuessOrientation, initialGuessCenter);
+        //initialGuessPose.print("CAMERA POSE");
+        cout << "X" << measurements[0].first.x() << "Y" << measurements[0].first.y()<< endl;
+        //other_initialGuessPose.print("PROJECTED MSMT POSE");
+        MserObject initialGuess(other_initialGuessPose, initialGuessAxes);
+        Values result = expressionsOptimizationRealWorld(initialGuess, measurements, cameras);
+        MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
+        gtsam::traits<MserObject>::Print(returnedObject);
+        objects.push_back(returnedObject);
+        gtsam::Vector3 trackColor(tracks[t].colorR,tracks[t].colorG,tracks[t].colorB);
+        colors.push_back(trackColor);
     }
     std::pair<std::vector<MserObject>,std::vector<Vector3>> pair(objects,colors);
     return pair;
@@ -190,18 +190,39 @@ void testDisplayPoses(){
     drawMserObjects(dummyObjects,colors);
 }
 
+//Helper function for displaying camera pose axes in same window as inferred MSER Objects. Adds dummy objects and colors to ends of provided vectors. You then call drawMserObjects() on the resulting vectors.
+void addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(std::vector<MserObject>& objects, std::vector<Vector3>& colors){
+    std::vector<Pose3> poses = getPosesFromBAL();
+    Vector3 color(0,0,0);
+    for (int p = 0; p < poses.size(); p++){
+        //poses[p].print();
+        Point2 axes = Point2(0,0); //Hack: Draw "invisible" ellipse. Only axes will show.
+        MserObject dummyObject = MserObject(poses[p],axes);
+        int frameNumber = p+1;
+        objects.push_back(dummyObject);
+        colors.push_back(color);
+    }
+}
+
 int main() {
     //testAllVisualization();
     //testAllGeometry();
-    //testAllMeasurementFunction();
-    testPrintSuperimposedMeasurementImages();
-    testDisplayPoses();
+    testAllMeasurementFunction();
+    //testPrintSuperimposedMeasurementImages();
+    //testDisplayPoses();
     //Display camera poses using dummy MserObjects
 
-    //std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
+    std::vector<MserTrack> tracks = getMserTracksFromCSV();
+    std::vector<Pose3> poses = getPosesFromBAL();
+    std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
     //drawMserObjects(pair.first,pair.second);
 
-
+    //std::vector<MserObject> cameraPoseDummyObjects;
+    //std::vector<Vector3> cameraPoseDummyColors;
+    addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(pair.first,pair.second);
+    //pair.first.insert(pair.first.end(),cameraPoseDummyObjects.begin(),cameraPoseDummyObjects.end());
+    //pair.second.insert(pair.second.end(),cameraPoseDummyColors.begin(),cameraPoseDummyColors.end());
+    drawMserObjects(pair.first,pair.second);
     return 0;
 }
 

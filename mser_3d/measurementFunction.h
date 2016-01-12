@@ -213,7 +213,7 @@ Values expressionsOptimizationSynthetic(MserObject& object, MserObject& initialG
     Isotropic::shared_ptr measurementNoise = Isotropic::Sigma(5, 1.0); // one pixel in every dimension
 
     //Ground truth object is passed to this function. Create vectors with measurements, cameras, and camera poses.
-    std::vector<SimpleCamera> cameras = alexCreateCameras(20,object.first.translation(),20); //make a bunch of cameras to pass to measurement function
+    std::vector<SimpleCamera> cameras = alexCreateCameras(20,object.first.translation(),10); //make a bunch of cameras to pass to measurement function
     std::vector<MserMeasurement> measurements = createIdealMeasurements(cameras, object); //synthetic measurements directly from measurement function
     std::vector<Pose3> poses;
     for (size_t i = 0; i < cameras.size(); i++){
@@ -224,12 +224,12 @@ Values expressionsOptimizationSynthetic(MserObject& object, MserObject& initialG
     ExpressionFactorGraph graph;
 
     for (size_t i = 0; i < poses.size(); ++i) {
-        const SimpleCamera_ c(cameras[i]); //expression for the camera created here
+        const SimpleCamera_ camera_(cameras[i]); //expression for the camera created here
         MserMeasurement measurement = measurements[i];
         // Below an expression for the prediction of the measurement:
-        MserObject_ o('o',0);
-        MserMeasurement_ prediction = measurementFunctionExpr(c,o);
-        graph.addExpressionFactor(prediction,measurement,measurementNoise);
+        MserObject_ object_('o',0);
+        MserMeasurement_ prediction_ = measurementFunctionExpr(camera_,object_);
+        graph.addExpressionFactor(prediction_,measurement,measurementNoise);
     }
     // Add prior on object to constrain scale, again with ExpressionFactor[
     Isotropic::shared_ptr objectNoise = Isotropic::Sigma(8, 0.1);
@@ -239,7 +239,7 @@ Values expressionsOptimizationSynthetic(MserObject& object, MserObject& initialG
     Values initial;
     initial.insert(Symbol('o', 0), initialGuess);
     //cout << "initial error = " << graph.error(initial) << endl;
-    Values result = DoglegOptimizer(graph, initial).optimize();
+    Values result = LevenbergMarquardtOptimizer(graph, initial).optimize();
     //cout << "final error = " << graph.error(result) << endl;
     return result;
 }
@@ -259,12 +259,12 @@ Values expressionsOptimizationRealWorld(MserObject& initialGuess, std::vector<Ms
     ExpressionFactorGraph graph;
 
     for (size_t i = 0; i < poses.size(); ++i) {
-        const SimpleCamera_ c(cameras[i]); //expression for the camera created here
+        const SimpleCamera_ camera_(cameras[i]); //expression for the camera created here
         MserMeasurement measurement = measurements[i];
         // Below an expression for the prediction of the measurement:
-        MserObject_ o('o',0);
-        MserMeasurement_ prediction = measurementFunctionExpr(c,o);
-        graph.addExpressionFactor(prediction,measurement,measurementNoise);
+        MserObject_ object_('o',0);
+        MserMeasurement_ prediction_ = measurementFunctionExpr(camera_,object_);
+        graph.addExpressionFactor(prediction_,measurement,measurementNoise);
     }
     // Add prior on object to constrain scale, again with ExpressionFactor[
     Isotropic::shared_ptr objectNoise = Isotropic::Sigma(8, 0.2);

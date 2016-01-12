@@ -5,6 +5,8 @@
 #ifndef MSER_3D_MSERTRACK_H
 #define MSER_3D_MSERTRACK_H
 
+#include "MserMeasurement.h"
+
 struct MserTrack{
     int colorR; //colors to be assigned to final object
     int colorG;
