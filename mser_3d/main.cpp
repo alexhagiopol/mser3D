@@ -99,15 +99,20 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
             cameras.push_back(camera);
         }
         //Make initial guess
-        Point3 other_initialGuessCenter = cameras[0].backproject(Point2(measurements[0].first.x(),measurements[0].first.y()),5); //totally guessing this depth....
-        Rot3 other_initialGuessOrientation = cameras[0].pose().rotation();
-        Pose3 other_initialGuessPose = Pose3(other_initialGuessOrientation, other_initialGuessCenter);
-        Point2 initialGuessAxes(2,1); //another complete guess....need to use back project for better guess
-        //Pose3 initialGuessPose = cameras[0].pose(); //(initialGuessOrientation, initialGuessCenter);
-        //initialGuessPose.print("CAMERA POSE");
+        double depthGuess = 5.0; //make this better later....
+        Point3 initialGuessCenter = cameras[0].backproject(Point2(measurements[0].first.x(),measurements[0].first.y()),depthGuess); //Guessed depth.
+        Rot3 initialGuessOrientation = cameras[0].pose().rotation();
+        Pose3 initialGuessPose = Pose3(initialGuessOrientation, initialGuessCenter);
+        Point2 majorAxisTipInImgFrame = measurements[0].first.translation() + Point2(measurements[0].second.x(),0);
+        Point2 minorAxisTipInImgFrame = measurements[0].first.translation() + Point2(0,measurements[0].second.y());
+        Point3 majorAxisTipInWorldFrame  = cameras[0].backproject(majorAxisTipInImgFrame,depthGuess);
+        Point3 minorAxisTipInWorldFrame  = cameras[0].backproject(minorAxisTipInImgFrame,depthGuess);
+        double majorAxisLengthInitialGuess = majorAxisTipInWorldFrame.distance(initialGuessCenter);
+        double minorAxisLengthInitialGuess = minorAxisTipInWorldFrame.distance(initialGuessCenter);
+        Point2 initialGuessAxes(majorAxisLengthInitialGuess,minorAxisLengthInitialGuess);
+        initialGuessAxes.print(" GUESS AXIS LENGTHS = \n");
         cout << "X" << measurements[0].first.x() << "Y" << measurements[0].first.y()<< endl;
-        //other_initialGuessPose.print("PROJECTED MSMT POSE");
-        MserObject initialGuess(other_initialGuessPose, initialGuessAxes);
+        MserObject initialGuess(initialGuessPose, initialGuessAxes);
         Values result = expressionsOptimizationRealWorld(initialGuess, measurements, cameras);
         MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
         gtsam::traits<MserObject>::Print(returnedObject);

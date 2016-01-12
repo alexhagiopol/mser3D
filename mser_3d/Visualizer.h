@@ -340,7 +340,8 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
     uniform_real_distribution<float> distr(0, 1);
 
     //More OpenGL setup
-    glClearColor(distr(eng), distr(eng), distr(eng), distr(eng)); // Random color background
+    //glClearColor(distr(eng), distr(eng), distr(eng), distr(eng)); // Random color background
+    glClearColor(1.0, 0, 0, 0);
     glEnable(GL_DEPTH_TEST); // Enable depth test
     glDepthFunc(GL_LESS);  // Accept fragment if it closer to the camera than the former one
     GLuint VertexArrayID;
@@ -580,7 +581,6 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
 
     //while loop start
     do{
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the screen
         glUseProgram(programID); // Use our shader
         // Compute the MVP matrix from keyboard and mouse input
@@ -590,7 +590,6 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
         glm::mat4 ModelMatrix = glm::mat4(1.0);
         glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE,&MVP[0][0]); // Send our transformation to the currently bound shader in the "MVP" uniform
-
         // 1st attribute buffer : vertices
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -613,7 +612,6 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
                 0,                                // stride
                 (void *) 0                          // array buffer offset
         );
-
         //MOST IMPORTANT DRAWING CODE IS HERE! We take what we stored in the vertex buffer and draw it.
         //Note that here we count VERTICES (e.g. 3 points per triangle or 2 points per line) NOT DOUBLES
         glDrawArrays(GL_TRIANGLES, 0, 360 * 3 * objects.size()); // Draw the 360 triangles per ellipse. Each triangle has 3 points. Hence 360*3*objects.size(). Start at index 0.
