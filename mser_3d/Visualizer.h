@@ -341,7 +341,7 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
 
     //More OpenGL setup
     //glClearColor(distr(eng), distr(eng), distr(eng), distr(eng)); // Random color background
-    glClearColor(1.0, 0, 0, 0);
+    glClearColor(1.0, 0.8, 0.8, 0.8); //Set color of background
     glEnable(GL_DEPTH_TEST); // Enable depth test
     glDepthFunc(GL_LESS);  // Accept fragment if it closer to the camera than the former one
     GLuint VertexArrayID;
@@ -411,8 +411,6 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
             g_vertex_buffer_data[i+8] = nextAxisTipInWorldFrame.z();//objects[o].first.z();
 
             //Set color of object
-            glClearColor(1.0, 1.0, 1.0, 1.0);
-
             g_color_buffer_data[i] = cubeR;
             g_color_buffer_data[i+1] = cubeG;
             g_color_buffer_data[i+2] = cubeB;
