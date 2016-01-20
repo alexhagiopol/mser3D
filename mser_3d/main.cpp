@@ -4,6 +4,7 @@
 #include "Visualizer.h"
 #include "MserTrack.h"
 #include <opencv2/opencv.hpp>
+#include <gtsam/geometry/triangulation.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -94,15 +95,38 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
         std::vector<MserMeasurement> measurements = tracks[t].measurements;
         std::cout << "#" << t << " has " << measurements.size() << " measurements" << std::endl;
         std::vector<SimpleCamera> cameras;
+        std::vector<Point2> centroidMeasurements;
+        std::vector<Point2> majorAxisMeasurements;
+        std::vector<Point2> minorAxisMeasurements;
         for (int m = 0; m < measurements.size(); m++){
-            SimpleCamera camera(VOposes[tracks[t].frameNumbers[m]],*K);
+            MserMeasurement measurement = tracks[t].measurements[m];
+            Pose3 pose = VOposes[tracks[t].frameNumbers[m]];
+            SimpleCamera camera(pose,*K);
             cameras.push_back(camera);
+            centroidMeasurements.push_back(measurement.first.translation());
         }
         //Make initial guess
-        double depthGuess = 5.0; //make this better later....
+
+        //Initial guess from Computer Vision 101 depth estimate
+        //Assume centers of measured MSERs are along same epipolar line...
+        //See Aaron Bobick notes on two views
+        /*
+        double B = abs(cameras[0].translation().x() - cameras[1].translation().x());// this is wrong....
+        double xCenter = 1280/2;
+        double f = 470;
+        double xl = abs(xCenter - measurements[0].first.translation().x());
+        double xr = abs(xCenter - measurements[1].first.translation().x());
+        double Z = f*B / abs(xl - xr);
+        */
+
+        double depthGuess = 2.0; //make this better later....
+        //cout << "left " << measurements[0].first.translation().x() << endl;
+        //cout << "right " << measurements[1].first.translation().x() << endl;
         Point3 initialGuessCenter = cameras[0].backproject(Point2(measurements[0].first.x(),measurements[0].first.y()),depthGuess); //Guessed depth.
         Rot3 initialGuessOrientation = cameras[0].pose().rotation();
         Pose3 initialGuessPose = Pose3(initialGuessOrientation, initialGuessCenter);
+
+        /* //Axes initial guess via back projection of first camera
         Point2 majorAxisTipInImgFrame = measurements[0].first.translation() + Point2(measurements[0].second.x(),0);
         Point2 minorAxisTipInImgFrame = measurements[0].first.translation() + Point2(0,measurements[0].second.y());
         Point3 majorAxisTipInWorldFrame  = cameras[0].backproject(majorAxisTipInImgFrame,depthGuess);
@@ -110,8 +134,18 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
         double majorAxisLengthInitialGuess = majorAxisTipInWorldFrame.distance(initialGuessCenter);
         double minorAxisLengthInitialGuess = minorAxisTipInWorldFrame.distance(initialGuessCenter);
         Point2 initialGuessAxes(majorAxisLengthInitialGuess,minorAxisLengthInitialGuess);
-        initialGuessAxes.print(" GUESS AXIS LENGTHS = \n");
-        cout << "X" << measurements[0].first.x() << "Y" << measurements[0].first.y()<< endl;
+        */
+
+        /* //Initial guess via triangulation.h methods
+        Point3 initialGuessCentroid = gtsam::triangulatePoint3(cameras,centroidMeasurements);
+        initialGuessCentroid.print("INIT GUESS \n");
+        Rot3 initialGuessOrientation = cameras[0].pose().rotation();
+        Pose3 initialGuessPose = Pose3(initialGuessOrientation, initialGuessCentroid);
+        */
+        //old_initialGuessPose.print("OLD \n");
+        //initialGuessPose.print("NEW \n");
+
+        Point2 initialGuessAxes = Point2(2,1);
         MserObject initialGuess(initialGuessPose, initialGuessAxes);
         Values result = expressionsOptimizationRealWorld(initialGuess, measurements, cameras);
         MserObject returnedObject = result.at<MserObject>(Symbol('o',0));

@@ -341,7 +341,7 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
 
     //More OpenGL setup
     //glClearColor(distr(eng), distr(eng), distr(eng), distr(eng)); // Random color background
-    glClearColor(1.0, 0.8, 0.8, 0.8); //Set color of background
+    glClearColor(1.0, 0.9, 0.9, 0.9); //Set color of background
     glEnable(GL_DEPTH_TEST); // Enable depth test
     glDepthFunc(GL_LESS);  // Accept fragment if it closer to the camera than the former one
     GLuint VertexArrayID;
