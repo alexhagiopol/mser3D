@@ -44,6 +44,83 @@ classdef ObjectCollection < handle
             end
         end
         
+        %helper function for manual matching; converts objects to mser
+        %measurements and plots them over the currently displayed
+        %image. i.e. must call imshow before doing this
+        function plotObject(OC, obj, ID, offsetX, color,size)
+            ellipse = vl_ertr(obj.getLatestMSER().getEllipse()); %vl_ertr necessary for axes conversion
+            mserMeasurement = OC.covarianceEllipseToMserMeasurement(ellipse);
+            theta_grid = linspace(0,2*pi);
+            phi = mserMeasurement(5);
+            X0=mserMeasurement(1);
+            Y0=mserMeasurement(2);
+            a=mserMeasurement(3);
+            b=mserMeasurement(4);
+            % the ellipse in x and y coordinates 
+            ellipse_x_r  = a*cos( theta_grid );
+            ellipse_y_r  = b*sin( theta_grid );
+            %Define a rotation matrix
+            R = [ cos(phi) sin(phi); -sin(phi) cos(phi) ];
+            %let's rotate the ellipse to some angle phi
+            r_ellipse = [ellipse_x_r;ellipse_y_r]' * R;            
+            % Draw the error ellipse            
+            plot(r_ellipse(:,1) + X0 + offsetX,r_ellipse(:,2) + Y0,'.','Color',color,'MarkerSize',size)   
+            text(X0 + offsetX,Y0,num2str(ID),'Color',color);
+        end
+        
+        %helper function with similar purpose to above
+        function plotLineBetweenObjects(OC, obj1, obj2, offsetX, color)
+            ellipse1 = vl_ertr(obj1.getLatestMSER().getEllipse()); %vl_ertr necessary for axes conversion
+            mserMeasurement1 = OC.covarianceEllipseToMserMeasurement(ellipse1);
+            X01=mserMeasurement1(1);
+            Y01=mserMeasurement1(2);
+            
+            ellipse2 = vl_ertr(obj2.getLatestMSER().getEllipse()); %vl_ertr necessary for axes conversion
+            mserMeasurement2 = OC.covarianceEllipseToMserMeasurement(ellipse2);
+            X02=mserMeasurement2(1);
+            Y02=mserMeasurement2(2);
+            
+            line([X01,X02 + offsetX],[Y01,Y02],'Color',color,'LineWidth',3);
+        end
+        
+        function manualMatchObjects(OC, prevF, newF, prevIm, newIm, threshold, otherCollection)
+            %% Display prev and new images side by side with Object IDs for user to match
+            %figure;
+            canvas = [prevIm,newIm];
+            imshow(canvas);
+            hold on;
+            title(['Manually Matching Measurements in Frame #',num2str(prevF),' (LEFT) with Frame #',num2str(newF),' (RIGHT)']);
+            set(gca,'FontSize',13); 
+            matchSummary = [];
+            for i = 1:length(OC.objects)
+                obj = OC.objects(i);
+                if obj.last_seen == prevF
+                    OC.plotObject(obj,i,0,[1,0,0],5);
+                end
+            end
+            offsetX = size(prevIm,2);
+            for i = 1:length(otherCollection.objects)                 
+                 obj = otherCollection.objects(i);
+                 if obj.last_seen == newF
+                    otherCollection.plotObject(obj,i,offsetX,[1,0,0],5);
+                 end                
+            end  
+            middleX = size(prevIm,2);
+            topY = size(prevIm,1);
+            bottomY = 0;
+            line([middleX,middleX],[topY,bottomY],'Color',[0,0,0]);%draw line to separate frames
+            firstID = input('Enter ID of LEFT MSER.\n');
+            OC.plotObject(OC.objects(firstID),firstID,0,[0,0,1],15);
+            secondID = input('Enter ID of RIGHT MSER.\n');
+            otherCollection.plotObject(otherCollection.objects(secondID),secondID,offsetX,[0,0,1],15);
+            OC.plotLineBetweenObjects(OC.objects(firstID),otherCollection.objects(secondID),offsetX,[0,0,1]);
+            matchSummary(:,1) = [firstID,secondID,99];         
+            pause()
+            disp('Press ENTER to continue\n.');
+            %close all;
+            OC.absorbMSERs(otherCollection, matchSummary, prevF, newF, threshold)
+        end
+        
         %perform object matching for member objects in a given frame to
         %non-member objects in a given objectFarm
         %TODO: lookback_num = number of frames to look back in; 0 is default
@@ -55,6 +132,7 @@ classdef ObjectCollection < handle
             %ugh, linear time search...need a hash table solution...
             for i = 1:length(OC.objects)
                 obj = OC.objects(i);
+                %awkward way to look back 5 frames...
                 if obj.last_seen == prev_f || obj.last_seen == prev_f - 1 || obj.last_seen == prev_f - 2 || obj.last_seen == prev_f - 3 || obj.last_seen == prev_f - 4 || obj.last_seen == prev_f - 5
                     ellipse = [obj.getLatestMSER().getEllipse();i]; %associate index of object with its ellipse to retrieve later
                     prev_ellipses = [prev_ellipses,ellipse];
@@ -132,7 +210,7 @@ classdef ObjectCollection < handle
             match score:               2.1, 3.4, -5.6, 1.1, 1.4  
             %}  
             
-            %keep track of qhich new objects have matches
+            %keep track of which new objects have matches
             matched_new_objects = zeros(1,length(other_farm.objects));
             %input matched MSER information into existing objects
             for i = 1:size(match_summary,2)

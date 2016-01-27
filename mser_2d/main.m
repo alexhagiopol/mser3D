@@ -1,3 +1,5 @@
+%% Driver function with automatic or manual selection of MSER Measurement data associations
+
 %% Initialize
 clc
 %clear
@@ -13,14 +15,16 @@ N = get(readerobj, 'NumberOfFrames');
 disp('Video Import Finished');
 
 %% Set tuning constants 
-visualization = true;
-resize = false;
+%VL Feat tuning constants
+MinDiversity = 0.7; 
+MinArea = 0.005; 
+MaxArea = 0.03; 
+% Alex tuning constants
 start = 1; %start at custom frame number. Default = 1.
-stop = N;  %end at custom frame number. Default = N.
-MinDiversity = 0.7; %VL Feat tuning constant
-MinArea = 0.005; %VL Feat tuning constant
-MaxArea = 0.03; %0.09 %VL Feat tuning constant
-% Alex tuning constant
+stop = 15;  %end at custom frame number. Default = N.
+manualMatching = true;
+visualization = false;
+resize = false; %reduce image to speed up computation
 threshold = -1; %-1 %Score threshold needed for two regions to be considered to come from the same object. A higher score indicates higher similarity.
 
 %% Set up video output
@@ -31,6 +35,7 @@ if visualization
     three_pane_fig = figure(1);
     set(three_pane_fig, 'Position', [0,0,2100,700]); 
 end
+
 %% Process first video frame 
 f = start;
 % Read image from video and resize + grayscale
@@ -89,10 +94,15 @@ for f=start + 1:stop
         myObject = Object(myMSER,f+i/1000,f,color); %create new object for each mser
         tempOC.addObject(myObject); %add to big data structure
     end
+    newIm = tempOC.getImage(I,f);
     %Perform matching
-    mainOC.matchObjects(f-1,f,threshold,tempOC);
-    newIm = mainOC.getImage(I,f);
-    if visualization
+    if manualMatching == true
+        mainOC.manualMatchObjects(f-1,f,prevIm,newIm,threshold,tempOC);
+    else %do standard automatic matching
+        mainOC.matchObjects(f-1,f,threshold,tempOC);
+    end    
+    
+    if visualization  && ~manualMatching
         %% Display results
         %Show raw image, prev frame, new frame
         %figure;
@@ -151,10 +161,11 @@ for f=start + 1:stop
         frame = frame2im(getframe(three_pane_fig));
         writeVideo(writer,frame); 
         %hold on;
-        prevIm = newIm; 
+         
     else
         disp(['Frame #',num2str(f),' done'])
     end
+    prevIm = newIm;
     %pause
 end
 if visualization
@@ -162,6 +173,10 @@ if visualization
 end
 %Make CSV data file
 mainOC.exportMserMeasurementsInGroups(7,'/home/alex/mser/mser_2d/mserMeasurements.csv');
+if manualMatching == true
+    mainOC.showTracks(3,size(I,1),size(I,2),2);
+    mainOC.makeTrackVideo(5,size(I,1),size(I,2),2);
+end
 
 if visualization
     %% Show MSER tracks in stills and videos. WARNING: These two commands could take hours!
@@ -198,6 +213,8 @@ if visualization
     xlabel('Frame #');
     title('Good Dark on Bright Tracks Visible in Each Video Frame');
 end
+
+close all;
     
     
     
