@@ -154,7 +154,7 @@ for f=start + 1:stop
             
             % Draw the error ellipse            
             plot(r_ellipse(:,1) + X0,r_ellipse(:,2) + Y0,'r.')   
-            text(X0,Y0,'MSMT TEST','Color',[1.0,0,0]);            
+            text(X0,Y0,['MSMT', num2str(i)],'Color',[1.0,0,0]);            
         end
         
         %% Produce and write video frame 

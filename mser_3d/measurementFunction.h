@@ -274,7 +274,12 @@ Values expressionsOptimizationRealWorld(MserObject& initialGuess, std::vector<Ms
     Values initial;
     initial.insert(Symbol('o', 0), initialGuess);
     //cout << "initial error = " << graph.error(initial) << endl;
-    Values result = DoglegOptimizer(graph, initial).optimize();
+    LevenbergMarquardtParams params = LevenbergMarquardtParams();
+    std::string verbosity = "SUMMARY";
+    params.setVerbosityLM(verbosity);
+    params.setlambdaUpperBound(1e32);
+    LevenbergMarquardtOptimizer optimizer = LevenbergMarquardtOptimizer(graph,initial,params);
+    Values result = optimizer.optimize();//LevenbergMarquardtOptimizer(graph, initial).optimize();
     //cout << "final error = " << graph.error(result) << endl;
     return result;
 }

@@ -246,7 +246,7 @@ void addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(std::vector
 int main() {
     //testAllVisualization();
     //testAllGeometry();
-    testAllMeasurementFunction();
+    //testAllMeasurementFunction();
     //testPrintSuperimposedMeasurementImages();
     //testDisplayPoses();
     //Display camera poses using dummy MserObjects
