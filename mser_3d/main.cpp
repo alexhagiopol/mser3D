@@ -260,7 +260,7 @@ int main() {
     //std::vector<MserObject> cameraPoseDummyObjects;
     //std::vector<Vector3> cameraPoseDummyColors;
 
-    //addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(pair.first,pair.second);
+    addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(pair.first,pair.second);
 
     //pair.first.insert(pair.first.end(),cameraPoseDummyObjects.begin(),cameraPoseDummyObjects.end());
     //pair.second.insert(pair.second.end(),cameraPoseDummyColors.begin(),cameraPoseDummyColors.end());

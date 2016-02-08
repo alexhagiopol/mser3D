@@ -304,6 +304,7 @@ int produceMserMeasurements(const std::vector<gtsam::SimpleCamera>& cameras, Poi
 }
 
 int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Vector3>& colors = std::vector<Vector3>()){
+    int numVerticesPerEllipse = 36;
     cout << "Starting to draw MSER Objects" << endl;
     cout << "Objects size: " << objects.size() << endl;
     cout << "Colors size: " << colors.size() << endl;
@@ -380,8 +381,8 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
 
     cout << "Camera pose set." << endl;
 
-    //(objects.size ellipses)(360 triangles / ellipse)(3 points / triangle)(3 doubles / point) + (objects.size axes groups)(3 lines / axis group)(6 doubles / line) + (1 world axis group)(3 lines / world axis group)(6 doubles / world axis line)
-    long int vertexDataSize = objects.size()*360*3*3 + objects.size()*3*6 + 1*3*6;
+    //(objects.size ellipses)(numVerticesPerEllipse triangles / ellipse)(3 points / triangle)(3 doubles / point) + (objects.size axes groups)(3 lines / axis group)(6 doubles / line) + (1 world axis group)(3 lines / world axis group)(6 doubles / world axis line)
+    long int vertexDataSize = objects.size()*numVerticesPerEllipse*3*3 + objects.size()*3*6 + 1*3*6;
 
     cout << "Vertex data size =" << vertexDataSize << endl;
 
@@ -405,10 +406,10 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
             cubeG = distr(eng);
             cubeB = distr(eng);
         }
-        for (int i = 0 + o*360*9; i < 360*9 + o*360*9; i+=9) {
+        for (int i = 0 + o*numVerticesPerEllipse*9; i < numVerticesPerEllipse*9 + o*numVerticesPerEllipse*9; i+=9) {
             // Object vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
-            float rad_angle = (i/9) * M_PI / 180;
-            float next_rad_angle = (i/9 + 1) * M_PI / 180;
+            float rad_angle = (i/9) * 360/numVerticesPerEllipse * M_PI / 180;
+            float next_rad_angle = (i/9 + 1) * 360/numVerticesPerEllipse * M_PI / 180;
             float ellipse_x_radius = objects[o].second.x();// / 40;
             float ellipse_y_radius = objects[o].second.y();// / 40;
             //cout << ellipse_x_radius << " " << ellipse_y_radius << endl;
@@ -446,7 +447,7 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
 
     //Draw axes lines in objects' frames. RGB correspond to XYZ.
     int objectAxisLength = 1;
-    int vertexDataNum = objects.size()*360*3*3; //start where variable i left off in the previous loop
+    int vertexDataNum = objects.size()*numVerticesPerEllipse*3*3; //start where variable i left off in the previous loop
     for (int o = 0; o < objects.size(); o++) {
         cout << "Computing axes vertices and colors for object #" << o << endl;
         //Object frame:
@@ -636,9 +637,9 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
         );
         //MOST IMPORTANT DRAWING CODE IS HERE! We take what we stored in the vertex buffer and draw it.
         //Note that here we count VERTICES (e.g. 3 points per triangle or 2 points per line) NOT DOUBLES
-        glDrawArrays(GL_TRIANGLES, 0, 360 * 3 * objects.size()); // Draw the 360 triangles per ellipse. Each triangle has 3 points. Hence 360*3*objects.size(). Start at index 0.
-        glDrawArrays(GL_LINES,360 * 3 * objects.size(), 360 * 3 * objects.size() + objects.size()*3*2); //Draw object.size # of axes groups. Each axes group has 3 lines. Each line has 2 points.
-        glDrawArrays(GL_LINES, 360 * 3 * objects.size() + objects.size()*3*2, 360 * 3 * objects.size() + objects.size()*3*2 + 3*2); //Draw world axes group. Group has 3 lines. Each line has 2 points.
+        glDrawArrays(GL_TRIANGLES, 0, numVerticesPerEllipse * 3 * objects.size()); // Draw the numVerticesPerEllipse triangles per ellipse. Each triangle has 3 points. Hence numVerticesPerEllipse*3*objects.size(). Start at index 0.
+        glDrawArrays(GL_LINES,numVerticesPerEllipse * 3 * objects.size(), numVerticesPerEllipse * 3 * objects.size() + objects.size()*3*2); //Draw object.size # of axes groups. Each axes group has 3 lines. Each line has 2 points.
+        glDrawArrays(GL_LINES, numVerticesPerEllipse * 3 * objects.size() + objects.size()*3*2, numVerticesPerEllipse * 3 * objects.size() + objects.size()*3*2 + 3*2); //Draw world axes group. Group has 3 lines. Each line has 2 points.
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glfwSwapBuffers(window); // Swap buffers
