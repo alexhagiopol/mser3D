@@ -14,6 +14,8 @@ vidFrames = read(readerobj);
 N = get(readerobj, 'NumberOfFrames');
 disp('Video Import Finished');
 
+ 
+
 %% Set tuning constants 
 %VL Feat tuning constants
 MinDiversity = 0.7; 
@@ -26,10 +28,12 @@ manualMatching = true;
 visualization = false;
 resize = false; %reduce image to speed up computation
 threshold = -1; %-1 %Score threshold needed for two regions to be considered to come from the same object. A higher score indicates higher similarity.
+measurementsOutputFileName = '/home/alex/mser/mser_2d/manualMserMeasurements.csv';
+videoOutputFileName = 'Alex_Tracking_Movie';
 
 %% Set up video output
 if visualization
-    writer = VideoWriter('Alex_Tracking_Movie','Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
+    writer = VideoWriter(videoOutputFileName,'Uncompressed AVI'); %AVI required because mp4 doesnt work on Matlab Linux :(
     writer.FrameRate = 10;
     open(writer);
     three_pane_fig = figure(1);
@@ -172,7 +176,7 @@ if visualization
     close(writer);
 end
 %Make CSV data file
-mainOC.exportMserMeasurementsInGroups(7,'/home/alex/mser/mser_2d/mserMeasurements.csv');
+mainOC.exportMserMeasurementsInGroups(7,measurementsOutputFileName);
 if manualMatching == true
     mainOC.showTracks(3,size(I,1),size(I,2),2);
     mainOC.makeTrackVideo(5,size(I,1),size(I,2),2);

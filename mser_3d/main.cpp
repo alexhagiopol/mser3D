@@ -40,7 +40,7 @@ std::istream& operator >> (std::istream& ins, data_t& data){
 }
 
 std::vector<MserTrack> getMserTracksFromCSV(){
-    std::ifstream infile("/home/alex/mser/mser_2d/mserMeasurements.csv");
+    std::ifstream infile("/home/alex/mser/mser_2d/manualMserMeasurements.csv");
     data_t data;
     infile >> data;
     infile.close();
@@ -250,21 +250,14 @@ int main() {
     //testAllMeasurementFunction();
     //testPrintSuperimposedMeasurementImages();
     //testDisplayPoses();
-    //Display camera poses using dummy MserObjects
 
     std::vector<MserTrack> tracks = getMserTracksFromCSV();
     std::vector<Pose3> poses = getPosesFromBAL();
     std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
-    //drawMserObjects(pair.first,pair.second);
 
-    //std::vector<MserObject> cameraPoseDummyObjects;
-    //std::vector<Vector3> cameraPoseDummyColors;
+    //Draw robot axes: causes seg fault for big track datasets because we cross the vertex memory limit.
+    addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(pair.first,pair.second);
 
-    //addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(pair.first,pair.second);
-
-    //pair.first.insert(pair.first.end(),cameraPoseDummyObjects.begin(),cameraPoseDummyObjects.end());
-    //pair.second.insert(pair.second.end(),cameraPoseDummyColors.begin(),cameraPoseDummyColors.end());
-    cout << "Dummy objects added for camera pose visualization" << endl;
     drawMserObjects(pair.first,pair.second);
     return 0;
 }
