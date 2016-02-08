@@ -304,11 +304,17 @@ int produceMserMeasurements(const std::vector<gtsam::SimpleCamera>& cameras, Poi
 }
 
 int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Vector3>& colors = std::vector<Vector3>()){
+    cout << "Starting to draw MSER Objects" << endl;
+    cout << "Objects size: " << objects.size() << endl;
+    cout << "Colors size: " << colors.size() << endl;
+
     GLFWwindow *window;
     // Initialise GLFW
     if (!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW\n");
         return -1;
+    } else {
+        cout << "GLFW initialized." << endl;
     }
 
     //Set up window.
@@ -323,6 +329,8 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
         fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible.\n");
         glfwTerminate();
         return -1;
+    } else {
+        cout << "GLFW Window Opened." << endl;
     }
     glfwMakeContextCurrent(window);
 
@@ -331,10 +339,12 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
     if (glewInit() != GLEW_OK) {
         fprintf(stderr, "Failed to initialize GLEW\n");
         return -1;
+    } else {
+        cout << "GLEW initialized." << endl;
     }
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE); // Ensure we can capture the escape key being pressed below
 
-    //Set up random float generator
+    //Set up random float generator for generating random colors
     random_device rd;
     mt19937 eng(0);
     uniform_real_distribution<float> distr(0, 1);
@@ -353,6 +363,8 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
     glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f,
                                             100.0f); // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 
+    cout << "Shaders loaded." << endl << "GLM pespective set." << endl << "Background color set." << endl;
+
     GLuint vertexbuffer; //create vertex buffer outside loop so it can be purged outside loop
     GLuint colorbuffer; //create color buffer outside loop so it can be purged outside loop
 
@@ -366,14 +378,23 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
     glm::mat4 MVP = Projection * View *
                     Model; // Our ModelViewProjection : multiplication of our 3 matrices. Remember, matrix multiplication is the other way around
 
+    cout << "Camera pose set." << endl;
+
     //(objects.size ellipses)(360 triangles / ellipse)(3 points / triangle)(3 doubles / point) + (objects.size axes groups)(3 lines / axis group)(6 doubles / line) + (1 world axis group)(3 lines / world axis group)(6 doubles / world axis line)
-    int vertexDataSize = objects.size()*360*3*3 + objects.size()*3*6 + 1*3*6;
+    long int vertexDataSize = objects.size()*360*3*3 + objects.size()*3*6 + 1*3*6;
+
+    cout << "Vertex data size =" << vertexDataSize << endl;
 
     GLfloat g_vertex_buffer_data[vertexDataSize];
     GLfloat g_color_buffer_data[vertexDataSize];
 
+    cout << "Buffers initialized. Vertex Data Size Set to" << vertexDataSize << endl;
+
+    cout << "OpenGL Setup Done. Starting main loop..." << endl;
+
     //Draw 3D ellipses representing objects
     for (int o = 0; o < objects.size(); o++) {
+        cout << "Computing ellipse vertices and colors for object #" << o << endl;
         float cubeR, cubeG, cubeB;
         if (colors.size() == objects.size()){
             cubeR = (float) colors[o][0] / 255;
@@ -427,6 +448,7 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
     int objectAxisLength = 1;
     int vertexDataNum = objects.size()*360*3*3; //start where variable i left off in the previous loop
     for (int o = 0; o < objects.size(); o++) {
+        cout << "Computing axes vertices and colors for object #" << o << endl;
         //Object frame:
         Point3 objectCenterInObjectFrame(0,0,0);
         Point3 objectXAxisTipInObjectFrame(objectAxisLength,0,0);
@@ -500,6 +522,7 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
         vertexDataNum += 18; //increment data position
     }
 
+    cout << "Computing vertices and colros for world axes." << endl;
     //Draw lines for world axes. RGB correspond to XYZ
     int worldAxisLength = 10;
     Point3 worldCenter(0,0,0);
@@ -567,6 +590,7 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
     g_color_buffer_data[vertexDataSize - 1] = 1.0f;
     // End lines for world axes
 
+    cout << "Vertex computation done. Placing vertices and colors into color buffers..." << endl;
     //Place vertex info into a buffer
     glGenBuffers(1, &vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -577,7 +601,7 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
     glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
 
-    //while loop start
+    //MAIN WINDOW ANIMATION LOOP: while loop start
     do{
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the screen
         glUseProgram(programID); // Use our shader
@@ -623,15 +647,15 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
            glfwWindowShouldClose(window) == 0 );
     //while loop and
 
-    Mat img(768, 1024, CV_8UC3); //store image data here to output to a file
-    glPixelStorei(GL_PACK_ALIGNMENT, (img.step & 3) ? 1 : 4); //use fast 4-byte alignment (default anyway) if possible
-    glPixelStorei(GL_PACK_ROW_LENGTH, img.step/img.elemSize()); //set length of one complete row in destination data (doesn't need to equal img.cols)
-    glReadPixels(0, 0, img.cols, img.rows, GL_BGR, GL_UNSIGNED_BYTE, img.data); //import OpenGL window repsesentation into cv::Mat
-    Mat flipped(768, 1024, CV_8UC3); //we have to flip because OpenCV and OpenGL use different xy conventions
-    cv::flip(img, flipped, 0);
-    char fileName[80];
-    sprintf(fileName, "/home/alex/mser/mser_3d/output/drawMserObjects.jpg"); //format filename
-    imwrite(fileName, flipped); //save to output folder
+    // Mat img(768, 1024, CV_8UC3); //store image data here to output to a file
+    //glPixelStorei(GL_PACK_ALIGNMENT, (img.step & 3) ? 1 : 4); //use fast 4-byte alignment (default anyway) if possible
+    //glPixelStorei(GL_PACK_ROW_LENGTH, img.step/img.elemSize()); //set length of one complete row in destination data (doesn't need to equal img.cols)
+    //glReadPixels(0, 0, img.cols, img.rows, GL_BGR, GL_UNSIGNED_BYTE, img.data); //import OpenGL window repsesentation into cv::Mat
+    //Mat flipped(768, 1024, CV_8UC3); //we have to flip because OpenCV and OpenGL use different xy conventions
+    //cv::flip(img, flipped, 0);
+    //char fileName[80];
+    //sprintf(fileName, "/home/alex/mser/mser_3d/output/drawMserObjects.jpg"); //format filename
+    //imwrite(fileName, flipped); //save to output folder
 }
 
 #endif //MSER_3D_VISUALIZER_H

@@ -91,7 +91,7 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
     Cal3_S2::shared_ptr K(new Cal3_S2(470.0, 470.0, 0.1, 1280/2, 720/2));
-    for (int t = 0; t < 40 /*tracks.size()*/; t++){
+    for (int t = 0; t < tracks.size(); t++){
         std::vector<MserMeasurement> measurements = tracks[t].measurements;
         std::cout << "#" << t << " has " << measurements.size() << " measurements" << std::endl;
         std::vector<SimpleCamera> cameras;
@@ -153,6 +153,7 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
         objects.push_back(returnedObject);
         gtsam::Vector3 trackColor(tracks[t].colorR,tracks[t].colorG,tracks[t].colorB);
         colors.push_back(trackColor);
+        cout << "FINISHED OPTIMIZING TRACK #" << t << " OF " << tracks.size() << endl;
     }
     std::pair<std::vector<MserObject>,std::vector<Vector3>> pair(objects,colors);
     return pair;
@@ -258,9 +259,12 @@ int main() {
 
     //std::vector<MserObject> cameraPoseDummyObjects;
     //std::vector<Vector3> cameraPoseDummyColors;
-    addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(pair.first,pair.second);
+
+    //addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(pair.first,pair.second);
+
     //pair.first.insert(pair.first.end(),cameraPoseDummyObjects.begin(),cameraPoseDummyObjects.end());
     //pair.second.insert(pair.second.end(),cameraPoseDummyColors.begin(),cameraPoseDummyColors.end());
+    cout << "Dummy objects added for camera pose visualization" << endl;
     drawMserObjects(pair.first,pair.second);
     return 0;
 }
