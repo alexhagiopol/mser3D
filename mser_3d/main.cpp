@@ -40,7 +40,7 @@ std::istream& operator >> (std::istream& ins, data_t& data){
 }
 
 std::vector<MserTrack> getMserTracksFromCSV(){
-    std::ifstream infile("/home/alex/mser/mser_2d/manualMserMeasurements.csv");
+    std::ifstream infile("/home/alex/mser/mser_2d/tempManualMserMeasurements.csv");
     data_t data;
     infile >> data;
     infile.close();
@@ -100,33 +100,48 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
         std::vector<Point2> minorAxisMeasurements;
         for (int m = 0; m < measurements.size(); m++){
             MserMeasurement measurement = tracks[t].measurements[m];
+            //make cameras with poses from Jing's Visual Odometry
             Pose3 pose = VOposes[tracks[t].frameNumbers[m]];
             SimpleCamera camera(pose,*K);
             cameras.push_back(camera);
+
+            //extract contents of measurement
+            double theta = measurement.first.theta();
+            double majAxis  = measurement.second.x();
+            double minAxis = measurement.second.y();
+            double ctrX = measurement.first.translation().x();
+            double ctrY = measurement.first.translation().y();
+
+            //make vector of 2D centroid measurements
             centroidMeasurements.push_back(measurement.first.translation());
+            measurement.first.print("MSER MEASUREMENT POSE \n");
+            measurement.second.print("MSER MEASUREMENT AXES \n");
+
+            //vector of 2D major axis measurements
+            double majX = ctrX + majAxis*cos(theta);
+            double majY = ctrY + majAxis*sin(theta);
+            Point2 majorAxisMeasurement(majX,majY);
+            majorAxisMeasurements.push_back(majorAxisMeasurement);
+            majorAxisMeasurement.print("MAJOR AXIS MEASUREMENT \n");
+
+            //vector of 2D minor axis measurements
+            double minX = ctrX + minAxis*cos(theta + M_PI/2);
+            double minY = ctrY + minAxis*sin(theta + M_PI/2);
+            Point2 minorAxisMeasurement(minX,minY);
+            minorAxisMeasurements.push_back(minorAxisMeasurement);
+            minorAxisMeasurement.print("MINOR AXIS MEASUREMENT \n");
+            cout << "THETA \n" << theta << endl;
         }
-        //Make initial guess
 
-        //Initial guess from Computer Vision 101 depth estimate
-        //Assume centers of measured MSERs are along same epipolar line...
-        //See Aaron Bobick notes on two views
-        /*
-        double B = abs(cameras[0].translation().x() - cameras[1].translation().x());// this is wrong....
-        double xCenter = 1280/2;
-        double f = 470;
-        double xl = abs(xCenter - measurements[0].first.translation().x());
-        double xr = abs(xCenter - measurements[1].first.translation().x());
-        double Z = f*B / abs(xl - xr);
-        */
-
+        /* //Crude initial guess.
         double depthGuess = 2.0; //make this better later....
-        //cout << "left " << measurements[0].first.translation().x() << endl;
-        //cout << "right " << measurements[1].first.translation().x() << endl;
         Point3 initialGuessCenter = cameras[0].backproject(Point2(measurements[0].first.x(),measurements[0].first.y()),depthGuess); //Guessed depth.
         Rot3 initialGuessOrientation = cameras[0].pose().rotation();
         Pose3 initialGuessPose = Pose3(initialGuessOrientation, initialGuessCenter);
+        */
 
-        /* //Axes initial guess via back projection of first camera
+        //Axes initial guess via back projection of first camera
+        /*
         Point2 majorAxisTipInImgFrame = measurements[0].first.translation() + Point2(measurements[0].second.x(),0);
         Point2 minorAxisTipInImgFrame = measurements[0].first.translation() + Point2(0,measurements[0].second.y());
         Point3 majorAxisTipInWorldFrame  = cameras[0].backproject(majorAxisTipInImgFrame,depthGuess);
@@ -136,16 +151,34 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
         Point2 initialGuessAxes(majorAxisLengthInitialGuess,minorAxisLengthInitialGuess);
         */
 
-        /* //Initial guess via triangulation.h methods
-        Point3 initialGuessCentroid = gtsam::triangulatePoint3(cameras,centroidMeasurements);
-        initialGuessCentroid.print("INIT GUESS \n");
+        //Initial guess via triangulation.h methods
+        Point3 initialGuessCentroid = gtsam::triangulatePoint3(cameras,centroidMeasurements,1e-9,true);
+        Point3 initialGuessMajAxisPoint = gtsam::triangulatePoint3(cameras,majorAxisMeasurements,1e-9,true);
+        Point3 initialGuessMinAxisPoint = gtsam::triangulatePoint3(cameras,minorAxisMeasurements,1e-9,true);
+
+        initialGuessCentroid.print("CENTROID GUESS \n");
+        initialGuessMajAxisPoint.print("MAJ AXIS POINT GUESS \n");
+        initialGuessMinAxisPoint.print("MIN AXIS POINT GUESS \n");
+
+        /*
+        Point3 C_majA = initialGuessMajAxisPoint - initialGuessCentroid;
+        Point3 C_minA = initialGuessMinAxisPoint - initialGuessCentroid;
+        Point3 normalVector = C_majA.cross(C_minA);
+        Point3 xVector(1,0,0);
+        Point3 yVector(0,1,0);
+        Point3 zVector(0,0,1);
+        */
+
+
+
         Rot3 initialGuessOrientation = cameras[0].pose().rotation();
         Pose3 initialGuessPose = Pose3(initialGuessOrientation, initialGuessCentroid);
-        */
-        //old_initialGuessPose.print("OLD \n");
-        //initialGuessPose.print("NEW \n");
+        double majAxisLengthEstimate = initialGuessCentroid.distance(initialGuessMajAxisPoint);
+        double minAxisLengthEstimate = initialGuessCentroid.distance(initialGuessMinAxisPoint);
+        Point2 initialGuessAxes = Point2(majAxisLengthEstimate,minAxisLengthEstimate);
+        initialGuessAxes.print("AXES LENGTH GUESS");
 
-        Point2 initialGuessAxes = Point2(2,1);
+
         MserObject initialGuess(initialGuessPose, initialGuessAxes);
         Values result = expressionsOptimizationRealWorld(initialGuess, measurements, cameras);
         MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
@@ -190,14 +223,28 @@ void testPrintSuperimposedMeasurementImages(){
         for (int f = 0; f < tracks[t].frameNumbers.size(); f++){
             int frameNum = tracks[t].frameNumbers[f] - 1;
             MserMeasurement msmt = tracks[t].measurements[f];
+            double majAxisLength = msmt.second.x();
+            double minAxisLength = msmt.second.y();
+            double theta = msmt.first.theta();
+            double cvTheta = msmt.first.theta()*180/M_PI; //opencv wants angles in degrees
+
             cv::Point center = cv::Point(msmt.first.x(),msmt.first.y());
-            cv::Size axes = cv::Size(msmt.second.x(),msmt.second.y());
-            double angle = msmt.first.theta()*180/M_PI; //opencv wants angles in degrees
+            cv::Size axes = cv::Size(majAxisLength,minAxisLength);
+            cv::Point majAxisTip = cv::Point(center.x + majAxisLength*cos(theta),center.y + majAxisLength*sin(theta));
+            cv::Point minAxisTip = cv::Point(center.x + minAxisLength*cos(theta + M_PI/2), center.y + minAxisLength*sin(theta + M_PI/2));
+            /*
+            double majX = ctrX + majAxis*cos(theta);
+            double majY = ctrY + majAxis*sin(theta);
+              */
+
+
             cv::Scalar color = cv::Scalar(tracks[t].colorB,tracks[t].colorG,tracks[t].colorR);
             int thickness = 5;
             int startAngle = 0;
             int endAngle = 360;//draw entire ellipse
-            cv::ellipse(allVideoFrames[frameNum],center,axes,angle,startAngle,endAngle,color,thickness);
+            cv::ellipse(allVideoFrames[frameNum],center,axes,cvTheta,startAngle,endAngle,color,thickness);
+            cv::line(allVideoFrames[frameNum],center,majAxisTip,color,thickness);
+            cv::line(allVideoFrames[frameNum],center,minAxisTip,color,thickness);
         }
     }
 
@@ -248,7 +295,7 @@ int main() {
     //testAllVisualization();
     //testAllGeometry();
     //testAllMeasurementFunction();
-    //testPrintSuperimposedMeasurementImages();
+    testPrintSuperimposedMeasurementImages();
     //testDisplayPoses();
 
     std::vector<MserTrack> tracks = getMserTracksFromCSV();

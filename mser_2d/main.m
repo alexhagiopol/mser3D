@@ -28,7 +28,7 @@ manualMatching = true;
 visualization = false;
 resize = false; %reduce image to speed up computation
 threshold = -1; %-1 %Score threshold needed for two regions to be considered to come from the same object. A higher score indicates higher similarity.
-measurementsOutputFileName = '/home/alex/mser/mser_2d/manualMserMeasurements.csv';
+measurementsOutputFileName = '/home/alex/mser/mser_2d/tempManualMserMeasurements.csv';
 videoOutputFileName = 'Alex_Tracking_Movie';
 
 %% Set up video output

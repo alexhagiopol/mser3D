@@ -393,8 +393,8 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
     cout << "OpenGL Setup Done. Starting main loop..." << endl;
 
     //Draw 3D ellipses representing objects
+    cout << "Computing ellipse vertices and colors for objects" << endl;
     for (int o = 0; o < objects.size(); o++) {
-        cout << "Computing ellipse vertices and colors for object #" << o << endl;
         float cubeR, cubeG, cubeB;
         if (colors.size() == objects.size()){
             cubeR = (float) colors[o][0] / 255;
@@ -447,8 +447,8 @@ int drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Ve
     //Draw axes lines in objects' frames. RGB correspond to XYZ.
     int objectAxisLength = 1;
     int vertexDataNum = objects.size()*360*3*3; //start where variable i left off in the previous loop
+    cout << "Computing axes vertices and colors for objects" << endl;
     for (int o = 0; o < objects.size(); o++) {
-        cout << "Computing axes vertices and colors for object #" << o << endl;
         //Object frame:
         Point3 objectCenterInObjectFrame(0,0,0);
         Point3 objectXAxisTipInObjectFrame(objectAxisLength,0,0);
