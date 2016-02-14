@@ -269,7 +269,13 @@ int Visualizer::produceMserMeasurements(const vector<SimpleCamera>& cameras, Poi
     return 0;
 }
 
-int Visualizer::drawMserObjects(const std::vector<MserObject>& objects, const std::vector<Vector3>& colors){
+int Visualizer::drawMserObjects(const std::vector<Pose3>& cameraPoses, const std::vector<MserObject>& inputObjects, const std::vector<Vector3>& inputColors){
+    //make local copies to modify
+    std::vector<MserObject> objects = inputObjects;
+    std::vector<Vector3> colors = inputColors;
+    //make easy representations of cmera pose axes
+    Visualizer::addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(cameraPoses, objects, colors);
+
     cout << "Starting to draw MSER Objects" << endl;
     cout << "Objects size: " << objects.size() << endl;
     cout << "Colors size: " << colors.size() << endl;
@@ -611,5 +617,17 @@ int Visualizer::drawMserObjects(const std::vector<MserObject>& objects, const st
         glfwPollEvents();
     }while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
             glfwWindowShouldClose(window) == 0 );
+}
+
+//Helper function for displaying camera pose axes in same window as inferred MSER Objects. Adds dummy objects and colors to ends of provided vectors. You then call drawMserObjects() on the resulting vectors.
+void Visualizer::addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(const std::vector<Pose3>& cameraPoses, std::vector<MserObject>& objects, std::vector<Vector3>& colors){
+    Vector3 color(0,0,0);
+    for (int p = 0; p < cameraPoses.size(); p++){
+        Point2 axes = Point2(0,0); //Hack: Draw "invisible" ellipse. Only axes will show.
+        MserObject dummyObject = MserObject(cameraPoses[p],axes);
+        int frameNumber = p+1;
+        objects.push_back(dummyObject);
+        colors.push_back(color);
+    }
 }
 

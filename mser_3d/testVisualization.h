@@ -50,7 +50,11 @@ void testMserObjectDrawing(){
     objects.push_back(initialGuess);
     objects.insert(objects.end(),measurementsAsObjects.begin(),measurementsAsObjects.end());
     Visualizer myVisualizer = Visualizer();
-    myVisualizer.drawMserObjects(objects);
+    std::vector<Pose3> cameraPoses;
+    for (int i = 0; i < cameras.size(); i++){
+        cameraPoses.push_back(cameras[i].pose());
+    }
+    myVisualizer.drawMserObjects(cameraPoses, objects);
 }
 
 void testAllVisualization(){

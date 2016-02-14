@@ -275,21 +275,7 @@ void testDisplayPoses(){
         colors.push_back(color);
     }
     Visualizer myVisualizer = Visualizer();
-    myVisualizer.drawMserObjects(dummyObjects,colors);
-}
-
-//Helper function for displaying camera pose axes in same window as inferred MSER Objects. Adds dummy objects and colors to ends of provided vectors. You then call drawMserObjects() on the resulting vectors.
-void addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(std::vector<MserObject>& objects, std::vector<Vector3>& colors){
-    std::vector<Pose3> poses = getPosesFromBAL();
-    Vector3 color(0,0,0);
-    for (int p = 0; p < poses.size(); p++){
-        //poses[p].print();
-        Point2 axes = Point2(0,0); //Hack: Draw "invisible" ellipse. Only axes will show.
-        MserObject dummyObject = MserObject(poses[p],axes);
-        int frameNumber = p+1;
-        objects.push_back(dummyObject);
-        colors.push_back(color);
-    }
+    myVisualizer.drawMserObjects(poses, dummyObjects, colors);
 }
 
 int main() {
@@ -300,13 +286,13 @@ int main() {
     //testDisplayPoses();
 
     std::vector<MserTrack> tracks = getMserTracksFromCSV();
-    std::vector<Pose3> poses = getPosesFromBAL();
-    std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
+    std::vector<Pose3> cameraPoses = getPosesFromBAL();
+    std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, cameraPoses);
 
     //Draw robot axes: causes seg fault for big track datasets because we cross the vertex memory limit.
-    addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(pair.first,pair.second);
     Visualizer myVisualizer = Visualizer();
-    myVisualizer.drawMserObjects(pair.first,pair.second);
+    //myVisualizer.addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(poses, pair.first,pair.second);
+    myVisualizer.drawMserObjects(cameraPoses, pair.first, pair.second);
     return 0;
 }
 
