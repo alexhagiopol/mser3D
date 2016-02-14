@@ -49,7 +49,8 @@ void testMserObjectDrawing(){
     objects.push_back(returnedObject);
     objects.push_back(initialGuess);
     objects.insert(objects.end(),measurementsAsObjects.begin(),measurementsAsObjects.end());
-    drawMserObjects(objects);
+    Visualizer myVisualizer = Visualizer();
+    myVisualizer.drawMserObjects(objects);
 }
 
 void testAllVisualization(){

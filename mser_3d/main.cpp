@@ -40,7 +40,7 @@ std::istream& operator >> (std::istream& ins, data_t& data){
 }
 
 std::vector<MserTrack> getMserTracksFromCSV(){
-    std::ifstream infile("/home/alex/mser/mser_2d/tempManualMserMeasurements.csv");
+    std::ifstream infile("/home/alex/mser/mser_2d/manualMserMeasurements.csv");
     data_t data;
     infile >> data;
     infile.close();
@@ -90,7 +90,7 @@ std::vector<Pose3> getPosesFromBAL(){
 std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(std::vector<MserTrack>& tracks, std::vector<Pose3>& VOposes){
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
-    Cal3_S2::shared_ptr K(new Cal3_S2(470.0, 470.0, 0.1, 1280/2, 720/2));
+    Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1/*0.1*/, 1280/2, 720/2));
     for (int t = 0; t < tracks.size(); t++){
         std::vector<MserMeasurement> measurements = tracks[t].measurements;
         std::cout << "#" << t << " has " << measurements.size() << " measurements" << std::endl;
@@ -274,7 +274,8 @@ void testDisplayPoses(){
         dummyObjects.push_back(dummyObject);
         colors.push_back(color);
     }
-    drawMserObjects(dummyObjects,colors);
+    Visualizer myVisualizer = Visualizer();
+    myVisualizer.drawMserObjects(dummyObjects,colors);
 }
 
 //Helper function for displaying camera pose axes in same window as inferred MSER Objects. Adds dummy objects and colors to ends of provided vectors. You then call drawMserObjects() on the resulting vectors.
@@ -295,7 +296,7 @@ int main() {
     //testAllVisualization();
     //testAllGeometry();
     //testAllMeasurementFunction();
-    testPrintSuperimposedMeasurementImages();
+    //testPrintSuperimposedMeasurementImages();
     //testDisplayPoses();
 
     std::vector<MserTrack> tracks = getMserTracksFromCSV();
@@ -304,8 +305,8 @@ int main() {
 
     //Draw robot axes: causes seg fault for big track datasets because we cross the vertex memory limit.
     addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(pair.first,pair.second);
-
-    drawMserObjects(pair.first,pair.second);
+    Visualizer myVisualizer = Visualizer();
+    myVisualizer.drawMserObjects(pair.first,pair.second);
     return 0;
 }
 
