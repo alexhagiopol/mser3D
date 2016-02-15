@@ -244,8 +244,10 @@ Values expressionsOptimizationSynthetic(MserObject& object, MserObject& initialG
     return result;
 }
 
-Values expressionsOptimizationRealWorld(MserObject& initialGuess, std::vector<MserMeasurement>& measurements, std::vector<SimpleCamera>& cameras){
-    Isotropic::shared_ptr measurementNoise = Isotropic::Sigma(5, 0.1); // one pixel in every dimension
+Values expressionsOptimizationRealWorld(MserObject& initialGuess, std::vector<MserMeasurement>& measurements, std::vector<SimpleCamera>& cameras, int iterations){
+    Vector5 measurementSigmasVector;
+    measurementSigmasVector << 4, 4, 0.1, 4, 4;
+    Diagonal::shared_ptr measurementNoise = Diagonal::Sigmas(measurementSigmasVector); // one pixel in every dimension
 
     //Ground truth object is passed to this function. Create vectors with measurements, cameras, and camera poses.
     //std::vector<SimpleCamera> cameras = alexCreateCameras(20,object.first.translation(),20); //make a bunch of cameras to pass to measurement function
@@ -267,7 +269,9 @@ Values expressionsOptimizationRealWorld(MserObject& initialGuess, std::vector<Ms
         graph.addExpressionFactor(prediction_,measurement,measurementNoise);
     }
     // Add prior on object to constrain scale, again with ExpressionFactor[
-    Isotropic::shared_ptr objectNoise = Isotropic::Sigma(8, 0.2);
+    Vector8 guessSigmasVector;
+    guessSigmasVector << 0.1,0.1,0.1,1,1,1,5,5;
+    Diagonal::shared_ptr objectNoise = Diagonal::Sigmas(guessSigmasVector);
     graph.addExpressionFactor(MserObject_('o', 0), initialGuess, objectNoise); //use initial guess as prior
 
     // Create perturbed initial
@@ -278,6 +282,7 @@ Values expressionsOptimizationRealWorld(MserObject& initialGuess, std::vector<Ms
     std::string verbosity = "SUMMARY";
     params.setVerbosityLM(verbosity);
     params.setlambdaUpperBound(1e32);
+    params.setMaxIterations(iterations);
     LevenbergMarquardtOptimizer optimizer = LevenbergMarquardtOptimizer(graph,initial,params);
     Values result = optimizer.optimize();//LevenbergMarquardtOptimizer(graph, initial).optimize();
     //cout << "final error = " << graph.error(result) << endl;
