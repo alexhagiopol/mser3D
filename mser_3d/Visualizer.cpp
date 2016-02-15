@@ -269,12 +269,12 @@ int Visualizer::produceMserMeasurements(const vector<SimpleCamera>& cameras, Poi
     return 0;
 }
 
-int Visualizer::drawMserObjects(const std::vector<Pose3>& cameraPoses, const std::vector<MserObject>& inputObjects, const std::vector<Vector3>& inputColors){
+int Visualizer::drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vector<MserObject>& inputObjects, const std::vector<Vector3>& inputColors, const std::vector<std::pair<Point3,Point3>>& rays){
     //make local copies to modify
     std::vector<MserObject> objects = inputObjects;
     std::vector<Vector3> colors = inputColors;
     //make easy representations of cmera pose axes
-    Visualizer::addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(cameraPoses, objects, colors);
+    Visualizer::addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(inputCameraPoses, objects, colors);
 
     cout << "Starting to draw MSER Objects" << endl;
     cout << "Objects size: " << objects.size() << endl;
@@ -352,8 +352,8 @@ int Visualizer::drawMserObjects(const std::vector<Pose3>& cameraPoses, const std
 
     cout << "Camera pose set." << endl;
 
-    //(objects.size ellipses)(360 triangles / ellipse)(3 points / triangle)(3 doubles / point) + (objects.size axes groups)(3 lines / axis group)(6 doubles / line) + (1 world axis group)(3 lines / world axis group)(6 doubles / world axis line)
-    long int vertexDataSize = objects.size()*360*3*3 + objects.size()*3*6 + 1*3*6;
+    //(objects.size ellipses)(360 triangles / ellipse)(3 points / triangle)(3 doubles / point) + (objects.size axes groups)(3 lines / axis group)(6 doubles / line) + (1 world axis group)(3 lines / world axis group)(6 doubles / world axis line) + (rays.size # rays)*(1 line / ray)*(3 doubles / line)
+    long int vertexDataSize = objects.size()*360*3*3 + objects.size()*3*6 + 1*3*6 + rays.size()*1*6;
 
     cout << "Vertex data size =" << vertexDataSize << endl;
 
@@ -494,7 +494,37 @@ int Visualizer::drawMserObjects(const std::vector<Pose3>& cameraPoses, const std
         vertexDataNum += 18; //increment data position
     }
 
-    cout << "Computing vertices and colros for world axes." << endl;
+    cout << "Computing rays to object centroids." << endl;
+    //Picking up where ellipses left off
+    vertexDataNum = objects.size()*360*3*3 + objects.size()*3*6;
+
+    for (int r = 0; r < rays.size(); r++){
+        Point3 rayStart = rays[r].first;
+        Point3 rayEnd = rays[r].second;
+
+        //Ray points
+        //First point:
+        g_vertex_buffer_data[vertexDataNum + 0] = rayStart.x();
+        g_vertex_buffer_data[vertexDataNum + 1] = rayStart.y();
+        g_vertex_buffer_data[vertexDataNum + 2] = rayStart.z();
+        //Second point:
+        g_vertex_buffer_data[vertexDataNum + 3] = rayEnd.x();
+        g_vertex_buffer_data[vertexDataNum + 4] = rayEnd.y();
+        g_vertex_buffer_data[vertexDataNum + 5] = rayEnd.z();
+
+        //Ray Colors
+        //First point:
+        g_color_buffer_data[vertexDataNum + 0] = 0.0f;
+        g_color_buffer_data[vertexDataNum + 1] = 0.0f;
+        g_color_buffer_data[vertexDataNum + 2] = 0.0f;
+        //Second point:
+        g_color_buffer_data[vertexDataNum + 3] = 0.0f;
+        g_color_buffer_data[vertexDataNum + 4] = 0.0f;
+        g_color_buffer_data[vertexDataNum + 5] = 0.0f;
+        vertexDataNum += 6;
+    }
+
+    cout << "Computing vertices and colors for world axes." << endl;
     //Draw lines for world axes. RGB correspond to XYZ
     int worldAxisLength = 10;
     Point3 worldCenter(0,0,0);
@@ -611,6 +641,7 @@ int Visualizer::drawMserObjects(const std::vector<Pose3>& cameraPoses, const std
         glDrawArrays(GL_TRIANGLES, 0, 360 * 3 * objects.size()); // Draw the 360 triangles per ellipse. Each triangle has 3 points. Hence 360*3*objects.size(). Start at index 0.
         glDrawArrays(GL_LINES,360 * 3 * objects.size(), 360 * 3 * objects.size() + objects.size()*3*2); //Draw object.size # of axes groups. Each axes group has 3 lines. Each line has 2 points.
         glDrawArrays(GL_LINES, 360 * 3 * objects.size() + objects.size()*3*2, 360 * 3 * objects.size() + objects.size()*3*2 + 3*2); //Draw world axes group. Group has 3 lines. Each line has 2 points.
+        glDrawArrays(GL_LINES,360 * 3 * objects.size() + objects.size()*3*2 + 3*2,360 * 3 * objects.size() + objects.size()*3*2 + 3*2 + rays.size()*2); //Draw ray lines. Each ray line has 2 points.
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glfwSwapBuffers(window); // Swap buffers

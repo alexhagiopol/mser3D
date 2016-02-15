@@ -40,7 +40,7 @@ class Visualizer{
 public:
     Visualizer(){}
     int produceMserMeasurements(const std::vector<gtsam::SimpleCamera>& cameras, Point3& target, std::vector<MserMeasurement>& measurements);
-    int drawMserObjects(const std::vector<Pose3>& cameraPoses, const std::vector<MserObject>& objects, const std::vector<Vector3>& colors = std::vector<Vector3>());
+    int drawMserObjects(const std::vector<Pose3>& cameraPoses, const std::vector<MserObject>& objects, const std::vector<Vector3>& colors = std::vector<Vector3>(), const std::vector<std::pair<Point3,Point3>>& rays = std::vector<std::pair<Point3,Point3>>());
 private:
     void addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(const std::vector<Pose3>& cameraPoses, std::vector<MserObject>& objects, std::vector<Vector3>& colors);
 };
