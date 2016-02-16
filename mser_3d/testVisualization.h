@@ -42,14 +42,19 @@ void testMserObjectDrawing(){
     }
 
     //Optimize
-    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess);
+    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess, 100);
     MserObject returnedObject = result.at<MserObject>(Symbol('o',0)); //retrieve object
     std::vector<MserObject> objects;
     objects.push_back(groundTruthObject);
     objects.push_back(returnedObject);
     objects.push_back(initialGuess);
     objects.insert(objects.end(),measurementsAsObjects.begin(),measurementsAsObjects.end());
-    drawMserObjects(objects);
+    Visualizer myVisualizer = Visualizer();
+    std::vector<Pose3> cameraPoses;
+    for (int i = 0; i < cameras.size(); i++){
+        cameraPoses.push_back(cameras[i].pose());
+    }
+    myVisualizer.drawMserObjects(cameraPoses, objects);
 }
 
 void testAllVisualization(){

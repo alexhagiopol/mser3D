@@ -36,7 +36,7 @@ void testExpressionsOptimization(){
     //Check correctness
     Values correct;
     correct.insert(Symbol('o',0),groundTruthObject);
-    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess);
+    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess, 100);
 
     if (correct.equals(result,0.1)){
         cout << "EXPRESSIONS OPTIMIZATION PASSED" << endl;
@@ -67,7 +67,7 @@ void testExpressionsOptimizationWithBadInitialGuess(){
     //Check correctness
     Values correct;
     correct.insert(Symbol('o',0),groundTruthObject);
-    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess);
+    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess, 100);
     if (correct.equals(result,0.1)){
         cout << "EXPRESSIONS OPTIMIZATION W/ BAD GUESS PASSED" << endl;
     } else {

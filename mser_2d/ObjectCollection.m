@@ -115,8 +115,8 @@ classdef ObjectCollection < handle
             otherCollection.plotObject(otherCollection.objects(secondID),secondID,offsetX,[0,0,1],15);
             OC.plotLineBetweenObjects(OC.objects(firstID),otherCollection.objects(secondID),offsetX,[0,0,1]);
             matchSummary(:,1) = [firstID,secondID,99];         
-            pause()
-            disp('Press ENTER to continue\n.');
+            disp('Press ENTER to continue.\n');
+            pause();
             %close all;
             OC.absorbMSERs(otherCollection, matchSummary, prevF, newF, threshold)
         end
