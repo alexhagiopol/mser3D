@@ -217,7 +217,7 @@ std::vector<std::pair<Point3,Point3>> makeRayTracingPairs(std::vector<MserTrack>
             MserMeasurement measurement = tracks[t].measurements[m];
             Point2 centroid2D = measurement.first.translation();
             //Assume a camera and calibration - later on ask caller to provide cameras in this function and in inferObjectsFromRealMserMeasurements()
-            Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1/*0.1*/, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
+            Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
             SimpleCamera camera(VOposes[tracks[t].frameNumbers[m]],*K);
             Point3 rayEnd = camera.backproject(centroid2D,1000);
             Point3 rayStart = VOposes[tracks[t].frameNumbers[m]].translation();
