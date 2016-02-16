@@ -1,10 +1,7 @@
 //
 // Created by alex on 1/11/16.
 //
-
-#ifndef MSER_3D_MSERMEASUREMENT_H
-#define MSER_3D_MSERMEASUREMENT_H
-
+#pragma once
 #include <gtsam/base/Manifold.h> //required for MSER object
 #include <gtsam/geometry/Pose3.h> //required for MSER object
 #include <gtsam/geometry/Pose2.h> //required for MSER measurement
@@ -32,4 +29,4 @@ namespace gtsam { //required to keep GCC from complaining
     };
 } //namespace gtsam
 
-#endif //MSER_3D_MSERMEASUREMENT_H
+
