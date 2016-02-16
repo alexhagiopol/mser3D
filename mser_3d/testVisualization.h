@@ -42,7 +42,7 @@ void testMserObjectDrawing(){
     }
 
     //Optimize
-    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess);
+    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess, 100);
     MserObject returnedObject = result.at<MserObject>(Symbol('o',0)); //retrieve object
     std::vector<MserObject> objects;
     objects.push_back(groundTruthObject);
