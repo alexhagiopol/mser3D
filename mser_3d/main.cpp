@@ -40,7 +40,7 @@ std::istream& operator >> (std::istream& ins, data_t& data){
 }
 
 std::vector<MserTrack> getMserTracksFromCSV(){
-    std::ifstream infile("/home/alex/mser/mser_2d/manualMserMeasurements.csv");
+    std::ifstream infile("/home/alex/mser/mser_2d/firstManualMeasurementGroup.csv");
     data_t data;
     infile >> data;
     infile.close();
@@ -87,10 +87,11 @@ std::vector<Pose3> getPosesFromBAL(){
     return poses;
 }
 
+//           objects                 colors
 std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(std::vector<MserTrack>& tracks, std::vector<Pose3>& VOposes){
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
-    Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1/*0.1*/, 1280/2, 720/2));
+    Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
     for (int t = 0; t < tracks.size(); t++){
         std::vector<MserMeasurement> measurements = tracks[t].measurements;
         std::cout << "#" << t << " has " << measurements.size() << " measurements" << std::endl;
@@ -180,17 +181,57 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
 
 
         MserObject initialGuess(initialGuessPose, initialGuessAxes);
-        Values result = expressionsOptimizationRealWorld(initialGuess, measurements, cameras);
+        //objects.push_back(initialGuess);
+        //colors.push_back(gtsam::Vector3(0,0,0)); ///black initial guess
+
+        /*
+        for (int iter = 20; iter <= 20; iter += 1){
+            cout << "OPTIMIZING WITH " << iter << " ITERATIONS" << endl;
+            Values result = expressionsOptimizationRealWorld(initialGuess, measurements, cameras, iter);
+            MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
+            objects.push_back(returnedObject);
+            //gtsam::Vector3 trackColor(tracks[t].colorR,tracks[t].colorG,tracks[t].colorB);
+            colors.push_back(gtsam::Vector3(50 + iter*20,50 + iter*20,50 + iter*20)); //make everything darker on every iteration
+        }
+        */
+
+        Values result = expressionsOptimizationRealWorld(initialGuess, measurements, cameras, 30);
         MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
-        gtsam::traits<MserObject>::Print(returnedObject);
         objects.push_back(returnedObject);
+        //gtsam::traits<MserObject>::Print(returnedObject);
+        //gtsam::Vector3 trackColor(tracks[t].colorR,tracks[t].colorG,tracks[t].colorB);
         gtsam::Vector3 trackColor(tracks[t].colorR,tracks[t].colorG,tracks[t].colorB);
         colors.push_back(trackColor);
+
         cout << "FINISHED OPTIMIZING TRACK #" << t << " OF " << tracks.size() << endl;
     }
     std::pair<std::vector<MserObject>,std::vector<Vector3>> pair(objects,colors);
     return pair;
 }
+
+std::vector<std::pair<Point3,Point3>> makeRayTracingPairs(std::vector<MserTrack>& tracks, std::vector<Pose3>& VOposes){
+    std::vector<std::pair<Point3,Point3>> rayTracingPairs;
+    for (int t = 0; t < tracks.size(); t++){
+        std::vector<MserMeasurement> measurements = tracks[t].measurements;
+        for (int m = 0; m < measurements.size(); m++){
+            MserMeasurement measurement = tracks[t].measurements[m];
+            Point2 centroid2D = measurement.first.translation();
+            //Assume a camera and calibration - later on ask caller to provide cameras in this function and in inferObjectsFromRealMserMeasurements()
+            Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1/*0.1*/, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
+            SimpleCamera camera(VOposes[tracks[t].frameNumbers[m]],*K);
+            Point3 rayEnd = camera.backproject(centroid2D,1000);
+            Point3 rayStart = VOposes[tracks[t].frameNumbers[m]].translation();
+            rayStart.print();
+            rayEnd.print();
+
+            std::pair<Point3,Point3> ray;
+            ray.first = rayStart;
+            ray.second = rayEnd;
+            rayTracingPairs.push_back(ray);
+        }
+    }
+    return rayTracingPairs;
+};
 
 //Write video images with superimposed MSER measurements to disk in order to test/verify
 void testPrintSuperimposedMeasurementImages(){
@@ -232,12 +273,8 @@ void testPrintSuperimposedMeasurementImages(){
             cv::Size axes = cv::Size(majAxisLength,minAxisLength);
             cv::Point majAxisTip = cv::Point(center.x + majAxisLength*cos(theta),center.y + majAxisLength*sin(theta));
             cv::Point minAxisTip = cv::Point(center.x + minAxisLength*cos(theta + M_PI/2), center.y + minAxisLength*sin(theta + M_PI/2));
-            /*
-            double majX = ctrX + majAxis*cos(theta);
-            double majY = ctrY + majAxis*sin(theta);
-              */
-
-
+            /* double majX = ctrX + majAxis*cos(theta);
+            double majY = ctrY + majAxis*sin(theta); */
             cv::Scalar color = cv::Scalar(tracks[t].colorB,tracks[t].colorG,tracks[t].colorR);
             int thickness = 5;
             int startAngle = 0;
@@ -278,21 +315,37 @@ void testDisplayPoses(){
     myVisualizer.drawMserObjects(poses, dummyObjects, colors);
 }
 
+void test3DReconstruction(bool showRays){
+    std::vector<MserTrack> tracks = getMserTracksFromCSV();
+    std::vector<Pose3> allCameraPoses = getPosesFromBAL();
+    //shows only relevant camera poses
+    std::vector<Pose3> relevantCameraPoses;
+    for (int t = 0; t < tracks.size(); t++){
+        for (int f = 0; f < tracks[t].frameNumbers.size(); f++){ //the frame number corresponds to the pose index??
+            relevantCameraPoses.push_back(allCameraPoses[tracks[t].frameNumbers[f]]);
+        }
+    }
+
+    std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, allCameraPoses); //use all poses because this funciton expects to look through everything from getPosesFromBAL()
+    std::vector<std::pair<Point3,Point3>> rays;
+    if (showRays) rays = makeRayTracingPairs(tracks, allCameraPoses);
+    //Draw robot axes: causes seg fault for big track datasets because we cross the vertex memory limit.
+    Visualizer myVisualizer = Visualizer();
+    //myVisualizer.addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(poses, pair.first,pair.second);
+    cout << "# cam poses " << relevantCameraPoses.size() << endl;
+    cout << "# objects " << pair.first.size() << endl;
+    cout << "# colors " << pair.second.size() << endl;
+    cout << "# rays " << rays.size() << endl;
+    myVisualizer.drawMserObjects(relevantCameraPoses, pair.first, pair.second, rays); //only display relevant poses
+}
+
 int main() {
     //testAllVisualization();
     //testAllGeometry();
     //testAllMeasurementFunction();
     //testPrintSuperimposedMeasurementImages();
     //testDisplayPoses();
-
-    std::vector<MserTrack> tracks = getMserTracksFromCSV();
-    std::vector<Pose3> cameraPoses = getPosesFromBAL();
-    std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, cameraPoses);
-
-    //Draw robot axes: causes seg fault for big track datasets because we cross the vertex memory limit.
-    Visualizer myVisualizer = Visualizer();
-    //myVisualizer.addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(poses, pair.first,pair.second);
-    myVisualizer.drawMserObjects(cameraPoses, pair.first, pair.second);
+    test3DReconstruction(true);
     return 0;
 }
 
