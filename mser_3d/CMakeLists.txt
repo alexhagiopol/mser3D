@@ -46,20 +46,23 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 # Tutorial 4
 add_executable(mser_3d
 	main.cpp
-	Visualizer.h
+	visualization.h
+	visualization.cpp
 	geometryFunctions.h
 	measurementFunction.h
-	testMeasurementFunction.h
 	common/shader.cpp
 	common/shader.hpp
 	common/controls.cpp
 	common/controls.hpp
 	TransformVertexShader.vertexshader
 	ColorFragmentShader.fragmentshader
-	Visualizer.cpp
 	MserObject.h
 	MserMeasurement.h
-	MserTrack.h)
+	MserTrack.h
+	tests.h
+	tests.cpp
+	InputManager.cpp
+	InputManager.h optimization.cpp optimization.h measurementFunction.cpp geometryFunctions.cpp)
 
 target_link_libraries(mser_3d
 	${ALL_LIBS}
