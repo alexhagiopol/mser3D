@@ -1,9 +1,34 @@
 //
 // Created by alex on 12/8/15.
 //
-#include "Visualizer.h"
+#include "visualization.h"
+using namespace gtsam;
 
-int Visualizer::produceMserMeasurements(const vector<SimpleCamera>& cameras, Point3& target, vector<MserMeasurement>& measurements){
+std::vector<std::pair<Point3,Point3>> makeRayTracingPairs(std::vector<MserTrack>& tracks, std::vector<Pose3>& VOposes){
+    std::vector<std::pair<Point3,Point3>> rayTracingPairs;
+    for (int t = 0; t < tracks.size(); t++){
+        std::vector<MserMeasurement> measurements = tracks[t].measurements;
+        for (int m = 0; m < measurements.size(); m++){
+            MserMeasurement measurement = tracks[t].measurements[m];
+            Point2 centroid2D = measurement.first.translation();
+            //Assume a camera and calibration - later on ask caller to provide cameras in this function and in inferObjectsFromRealMserMeasurements()
+            Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
+            SimpleCamera camera(VOposes[tracks[t].frameNumbers[m]],*K);
+            Point3 rayEnd = camera.backproject(centroid2D,1000);
+            Point3 rayStart = VOposes[tracks[t].frameNumbers[m]].translation();
+            rayStart.print();
+            rayEnd.print();
+
+            std::pair<Point3,Point3> ray;
+            ray.first = rayStart;
+            ray.second = rayEnd;
+            rayTracingPairs.push_back(ray);
+        }
+    }
+    return rayTracingPairs;
+}
+
+int produceMserMeasurements(const vector<SimpleCamera>& cameras, Point3& target, vector<MserMeasurement>& measurements){
     GLFWwindow* window;
     // Initialise GLFW
     if( !glfwInit() )
@@ -269,12 +294,12 @@ int Visualizer::produceMserMeasurements(const vector<SimpleCamera>& cameras, Poi
     return 0;
 }
 
-int Visualizer::drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vector<MserObject>& inputObjects, const std::vector<Vector3>& inputColors, const std::vector<std::pair<Point3,Point3>>& rays){
+int drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vector<MserObject>& inputObjects, const std::vector<Vector3>& inputColors, const std::vector<std::pair<Point3,Point3>>& rays){
     //make local copies to modify
     std::vector<MserObject> objects = inputObjects;
     std::vector<Vector3> colors = inputColors;
     //make easy representations of cmera pose axes
-    Visualizer::addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(inputCameraPoses, objects, colors);
+    addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(inputCameraPoses, objects, colors);
 
     cout << "Starting to draw MSER Objects" << endl;
     cout << "Objects size: " << objects.size() << endl;
@@ -653,7 +678,7 @@ int Visualizer::drawMserObjects(const std::vector<Pose3>& inputCameraPoses, cons
 }
 
 //Helper function for displaying camera pose axes in same window as inferred MSER Objects. Adds dummy objects and colors to ends of provided vectors. You then call drawMserObjects() on the resulting vectors.
-void Visualizer::addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(const std::vector<Pose3>& cameraPoses, std::vector<MserObject>& objects, std::vector<Vector3>& colors){
+void addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(const std::vector<Pose3>& cameraPoses, std::vector<MserObject>& objects, std::vector<Vector3>& colors){
     Vector3 color(0,0,0);
     for (int p = 0; p < cameraPoses.size(); p++){
         Point2 axes = Point2(0,0); //Hack: Draw "invisible" ellipse. Only axes will show.
