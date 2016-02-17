@@ -16,8 +16,8 @@ std::vector<std::pair<Point3,Point3>> makeRayTracingPairs(std::vector<MserTrack>
             SimpleCamera camera(VOposes[tracks[t].frameNumbers[m]],*K);
             Point3 rayEnd = camera.backproject(centroid2D,1000);
             Point3 rayStart = VOposes[tracks[t].frameNumbers[m]].translation();
-            rayStart.print();
-            rayEnd.print();
+            //rayStart.print();
+            //rayEnd.print();
 
             std::pair<Point3,Point3> ray;
             ray.first = rayStart;
@@ -301,9 +301,9 @@ int drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vecto
     //make easy representations of cmera pose axes
     addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(inputCameraPoses, objects, colors);
 
-    cout << "Starting to draw MSER Objects" << endl;
-    cout << "Objects size: " << objects.size() << endl;
-    cout << "Colors size: " << colors.size() << endl;
+    cerr << "VISUALIZATION: Starting to draw MSER Objects" << endl;
+    cerr << "VISUALIZATION: Objects size: " << objects.size() << endl;
+    cerr << "VISUALIZATION: Colors size: " << colors.size() << endl;
 
     GLFWwindow *window;
     // Initialise GLFW
@@ -311,7 +311,7 @@ int drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vecto
         fprintf(stderr, "Failed to initialize GLFW\n");
         return -1;
     } else {
-        cout << "GLFW initialized." << endl;
+        cerr << "VISUALIZATION: GLFW initialized." << endl;
     }
 
     //Set up window.
@@ -321,23 +321,23 @@ int drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vecto
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Open a window and create its OpenGL context
-    window = glfwCreateWindow(1024, 768, "MSER 3D", NULL, NULL);
+    window = glfwCreateWindow(1024, 768, "VISUALIZATION MSER 3D", NULL, NULL);
     if (window == NULL) {
-        fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible.\n");
+        fprintf(stderr, "VISUALIZATION: Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible.\n");
         glfwTerminate();
         return -1;
     } else {
-        cout << "GLFW Window Opened." << endl;
+        cerr << "VISUALIZATION: GLFW Window Opened." << endl;
     }
     glfwMakeContextCurrent(window);
 
     // Initialize GLEW - OpenGL Extension Wrangler Library
     glewExperimental = true; // Needed for core profile
     if (glewInit() != GLEW_OK) {
-        fprintf(stderr, "Failed to initialize GLEW\n");
+        fprintf(stderr, "VISUALIZATION: Failed to initialize GLEW\n");
         return -1;
     } else {
-        cout << "GLEW initialized." << endl;
+        cerr << "VISUALIZATION: GLEW initialized." << endl;
     }
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE); // Ensure we can capture the escape key being pressed below
 
@@ -360,7 +360,7 @@ int drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vecto
     glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f,
                                             100.0f); // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 
-    cout << "Shaders loaded." << endl << "GLM pespective set." << endl << "Background color set." << endl;
+    cerr << "VISUALIZATION: Shaders loaded, GLM pespective set, background color set." << endl;
 
     GLuint vertexbuffer; //create vertex buffer outside loop so it can be purged outside loop
     GLuint colorbuffer; //create color buffer outside loop so it can be purged outside loop
@@ -375,24 +375,18 @@ int drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vecto
     glm::mat4 MVP = Projection * View *
                     Model; // Our ModelViewProjection : multiplication of our 3 matrices. Remember, matrix multiplication is the other way around
 
-    cout << "Camera pose set." << endl;
-
     //36 vertices makes for a decent-looking ellipse and keeps memory usage low.
     int numVerticesPerEllipse = 36;
     //(objects.size ellipses)(numVerticesPerEllipse triangles / ellipse)(3 points / triangle)(3 doubles / point) + (objects.size axes groups)(3 lines / axis group)(6 doubles / line) + (1 world axis group)(3 lines / world axis group)(6 doubles / world axis line) + (rays.size # rays)*(1 line / ray)*(3 doubles / line)
     long int vertexDataSize = objects.size()*numVerticesPerEllipse*3*3 + objects.size()*3*6 + 1*3*6 + rays.size()*1*6;
 
-    cout << "Vertex data size =" << vertexDataSize << endl;
+    cerr << "VISUALIZATION: Vertex data size = " << vertexDataSize << endl;
 
     GLfloat g_vertex_buffer_data[vertexDataSize];
     GLfloat g_color_buffer_data[vertexDataSize];
 
-    cout << "Buffers initialized. Vertex Data Size Set to" << vertexDataSize << endl;
-
-    cout << "OpenGL Setup Done. Starting main loop..." << endl;
-
     //Draw 3D ellipses representing objects
-    cout << "Computing ellipse vertices and colors for objects" << endl;
+    cerr << "VISUALIZATION: Computing ellipse vertices and colors for objects." << endl;
     for (int o = 0; o < objects.size(); o++) {
         float cubeR, cubeG, cubeB;
         if (colors.size() == objects.size()){
@@ -446,7 +440,7 @@ int drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vecto
     //Draw axes lines in objects' frames. RGB correspond to XYZ.
     int objectAxisLength = 1;
     int vertexDataNum = objects.size()*numVerticesPerEllipse*3*3; //start where variable i left off in the previous loop
-    cout << "Computing axes vertices and colors for objects" << endl;
+    cerr << "VISUALIZATION: Computing axes vertices and colors for objects." << endl;
     for (int o = 0; o < objects.size(); o++) {
         //Object frame:
         Point3 objectCenterInObjectFrame(0,0,0);
@@ -521,7 +515,7 @@ int drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vecto
         vertexDataNum += 18; //increment data position
     }
 
-    cout << "Computing rays to object centroids." << endl;
+    cerr << "VISUALIZATION: Computing rays to object centroids." << endl;
     //Picking up where ellipses left off
     vertexDataNum = objects.size()*numVerticesPerEllipse*3*3 + objects.size()*3*6;
 
@@ -551,7 +545,7 @@ int drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vecto
         vertexDataNum += 6;
     }
 
-    cout << "Computing vertices and colors for world axes." << endl;
+    cerr << "VISUALIZATION: Computing vertices and colors for world axes." << endl;
     //Draw lines for world axes. RGB correspond to XYZ
     int worldAxisLength = 10;
     Point3 worldCenter(0,0,0);
@@ -619,7 +613,7 @@ int drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vecto
     g_color_buffer_data[vertexDataSize - 1] = 1.0f;
     // End lines for world axes
 
-    cout << "Vertex computation done. Placing vertices and colors into color buffers..." << endl;
+    cerr << "VISUALIZATION: Vertex computation done. Placing vertices and colors into color buffers..." << endl;
     //Place vertex info into a buffer
     glGenBuffers(1, &vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);

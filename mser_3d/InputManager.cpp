@@ -36,11 +36,11 @@ std::istream& operator >> (std::istream& ins, data_t& data){
 InputManager::InputManager(std::string settingsPath) {
      cv::FileStorage settings(settingsPath.c_str(), cv::FileStorage::READ);
      if (!settings.isOpened()){
-          std::cerr << std::endl << "Wrong path to settings! Was given " << settingsPath << std::endl;
-          std::cerr << "Fix settings file location and re-execute!" << std::endl;
+          std::cerr << std::endl << "INPUT MANAGER: Wrong path to settings! Was given " << settingsPath << std::endl;
+          std::cerr << "INPUT MANAGER: Fix settings file location and re-execute!" << std::endl;
           successfulInput_ = false;
      } else {
-          std::cerr << "Successfully read settings from " << settingsPath << std::endl;
+          std::cerr << "INPUT MANAGER: Reading settings from " << settingsPath << std::endl;
           videoPath_ = (std::string) settings["VideoPath"];
           BALPath_ = (std::string) settings["BALPath"];
           CSVPath_ = (std::string) settings["CSVPath"];
@@ -51,8 +51,10 @@ InputManager::InputManager(std::string settingsPath) {
           cameraCy_ = settings["Camera.cy"];
           MSERMeasurementTracks_ = getMserTracksFromCSV(CSVPath_);
           VOCameraPoses_ = getPosesFromBAL(BALPath_);
-          std::cerr << "Found " << MSERMeasurementTracks_.size() << " MSER tracks." << std::endl;
-          std::cerr << "Found " << VOCameraPoses_.size() << " VO poses." << std::endl;
+          std::cerr << "INPUT MANAGER: Reading " << CSVPath_ << std::endl;
+          std::cerr << "INPUT MANAGER: Found " << MSERMeasurementTracks_.size() << " MSER tracks." << std::endl;
+          std::cerr << "INPUT MANAGER: Reading " << BALPath_ << std::endl;
+          std::cerr << "INPUT MANAGER: Found " << VOCameraPoses_.size() << " VO poses." << std::endl;
           int intShowRays = settings["Vis.ShowRays"];
           showRays_ = (bool) intShowRays;
           successfulInput_ = true;
@@ -96,11 +98,9 @@ std::vector<MserTrack> InputManager::getMserTracksFromCSV(std::string csvFile){
 std::vector<Pose3> InputManager::getPosesFromBAL(std::string balFile){
      SfM_data mydata;
      readBAL(balFile, mydata);
-     cout << boost::format("read %1% tracks on %2% cameras\n") % mydata.number_tracks() % mydata.number_cameras();
      std::vector<Pose3> poses;
      BOOST_FOREACH(const SfM_Camera& camera, mydata.cameras){
           const Pose3 pose = camera.pose();
-          //pose.print("Camera pose:\n");
           poses.push_back(pose);
      }
      return poses;

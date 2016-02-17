@@ -278,7 +278,7 @@ void test3DReconstruction(const InputManager& input){
     std::vector<Pose3> allCameraPoses;// = getPosesFromBAL();
     input.getMSERMeasurementTracks(tracks);
     input.getVOCameraPoses(allCameraPoses);
-    //shows only relevant camera poses
+    //shows only relevant camera poses; VERY INEFFICIENT!!!
     std::vector<Pose3> relevantCameraPoses;
     for (int t = 0; t < tracks.size(); t++){
         for (int f = 0; f < tracks[t].frameNumbers.size(); f++){ //the frame number corresponds to the pose index??
@@ -286,15 +286,15 @@ void test3DReconstruction(const InputManager& input){
         }
     }
 
-    std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, allCameraPoses); //use all poses because this funciton expects to look through everything from getPosesFromBAL()
+    std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, allCameraPoses); //use all poses because this function expects to look through everything from getPosesFromBAL()
     std::vector<std::pair<Point3,Point3>> rays;
     if (input.showRays()) rays = makeRayTracingPairs(tracks, allCameraPoses);
     //Draw robot axes: causes seg fault for big track datasets because we cross the vertex memory limit.
     //myVisualizer.addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(poses, pair.first,pair.second);
-    cout << "# cam poses " << relevantCameraPoses.size() << endl;
-    cout << "# objects " << pair.first.size() << endl;
-    cout << "# colors " << pair.second.size() << endl;
-    cout << "# rays " << rays.size() << endl;
+    cerr << "TEST 3D: # of cam poses " << relevantCameraPoses.size() << endl;
+    cerr << "TEST 3D: # of objects " << pair.first.size() << endl;
+    cerr << "TEST 3D: # of colors " << pair.second.size() << endl;
+    cerr << "TEST 3D: # of rays " << rays.size() << endl;
     drawMserObjects(relevantCameraPoses, pair.first, pair.second, rays); //only display relevant poses
 }
 

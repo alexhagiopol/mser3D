@@ -111,7 +111,7 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
     Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
     for (int t = 0; t < tracks.size(); t++){
         std::vector<MserMeasurement> measurements = tracks[t].measurements;
-        std::cout << "#" << t << " has " << measurements.size() << " measurements" << std::endl;
+        std::cerr << "OPTIMIZER: Track #" << t << " has " << measurements.size() << " measurements." << std::endl;
         std::vector<SimpleCamera> cameras;
         std::vector<Point2> centroidMeasurements;
         std::vector<Point2> majorAxisMeasurements;
@@ -132,38 +132,38 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
 
             //make vector of 2D centroid measurements
             centroidMeasurements.push_back(measurement.first.translation());
-            measurement.first.print("MSER MEASUREMENT POSE \n");
-            measurement.second.print("MSER MEASUREMENT AXES \n");
+            //measurement.first.print("MSER MEASUREMENT POSE \n");
+            //measurement.second.print("MSER MEASUREMENT AXES \n");
 
             //vector of 2D major axis measurements
             double majX = ctrX + majAxis*cos(theta);
             double majY = ctrY + majAxis*sin(theta);
             Point2 majorAxisMeasurement(majX,majY);
             majorAxisMeasurements.push_back(majorAxisMeasurement);
-            majorAxisMeasurement.print("MAJOR AXIS MEASUREMENT \n");
+            //majorAxisMeasurement.print("MAJOR AXIS MEASUREMENT \n");
 
             //vector of 2D minor axis measurements
             double minX = ctrX + minAxis*cos(theta + M_PI/2);
             double minY = ctrY + minAxis*sin(theta + M_PI/2);
             Point2 minorAxisMeasurement(minX,minY);
             minorAxisMeasurements.push_back(minorAxisMeasurement);
-            minorAxisMeasurement.print("MINOR AXIS MEASUREMENT \n");
-            cout << "THETA \n" << theta << endl;
+            //minorAxisMeasurement.print("MINOR AXIS MEASUREMENT \n");
+            //cout << "THETA \n" << theta << endl;
         }
 
         //Initial guess via triangulation.h methods
         Point3 initialGuessCentroid = gtsam::triangulatePoint3(cameras,centroidMeasurements,1e-9,true);
         Point3 initialGuessMajAxisPoint = gtsam::triangulatePoint3(cameras,majorAxisMeasurements,1e-9,true);
         Point3 initialGuessMinAxisPoint = gtsam::triangulatePoint3(cameras,minorAxisMeasurements,1e-9,true);
-        initialGuessCentroid.print("CENTROID GUESS \n");
-        initialGuessMajAxisPoint.print("MAJ AXIS POINT GUESS \n");
-        initialGuessMinAxisPoint.print("MIN AXIS POINT GUESS \n");
+        //initialGuessCentroid.print("CENTROID GUESS \n");
+        //initialGuessMajAxisPoint.print("MAJ AXIS POINT GUESS \n");
+        //initialGuessMinAxisPoint.print("MIN AXIS POINT GUESS \n");
         Rot3 initialGuessOrientation = cameras[0].pose().rotation();
         Pose3 initialGuessPose = Pose3(initialGuessOrientation, initialGuessCentroid);
         double majAxisLengthEstimate = initialGuessCentroid.distance(initialGuessMajAxisPoint);
         double minAxisLengthEstimate = initialGuessCentroid.distance(initialGuessMinAxisPoint);
         Point2 initialGuessAxes = Point2(majAxisLengthEstimate,minAxisLengthEstimate);
-        initialGuessAxes.print("AXES LENGTH GUESS");
+        //initialGuessAxes.print("AXES LENGTH GUESS");
         MserObject initialGuess(initialGuessPose, initialGuessAxes);
         Values result = expressionsOptimizationRealWorld(initialGuess, measurements, cameras, 30);
         MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
@@ -172,7 +172,7 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
         //gtsam::Vector3 trackColor(tracks[t].colorR,tracks[t].colorG,tracks[t].colorB);
         gtsam::Vector3 trackColor(tracks[t].colorR,tracks[t].colorG,tracks[t].colorB);
         colors.push_back(trackColor);
-        cout << "FINISHED OPTIMIZING TRACK #" << t << " OF " << tracks.size() << endl;
+        cerr << "OPTIMIZER: Finished optimizing track #" << t << " of " << tracks.size() - 1 << endl;
     }
     std::pair<std::vector<MserObject>,std::vector<Vector3>> pair(objects,colors);
     return pair;
