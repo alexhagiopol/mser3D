@@ -64,7 +64,7 @@ void testMserObjectDrawing(){
     MserObject groundTruthObject(objectPose,objectAxes);
     //Make initial guess
     Point3 initialGuessCenter(0.2,1.5,-0.5);
-    Rot3 initialGuessOrientation = objectOrientation.yaw(0.5);
+    Rot3 initialGuessOrientation = objectOrientation.Yaw(0.5);
     Point2 initialGuessAxes(1.7,0.5);
     Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
     MserObject initialGuess(initialGuessPose, initialGuessAxes);
@@ -106,7 +106,7 @@ void testExpressionsOptimization(){
 
     //Make initial guess
     Point3 initialGuessCenter(0.1,0.1,0.1);
-    Rot3 initialGuessOrientation = objectOrientation.yaw(0.2);
+    Rot3 initialGuessOrientation = objectOrientation.Yaw(0.2);
     Point2 initialGuessAxes(2.7,0.9);
     Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
     MserObject initialGuess(initialGuessPose, initialGuessAxes);
@@ -204,7 +204,7 @@ void testExpressionsOptimizationWithBadInitialGuess(){
 
     //Make initial guess
     Point3 initialGuessCenter(0.2,0.2,-0.2);
-    Rot3 initialGuessOrientation = objectOrientation.yaw(0.2);
+    Rot3 initialGuessOrientation = objectOrientation.Yaw(0.2);
     Point2 initialGuessAxes(2.7,0.5);
     Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
     MserObject initialGuess(initialGuessPose, initialGuessAxes);
