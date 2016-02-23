@@ -178,7 +178,7 @@ void syntheticTestOptimization(){
     //std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks,camPoses);
 
     //Infer objects using multiple expressions optimizations with increasing Levenberg Marquardt iterations
-    int numAttempts = 20;
+    int numAttempts = 100;
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
 
@@ -206,7 +206,7 @@ void syntheticTestOptimization(){
     for (int i = 0; i < numAttempts; i++){
         Values result = expressionsOptimization(initialGuess,measurements,cameras,i); //Note number of Lev Mar iterations increases with each loop. This is to see how error changes over time.
         MserObject retObject = result.at<MserObject>(Symbol('o',0));
-        Vector3 objectColor = Vector3(255,255-i*(255 / numAttempts),255); //deeper shades of purple mean more optimal objects
+        Vector3 objectColor = Vector3(255,300-i*(255 / numAttempts),255); //deeper shades of purple mean more optimal objects
         objects.push_back(retObject);
         colors.push_back(objectColor);
 
