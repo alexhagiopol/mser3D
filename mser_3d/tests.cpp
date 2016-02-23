@@ -143,16 +143,17 @@ void syntheticTestOptimization(){
     Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
     std::vector<SimpleCamera> cameras;
     std::vector<Pose3> camPoses;
+    double maxTheta = M_PI/2;
     double theta = 0.0;
     Point3 up = Point3(0,0,1);
-    int numCams = 10;
+    int numCams = 20;
     double radius = 10;
     for(int i = 0; i < numCams; i++){
-        Point3 position = Point3(objectCenter.x() + radius*cos(theta), objectCenter.y() + radius*sin(theta), objectCenter.z() + 0.0);
+        Point3 position = Point3(objectCenter.x() + radius*cos(theta), objectCenter.y(), objectCenter.z()  + radius*sin(theta)); //moving in XZ plane
         SimpleCamera tempCam = SimpleCamera::Lookat(position, objectCenter, up, *K);
         cameras.push_back(tempCam);
         camPoses.push_back(tempCam.pose());
-        theta += 2*M_PI/numCams;
+        theta += maxTheta/numCams;
     }
 
     //Create ideal measurements taken by cameras of correct object
@@ -180,10 +181,15 @@ void syntheticTestOptimization(){
     for (int i = 0; i < numAttempts; i++){
         Values result = expressionsOptimization(initialGuess,measurements,cameras,i); //Note number of Lev Mar iterations increases with each loop. This is to see how error changes over time.
         MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
-        Vector3 objectColor = Vector3(0,0,i*(255 / numAttempts)); //deeper shades of blue mean more optimal objects
+        Vector3 objectColor = Vector3(255,255-i*(255 / numAttempts),255); //deeper shades of purple mean more optimal objects
         objects.push_back(returnedObject);
         colors.push_back(objectColor);
     }
+    //add correct object in green
+    objects.push_back(correctObject);
+    colors.push_back(Vector3(0,255,0));
+
+    //Visualization
     std::vector<std::pair<Point3,Point3>> rays = makeRayTracingPairs(tracks,camPoses);
     drawMserObjects(camPoses,objects,colors,rays);
 }
