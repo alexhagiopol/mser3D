@@ -36,66 +36,39 @@ add_definitions(
 	-DGLEW_STATIC
 	-D_CRT_SECURE_NO_WARNINGS
 )
-#set(OpenCV_DIR "/home/alex/opencv-2.4.11/build")
-#set(OpenCV_FOUND 1) #fixes issue in CLion that prevents building
-#find_package(GTSAM REQUIRED) #CRAZY ISSUE adding this along with the other find_package statements breaks GLEW and GLFW linkage....
-#include_directories(${GTSAM_INCLUDE_DIRS}) #see above
-#find_package(OpenCV REQUIRED)
-#include_directories(${OpenCV_INCLUDE_DIRS})
+set(OpenCV_DIR "/home/alex/opencv-2.4.11/build")
+set(OpenCV_FOUND 1) #fixes issue in CLion that prevents building
+find_package(GTSAM REQUIRED) #CRAZY ISSUE adding this along with the other find_package statements breaks GLEW and GLFW linkage....
+include_directories(${GTSAM_INCLUDE_DIRS}) #see above
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
 
-##########GTSAM##############
-file(GLOB GTSAM_LIBS
-	"/home/alex/gtsam/build/gtsam/libgtsam*"
-)
-include_directories(
-		/home/gtsam/build/gtsam
-		/home/gtsam/build
-		/home/gtsam
-)
-MESSAGE(STATUS "GTSAM_LIBS: " ${GTSAM_LIBS})
-##########END GTSAM##########
-
-##########OPENCV#############
-file(GLOB OPENCV_LIBS
-	"/usr/local/lib/libopencv*"
-)
-include_directories(/home/alex/opencv-2.4.11/include)
-MESSAGE(STATUS "OpenCV_LIBS: " ${OPENCV_LIBS})
-##########END OPENCV#########
-
+# Tutorial 4
 add_executable(mser_3d
-	ColorFragmentShader.fragmentshader
+	main.cpp
+	visualization.h
+	visualization.cpp
+	geometryFunctions.h
+	measurementFunction.h
 	common/shader.cpp
 	common/shader.hpp
 	common/controls.cpp
 	common/controls.hpp
-	geometryFunctions.h
-	geometryFunctions.cpp
-	InputManager.cpp
-	InputManager.h
-	main.cpp
-	measurementFunction.h
-	measurementFunction.cpp
+	TransformVertexShader.vertexshader
+	ColorFragmentShader.fragmentshader
 	MserObject.h
 	MserMeasurement.h
 	MserTrack.h
-	optimization.h
-	optimization.cpp
 	tests.h
 	tests.cpp
-	TransformVertexShader.vertexshader
-	visualization.h
-	visualization.cpp)
+	InputManager.cpp
+	InputManager.h optimization.cpp optimization.h measurementFunction.cpp geometryFunctions.cpp)
 
 target_link_libraries(mser_3d
 	${ALL_LIBS}
-	#gtsam
-	${GTSAM_LIBS}
+	gtsam
 	${OpenCV_LIBS}
-	boost_system
 )
 
 SOURCE_GROUP(common REGULAR_EXPRESSION ".*/common/.*" )
 SOURCE_GROUP(shaders REGULAR_EXPRESSION ".*/.*shader$" )
-
-
