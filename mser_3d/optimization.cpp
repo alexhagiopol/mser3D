@@ -16,51 +16,8 @@
 #include "optimization.h"
 using namespace gtsam;
 using namespace noiseModel;
-Values expressionsOptimizationSynthetic(MserObject& object, MserObject& initialGuess, int iterations){
-    Vector5 measurementSigmasVector;
-    measurementSigmasVector << 4, 4, 0.1, 4, 4;
-    Diagonal::shared_ptr measurementNoise = Diagonal::Sigmas(measurementSigmasVector); // one pixel in every dimension
 
-    //Ground truth object is passed to this function. Create vectors with measurements, cameras, and camera poses.
-    std::vector<SimpleCamera> cameras = alexCreateCameras(20,object.first.translation(),10); //make a bunch of cameras to pass to measurement function
-    std::vector<MserMeasurement> measurements = createIdealMeasurements(cameras, object); //synthetic measurements directly from measurement function
-    std::vector<Pose3> poses;
-    for (size_t i = 0; i < cameras.size(); i++){
-        poses.push_back(cameras[i].pose());
-    }
-
-    // Create a factor graph
-    ExpressionFactorGraph graph;
-
-    for (size_t i = 0; i < poses.size(); ++i) {
-        const SimpleCamera_ camera_(cameras[i]); //expression for the camera created here
-        MserMeasurement measurement = measurements[i];
-        // Below an expression for the prediction of the measurement:
-        MserObject_ object_('o',0);
-        MserMeasurement_ prediction_ = measurementFunctionExpr(camera_,object_);
-        graph.addExpressionFactor(prediction_,measurement,measurementNoise);
-    }
-    // Add prior on object to constrain scale, again with ExpressionFactor[
-    Vector8 guessSigmasVector;
-    guessSigmasVector << 0.1,0.1,0.1,1,1,1,5,5;
-    Diagonal::shared_ptr objectNoise = Diagonal::Sigmas(guessSigmasVector);
-    graph.addExpressionFactor(MserObject_('o', 0), initialGuess, objectNoise); //use initial guess as prior
-
-    // Create perturbed initial
-    Values initial;
-    initial.insert(Symbol('o', 0), initialGuess);
-    //cout << "initial error = " << graph.error(initial) << endl;
-    LevenbergMarquardtParams params = LevenbergMarquardtParams();
-    std::string verbosity = "SUMMARY";
-    params.setVerbosityLM(verbosity);
-    params.setlambdaUpperBound(1e32);
-    params.setMaxIterations(iterations);
-    Values result = LevenbergMarquardtOptimizer(graph, initial).optimize();
-    //cout << "final error = " << graph.error(result) << endl;
-    return result;
-}
-
-Values expressionsOptimizationRealWorld(MserObject& initialGuess, std::vector<MserMeasurement>& measurements, std::vector<SimpleCamera>& cameras, int iterations){
+Values expressionsOptimization(MserObject& initialGuess, std::vector<MserMeasurement>& measurements, std::vector<SimpleCamera>& cameras, int iterations){
     Vector5 measurementSigmasVector;
     measurementSigmasVector << 4, 4, 0.1, 4, 4;
     Diagonal::shared_ptr measurementNoise = Diagonal::Sigmas(measurementSigmasVector); // one pixel in every dimension
@@ -165,7 +122,7 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
         Point2 initialGuessAxes = Point2(majAxisLengthEstimate,minAxisLengthEstimate);
         //initialGuessAxes.print("AXES LENGTH GUESS");
         MserObject initialGuess(initialGuessPose, initialGuessAxes);
-        Values result = expressionsOptimizationRealWorld(initialGuess, measurements, cameras, 30);
+        Values result = expressionsOptimization(initialGuess, measurements, cameras, 30);
         MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
         objects.push_back(returnedObject);
         //gtsam::traits<MserObject>::Print(returnedObject);

@@ -25,9 +25,6 @@
 #include <string>
 #include <vector>
 
-
-
-
 std::vector<gtsam::Pose3> alexCreatePoses(double radius, gtsam::Point3 target, int numPoses);
 
 std::vector<gtsam::SimpleCamera> alexCreateCameras(double radius, gtsam::Point3 target, int numCams);

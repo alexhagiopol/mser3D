@@ -5,7 +5,8 @@ int main(int argc, char ** argv) {
     assert(argc == 2);
     std::string settingsFileLocation = argv[1];
     InputManager myInput(settingsFileLocation);
-    test3DReconstruction(myInput);
+    //realWorldTestOptimization(myInput);
+    syntheticTestOptimization();
     return 0;
 }
 
