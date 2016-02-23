@@ -124,8 +124,11 @@ void syntheticTestOptimization(){
     //Make correct object
     Point3 objectCenter(12,12,12);
     Rot3 objectOrientation(1,0,0,
-                           0,1,0,
-                           0,0,1);
+              0,1,0,
+              0,0,1);
+    //Rot3 objectOrientation = zero.Yaw(0.3);
+    //objectOrientation = objectOrientation.Roll(0.1);
+    //objectOrientation = objectOrientation.Pitch(-0.3);
     Point2 objectAxes(3,1);
     Pose3 objectPose(objectOrientation, objectCenter);
     MserObject correctObject(objectPose,objectAxes); //ground truth object
@@ -175,7 +178,7 @@ void syntheticTestOptimization(){
     //std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks,camPoses);
 
     //Infer objects using multiple expressions optimizations with increasing Levenberg Marquardt iterations
-    int numAttempts = 10;
+    int numAttempts = 20;
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
 
@@ -183,7 +186,9 @@ void syntheticTestOptimization(){
     std::string csvFileName = "syntheticOptimization.csv";
     ofstream csvData;
     csvData.open(csvFileName);
-    csvData << "Iteration #" << "," << "X error" << "," << "Y Error" << "," << "Z Error" << "," << "Roll Error" << "," << "Pitch Error" << "," << "Yaw Error" << "," << "Maj Axis Error" << "," << "Min Axis Error" << endl;
+
+    csvData << "CORRECT VALUES" << endl;
+    csvData << "X" << "," << "Y" << "," << "Z" << "," << "Roll" << "," << "Pitch" << "," << "Yaw" << "," << "MajAxis" << "," << "MinAxis" << endl;
 
     double correctX = correctObject.first.x();
     double correctY = correctObject.first.y();
@@ -194,6 +199,9 @@ void syntheticTestOptimization(){
     double correctYaw = correctAngles[2];
     double correctMajorAxis = correctObject.second.x();
     double correctMinorAxis = correctObject.second.y();
+    csvData << correctX << "," << correctY << "," << correctZ << "," << correctRoll << "," << correctPitch << "," << correctYaw << "," << correctMajorAxis << "," << correctMinorAxis << endl;
+    csvData << "ERRORS" << endl;
+    csvData << "Iteration #" << "," << "Xerror" << "," << "YError" << "," << "ZError" << "," << "RollError" << "," << "PitchError" << "," << "YawError" << "," << "MajAxisError" << "," << "MinAxisError" << endl;
 
     for (int i = 0; i < numAttempts; i++){
         Values result = expressionsOptimization(initialGuess,measurements,cameras,i); //Note number of Lev Mar iterations increases with each loop. This is to see how error changes over time.
@@ -214,14 +222,14 @@ void syntheticTestOptimization(){
         double retMinorAxis = retObject.second.y();
 
         //compute error in the form of doubles to plot in Matlab
-        double Xerror = abs((correctX - retX)/correctX);
-        double Yerror = abs((correctY - retY)/correctY);
-        double Zerror = abs((correctZ - retZ)/correctZ);
-        double rollError = abs((correctRoll - retRoll)/correctRoll);
-        double pitchError = abs((correctPitch - retPitch)/correctPitch);
-        double yawError = abs((correctYaw - retYaw)/correctYaw);
-        double majorAxisError = abs((correctMajorAxis - retMajorAxis)/correctMajorAxis);
-        double minorAxisError = abs((correctMinorAxis - retMinorAxis)/correctMinorAxis);
+        double Xerror = abs(correctX - retX);
+        double Yerror = abs(correctY - retY);
+        double Zerror = abs(correctZ - retZ);
+        double rollError = abs(correctRoll - retRoll);
+        double pitchError = abs(correctPitch - retPitch);
+        double yawError = abs(correctYaw - retYaw);
+        double majorAxisError = abs(correctMajorAxis - retMajorAxis);
+        double minorAxisError = abs(correctMinorAxis - retMinorAxis);
         csvData << i << "," << Xerror << "," << Yerror << "," << Zerror << "," << rollError << "," << pitchError << "," << yawError << "," << majorAxisError << "," << minorAxisError << "," << endl;
     }
     //add correct object in green
