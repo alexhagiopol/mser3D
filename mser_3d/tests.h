@@ -19,17 +19,15 @@ void testLocateObject();
 void testEllipse2DOrientation();
 
 //Visualization tests
-void testMserObjectDrawing();
 void testPrintSuperimposedMeasurementImages(const InputManager& input);
 
 //MeasurementFunction tests
-void testExpressionsOptimization();
-void testExpressionsOptimizationWithBadInitialGuess();
+void syntheticTestOptimization();
 void testMeasurementFunction();
 
 //3D Reconstruction tests
 void testDisplayPoses(const InputManager& input);
-void test3DReconstruction(const InputManager& input);
+void realWorldTestOptimization(const InputManager& input);
 
 //test everything
 void testAll(const InputManager& input);

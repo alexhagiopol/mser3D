@@ -53,78 +53,6 @@ void testEllipse2DOrientation(){
     }
 }
 
-void testMserObjectDrawing(){
-    //Make correct object
-    Point3 objectCenter(0,0,0);
-    Rot3 objectOrientation(1,0,0,
-                           0,1,0,
-                           0,0,1);
-    Point2 objectAxes(3,1);
-    Pose3 objectPose(objectOrientation, objectCenter);
-    MserObject groundTruthObject(objectPose,objectAxes);
-    //Make initial guess
-    Point3 initialGuessCenter(0.2,1.5,-0.5);
-    Rot3 initialGuessOrientation = objectOrientation.yaw(0.5);
-    Point2 initialGuessAxes(1.7,0.5);
-    Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
-    MserObject initialGuess(initialGuessPose, initialGuessAxes);
-    //Get measurements as well
-    std::vector<SimpleCamera> cameras = alexCreateCameras(15,groundTruthObject.first.translation(),20); //make a bunch of cameras to pass to measurement function
-    std::vector<MserMeasurement> measurements = createIdealMeasurements(cameras, groundTruthObject); //synthetic measurements directly from measurement function
-    //std::vector<Pose3> poses;
-    std::vector<MserObject> measurementsAsObjects; //needed to draw both measurements and resulting optimize object on same screen
-    for (size_t i = 0; i < cameras.size(); i++){
-        //poses.push_back(cameras[i].pose());
-        MserObject temporary(cameras[i].pose(),measurements[i].second/30);
-        measurementsAsObjects.push_back(temporary);
-    }
-
-    //Optimize
-    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess, 100);
-    MserObject returnedObject = result.at<MserObject>(Symbol('o',0)); //retrieve object
-    std::vector<MserObject> objects;
-    objects.push_back(groundTruthObject);
-    objects.push_back(returnedObject);
-    objects.push_back(initialGuess);
-    objects.insert(objects.end(),measurementsAsObjects.begin(),measurementsAsObjects.end());
-    std::vector<Pose3> cameraPoses;
-    for (int i = 0; i < cameras.size(); i++){
-        cameraPoses.push_back(cameras[i].pose());
-    }
-    drawMserObjects(cameraPoses, objects);
-}
-
-void testExpressionsOptimization(){
-    //Make correct object
-    Point3 objectCenter(0,0,0);
-    Rot3 objectOrientation(1,0,0,
-                           0,1,0,
-                           0,0,1);
-    Point2 objectAxes(3,1);
-    Pose3 objectPose(objectOrientation, objectCenter);
-    MserObject groundTruthObject(objectPose,objectAxes); //ground truth object
-
-    //Make initial guess
-    Point3 initialGuessCenter(0.1,0.1,0.1);
-    Rot3 initialGuessOrientation = objectOrientation.yaw(0.2);
-    Point2 initialGuessAxes(2.7,0.9);
-    Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
-    MserObject initialGuess(initialGuessPose, initialGuessAxes);
-
-    //Check correctness
-    Values correct;
-    correct.insert(Symbol('o',0),groundTruthObject);
-    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess, 100);
-
-    if (correct.equals(result,0.1)){
-        cout << "EXPRESSIONS OPTIMIZATION PASSED" << endl;
-    } else {
-        cout << "EXPRESSIONS OPTIMIZATION FAILED" << endl;
-        correct.print("CORRECT OBJECT\n");
-        result.print("RETURNED OBJECT\n");
-    }
-}
-
 //Write video images with superimposed MSER measurements to disk in order to test/verify
 void testPrintSuperimposedMeasurementImages(const InputManager& input){
     std::vector<MserTrack> tracks;// = input.MSERmeasurementTracks;
@@ -192,7 +120,76 @@ void testPrintSuperimposedMeasurementImages(const InputManager& input){
     }
 }
 
-void testExpressionsOptimizationWithBadInitialGuess(){
+void syntheticTestOptimization(){
+    //Make correct object
+    Point3 objectCenter(0,0,0);
+    Rot3 objectOrientation(1,0,0,
+                           0,1,0,
+                           0,0,1);
+    Point2 objectAxes(3,1);
+    Pose3 objectPose(objectOrientation, objectCenter);
+    MserObject correctObject(objectPose,objectAxes); //ground truth object
+
+    //Make slightly wrong initial guess
+    Point3 initialGuessCenter(0.2,0.2,-0.2);
+    Rot3 initialGuessOrientation = objectOrientation.Yaw(0.2);
+    initialGuessOrientation = initialGuessOrientation.Roll(0.2);
+    initialGuessOrientation = initialGuessOrientation.Pitch(-0.2);
+    Point2 initialGuessAxes(2.7,0.5);
+    Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
+    MserObject initialGuess(initialGuessPose, initialGuessAxes);
+
+    //Create cameras looking directly at correct object
+    Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
+    std::vector<SimpleCamera> cameras;
+    std::vector<Pose3> camPoses;
+    double theta = 0.0;
+    Point3 up = Point3(0,0,1);
+    int numCams = 10;
+    double radius = 10;
+    for(int i = 0; i < numCams; i++){
+        Point3 position = Point3(objectCenter.x() + radius*cos(theta), objectCenter.y() + radius*sin(theta), objectCenter.z() + 0.0);
+        SimpleCamera tempCam = SimpleCamera::Lookat(position, objectCenter, up, *K);
+        cameras.push_back(tempCam);
+        camPoses.push_back(tempCam.pose());
+        theta += 2*M_PI/numCams;
+    }
+
+    //Create ideal measurements taken by cameras of correct object
+    std::vector<MserMeasurement> measurements = createIdealMeasurements(cameras,correctObject);
+
+    //Create a single MserTrack for all of the measurements
+    std::vector<MserTrack> tracks;
+    MserTrack track;
+    for (int i = 0; i < numCams; i++){
+        track.frameNumbers.push_back(i);
+        track.measurements.push_back(measurements[i]);
+    }
+    track.colorB = 100; //arbitrary colors
+    track.colorG = 150;
+    track.colorR = 200;
+    tracks.push_back(track);
+
+    //Infer object using my function for real MSER measurements; note this uses its own initial guess and requires tracks as input
+    //std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks,camPoses);
+
+    //Infer objects using multiple expressions optimizations with increasing Levenberg Marquardt iterations
+    int numAttempts = 10;
+    std::vector<MserObject> objects;
+    std::vector<Vector3> colors;
+    for (int i = 0; i < numAttempts; i++){
+        Values result = expressionsOptimization(initialGuess,measurements,cameras,i); //Note number of Lev Mar iterations increases with each loop. This is to see how error changes over time.
+        MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
+        Vector3 objectColor = Vector3(0,0,i*(255 / numAttempts)); //deeper shades of blue mean more optimal objects
+        objects.push_back(returnedObject);
+        colors.push_back(objectColor);
+    }
+    std::vector<std::pair<Point3,Point3>> rays = makeRayTracingPairs(tracks,camPoses);
+    drawMserObjects(camPoses,objects,colors,rays);
+}
+
+/*
+void testOptimizationWithBadInitialGuess(){
     //Make correct object
     Point3 objectCenter(0,0,0);
     Rot3 objectOrientation(1,0,0,
@@ -204,7 +201,7 @@ void testExpressionsOptimizationWithBadInitialGuess(){
 
     //Make initial guess
     Point3 initialGuessCenter(0.2,0.2,-0.2);
-    Rot3 initialGuessOrientation = objectOrientation.yaw(0.2);
+    Rot3 initialGuessOrientation = objectOrientation.Yaw(0.2);
     Point2 initialGuessAxes(2.7,0.5);
     Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
     MserObject initialGuess(initialGuessPose, initialGuessAxes);
@@ -224,6 +221,42 @@ void testExpressionsOptimizationWithBadInitialGuess(){
     MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
     gtsam::traits<MserObject>::Print(returnedObject);
 }
+ */
+
+/*
+void testOptimization(){
+    //Make correct object
+    Point3 objectCenter(0,0,0);
+    Rot3 objectOrientation(1,0,0,
+                           0,1,0,
+                           0,0,1);
+    Point2 objectAxes(3,1);
+    Pose3 objectPose(objectOrientation, objectCenter);
+    MserObject groundTruthObject(objectPose,objectAxes); //ground truth object
+
+    //Make initial guess
+    Point3 initialGuessCenter(0.1,0.1,0.1);
+    Rot3 initialGuessOrientation = objectOrientation.Yaw(0.2);
+    Point2 initialGuessAxes(2.7,0.9);
+    Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
+    MserObject initialGuess(initialGuessPose, initialGuessAxes);
+
+    //Check correctness
+    Values correct;
+    correct.insert(Symbol('o',0),groundTruthObject);
+    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess, 100);
+
+    if (correct.equals(result,0.1)){
+        cout << "EXPRESSIONS OPTIMIZATION PASSED" << endl;
+    } else {
+        cout << "EXPRESSIONS OPTIMIZATION FAILED" << endl;
+        correct.print("CORRECT OBJECT\n");
+        result.print("RETURNED OBJECT\n");
+    }
+}
+ */
+
+
 
 void testMeasurementFunction(){
     //Make object
@@ -273,7 +306,7 @@ void testDisplayPoses(const InputManager& input){
     drawMserObjects(poses, dummyObjects, colors);
 }
 
-void test3DReconstruction(const InputManager& input){
+void realWorldTestOptimization(const InputManager& input){
     std::vector<MserTrack> tracks;// = getMserTracksFromCSV();
     std::vector<Pose3> allCameraPoses;// = getPosesFromBAL();
     input.getMSERMeasurementTracks(tracks);
@@ -301,11 +334,9 @@ void test3DReconstruction(const InputManager& input){
 void testAll(const InputManager& input){
     testLocateObject();
     testEllipse2DOrientation();
-    testMserObjectDrawing();
     testPrintSuperimposedMeasurementImages(input);
-    testExpressionsOptimization();
-    testExpressionsOptimizationWithBadInitialGuess();
+    syntheticTestOptimization();
+    realWorldTestOptimization(input);
     testMeasurementFunction();
     testDisplayPoses(input);
-    test3DReconstruction(input);
 }
