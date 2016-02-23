@@ -122,7 +122,7 @@ void testPrintSuperimposedMeasurementImages(const InputManager& input){
 
 void syntheticTestOptimization(){
     //Make correct object
-    Point3 objectCenter(0,0,0);
+    Point3 objectCenter(12,12,12);
     Rot3 objectOrientation(1,0,0,
                            0,1,0,
                            0,0,1);
@@ -131,7 +131,7 @@ void syntheticTestOptimization(){
     MserObject correctObject(objectPose,objectAxes); //ground truth object
 
     //Make slightly wrong initial guess
-    Point3 initialGuessCenter(0.2,0.2,-0.2);
+    Point3 initialGuessCenter = objectCenter + Point3(0.2,0.2,-0.2);
     Rot3 initialGuessOrientation = objectOrientation.Yaw(0.2);
     initialGuessOrientation = initialGuessOrientation.Roll(0.2);
     initialGuessOrientation = initialGuessOrientation.Pitch(-0.2);
@@ -193,76 +193,6 @@ void syntheticTestOptimization(){
     std::vector<std::pair<Point3,Point3>> rays = makeRayTracingPairs(tracks,camPoses);
     drawMserObjects(camPoses,objects,colors,rays);
 }
-
-/*
-void testOptimizationWithBadInitialGuess(){
-    //Make correct object
-    Point3 objectCenter(0,0,0);
-    Rot3 objectOrientation(1,0,0,
-                           0,1,0,
-                           0,0,1);
-    Point2 objectAxes(3,1);
-    Pose3 objectPose(objectOrientation, objectCenter);
-    MserObject groundTruthObject(objectPose,objectAxes); //ground truth object
-
-    //Make initial guess
-    Point3 initialGuessCenter(0.2,0.2,-0.2);
-    Rot3 initialGuessOrientation = objectOrientation.Yaw(0.2);
-    Point2 initialGuessAxes(2.7,0.5);
-    Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
-    MserObject initialGuess(initialGuessPose, initialGuessAxes);
-
-    //Check correctness
-    Values correct;
-    correct.insert(Symbol('o',0),groundTruthObject);
-    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess, 100);
-    if (correct.equals(result,0.1)){
-        cout << "EXPRESSIONS OPTIMIZATION W/ BAD GUESS PASSED" << endl;
-    } else {
-        cout << "EXPRESSIONS OPTIMIZATION W/ BAD GUESS FAILED" << endl;
-        correct.print("CORRECT OBJECT\n");
-        result.print("RETURNED OBJECT\n");
-    }
-
-    MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
-    gtsam::traits<MserObject>::Print(returnedObject);
-}
- */
-
-/*
-void testOptimization(){
-    //Make correct object
-    Point3 objectCenter(0,0,0);
-    Rot3 objectOrientation(1,0,0,
-                           0,1,0,
-                           0,0,1);
-    Point2 objectAxes(3,1);
-    Pose3 objectPose(objectOrientation, objectCenter);
-    MserObject groundTruthObject(objectPose,objectAxes); //ground truth object
-
-    //Make initial guess
-    Point3 initialGuessCenter(0.1,0.1,0.1);
-    Rot3 initialGuessOrientation = objectOrientation.Yaw(0.2);
-    Point2 initialGuessAxes(2.7,0.9);
-    Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
-    MserObject initialGuess(initialGuessPose, initialGuessAxes);
-
-    //Check correctness
-    Values correct;
-    correct.insert(Symbol('o',0),groundTruthObject);
-    Values result = expressionsOptimizationSynthetic(groundTruthObject, initialGuess, 100);
-
-    if (correct.equals(result,0.1)){
-        cout << "EXPRESSIONS OPTIMIZATION PASSED" << endl;
-    } else {
-        cout << "EXPRESSIONS OPTIMIZATION FAILED" << endl;
-        correct.print("CORRECT OBJECT\n");
-        result.print("RETURNED OBJECT\n");
-    }
-}
- */
-
-
 
 void testMeasurementFunction(){
     //Make object
