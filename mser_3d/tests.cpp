@@ -178,12 +178,51 @@ void syntheticTestOptimization(){
     int numAttempts = 10;
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
+
+    //Store optimization data to file
+    std::string csvFileName = "syntheticOptimization.csv";
+    ofstream csvData;
+    csvData.open(csvFileName);
+    csvData << "Iteration #" << "," << "X error" << "," << "Y Error" << "," << "Z Error" << "," << "Roll Error" << "," << "Pitch Error" << "," << "Yaw Error" << "," << "Maj Axis Error" << "," << "Min Axis Error" << endl;
+
+    double correctX = correctObject.first.x();
+    double correctY = correctObject.first.y();
+    double correctZ = correctObject.first.z();
+    Vector3 correctAngles = correctObject.first.rotation().rpy();
+    double correctRoll = correctAngles[0];
+    double correctPitch = correctAngles[1];
+    double correctYaw = correctAngles[2];
+    double correctMajorAxis = correctObject.second.x();
+    double correctMinorAxis = correctObject.second.y();
+
     for (int i = 0; i < numAttempts; i++){
         Values result = expressionsOptimization(initialGuess,measurements,cameras,i); //Note number of Lev Mar iterations increases with each loop. This is to see how error changes over time.
-        MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
+        MserObject retObject = result.at<MserObject>(Symbol('o',0));
         Vector3 objectColor = Vector3(255,255-i*(255 / numAttempts),255); //deeper shades of purple mean more optimal objects
-        objects.push_back(returnedObject);
+        objects.push_back(retObject);
         colors.push_back(objectColor);
+
+        //Extract data from object structure
+        double retX = retObject.first.x();
+        double retY = retObject.first.y();
+        double retZ = retObject.first.z();
+        Vector3 retAngles = retObject.first.rotation().rpy();
+        double retRoll = retAngles[0];
+        double retPitch = retAngles[1];
+        double retYaw = retAngles[2];
+        double retMajorAxis = retObject.second.x();
+        double retMinorAxis = retObject.second.y();
+
+        //compute error in the form of doubles to plot in Matlab
+        double Xerror = abs((correctX - retX)/correctX);
+        double Yerror = abs((correctY - retY)/correctY);
+        double Zerror = abs((correctZ - retZ)/correctZ);
+        double rollError = abs((correctRoll - retRoll)/correctRoll);
+        double pitchError = abs((correctPitch - retPitch)/correctPitch);
+        double yawError = abs((correctYaw - retYaw)/correctYaw);
+        double majorAxisError = abs((correctMajorAxis - retMajorAxis)/correctMajorAxis);
+        double minorAxisError = abs((correctMinorAxis - retMinorAxis)/correctMinorAxis);
+        csvData << i << "," << Xerror << "," << Yerror << "," << Zerror << "," << rollError << "," << pitchError << "," << yawError << "," << majorAxisError << "," << minorAxisError << "," << endl;
     }
     //add correct object in green
     objects.push_back(correctObject);
@@ -192,6 +231,8 @@ void syntheticTestOptimization(){
     //Visualization
     std::vector<std::pair<Point3,Point3>> rays = makeRayTracingPairs(tracks,camPoses);
     drawMserObjects(camPoses,objects,colors,rays);
+
+    csvData.close();
 }
 
 void testMeasurementFunction(){
@@ -254,7 +295,6 @@ void realWorldTestOptimization(const InputManager& input){
             relevantCameraPoses.push_back(allCameraPoses[tracks[t].frameNumbers[f]]);
         }
     }
-
     std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, allCameraPoses); //use all poses because this function expects to look through everything from getPosesFromBAL()
     std::vector<std::pair<Point3,Point3>> rays;
     if (input.showRays()) rays = makeRayTracingPairs(tracks, allCameraPoses);

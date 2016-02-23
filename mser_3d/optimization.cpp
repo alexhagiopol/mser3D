@@ -62,10 +62,27 @@ Values expressionsOptimization(MserObject& initialGuess, std::vector<MserMeasure
     return result;
 }
 
+float standardDeviation(std::vector<float> data)
+{
+    int n = data.size();
+    float mean=0.0, sum_deviation=0.0;
+    int i;
+    for(i=0; i<n;++i)
+    {
+        mean+=data[i];
+    }
+    mean=mean/n;
+    for(i=0; i<n;++i)
+        sum_deviation+=(data[i]-mean)*(data[i]-mean);
+    return sqrt(sum_deviation/n);
+}
+
 std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(std::vector<MserTrack>& tracks, std::vector<Pose3>& VOposes){
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
     Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
+    float sumMeasurements;
+    std::vector<float> measurementsSizes;
     for (int t = 0; t < tracks.size(); t++){
         std::vector<MserMeasurement> measurements = tracks[t].measurements;
         std::cerr << "OPTIMIZER: Track #" << t << " has " << measurements.size() << " measurements." << std::endl;
@@ -73,13 +90,14 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
         std::vector<Point2> centroidMeasurements;
         std::vector<Point2> majorAxisMeasurements;
         std::vector<Point2> minorAxisMeasurements;
+        sumMeasurements += measurements.size();
+        measurementsSizes.push_back(measurements.size());
         for (int m = 0; m < measurements.size(); m++){
             MserMeasurement measurement = tracks[t].measurements[m];
             //make cameras with poses from Jing's Visual Odometry
             Pose3 pose = VOposes[tracks[t].frameNumbers[m]];
             SimpleCamera camera(pose,*K);
             cameras.push_back(camera);
-
             //extract contents of measurement
             double theta = measurement.first.theta();
             double majAxis  = measurement.second.x();
@@ -132,5 +150,7 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
         cerr << "OPTIMIZER: Finished optimizing track #" << t << " of " << tracks.size() - 1 << endl;
     }
     std::pair<std::vector<MserObject>,std::vector<Vector3>> pair(objects,colors);
+    cerr << "OPTIMIZER: Average # of measurements / track = " << sumMeasurements / tracks.size() << endl;
+    cerr << "OPTIMIZER: STDEV of # of measurements / track = " << standardDeviation(measurementsSizes) << endl;
     return pair;
 }
