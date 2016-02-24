@@ -1,9 +1,6 @@
-clear;
-clc;
-close all;
-
-correctValues = csvread('/home/alex/mser/mser_3d/build/Debug/syntheticOptimization.csv',2,0,[2,0,2,7]);
-errorMatrix = csvread('/home/alex/mser/mser_3d/build/Debug/syntheticOptimization.csv',5,0,[5,0,104,8]);
+function levMarErrors(levMarIterations)
+correctValues = csvread('/home/alex/mser/mser_3d/build/Debug/syntheticOptimizationTestResults.csv',2,0,[2,0,2,7]);
+errorMatrix = csvread('/home/alex/mser/mser_3d/build/Debug/syntheticOptimizationTestResults.csv',5,0,[5,0,levMarIterations + 4,8]);
 xErrors = errorMatrix(:,2);
 yErrors = errorMatrix(:,3);
 zErrors = errorMatrix(:,4);
@@ -13,7 +10,7 @@ yawErrors = errorMatrix(:,7);
 majAxisErrors = errorMatrix(:,8);
 minAxisErrors = errorMatrix(:,9);
 
-i = linspace(1,100,100);
+i = linspace(1,levMarIterations,levMarIterations);
 figure;
 %X
 subplot(2,4,1);
@@ -63,5 +60,5 @@ plot(i,minAxisErrors,'k*');
 xlabel('# Lev Mar Iterations');
 ylabel('Min Axis Error');
 title('Min Axis Error');
-
+end
 
