@@ -56,12 +56,12 @@ subplot(2,4,7);
 plot(i,majAxisErrors,'k.');
 xlabel('# Lev Mar Iterations');
 ylabel('Maj Axis Error');
-title('Max Axis Error');
+title('Maj Axis Error');
 %Min Axis
 subplot(2,4,8);
 plot(i,minAxisErrors,'k*');
 xlabel('# Lev Mar Iterations');
-ylabel('Maj Axis Error');
-title('Max Axis Error');
+ylabel('Min Axis Error');
+title('Min Axis Error');
 
 

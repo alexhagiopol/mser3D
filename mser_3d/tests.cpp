@@ -120,7 +120,7 @@ void testPrintSuperimposedMeasurementImages(const InputManager& input){
     }
 }
 
-void syntheticTestOptimization(){
+void syntheticTestOptimization(bool visualize, bool showEachStep, int levMarIterations){
     //Make correct object
     Point3 objectCenter(12,12,12);
     Rot3 objectOrientation(1,0,0,
@@ -178,12 +178,11 @@ void syntheticTestOptimization(){
     //std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks,camPoses);
 
     //Infer objects using multiple expressions optimizations with increasing Levenberg Marquardt iterations
-    int numAttempts = 100;
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
 
     //Store optimization data to file
-    std::string csvFileName = "syntheticOptimization.csv";
+    std::string csvFileName = "syntheticOptimizationTestResults.csv";
     ofstream csvData;
     csvData.open(csvFileName);
 
@@ -203,10 +202,17 @@ void syntheticTestOptimization(){
     csvData << "ERRORS" << endl;
     csvData << "Iteration #" << "," << "Xerror" << "," << "YError" << "," << "ZError" << "," << "RollError" << "," << "PitchError" << "," << "YawError" << "," << "MajAxisError" << "," << "MinAxisError" << endl;
 
-    for (int i = 0; i < numAttempts; i++){
+    int startingPoint;
+    if (showEachStep){
+        startingPoint = 0;
+    } else {
+        startingPoint = levMarIterations - 1;
+    }
+
+    for (int i = startingPoint; i < levMarIterations; i++){
         Values result = expressionsOptimization(initialGuess,measurements,cameras,i); //Note number of Lev Mar iterations increases with each loop. This is to see how error changes over time.
         MserObject retObject = result.at<MserObject>(Symbol('o',0));
-        Vector3 objectColor = Vector3(255,300-i*(255 / numAttempts),255); //deeper shades of purple mean more optimal objects
+        Vector3 objectColor = Vector3(255-i*(255 / levMarIterations),255-i*(255 / levMarIterations),255-i*(255 / levMarIterations)); //deeper shades of red mean more optimal objects
         objects.push_back(retObject);
         colors.push_back(objectColor);
 
@@ -232,15 +238,27 @@ void syntheticTestOptimization(){
         double minorAxisError = abs(correctMinorAxis - retMinorAxis);
         csvData << i << "," << Xerror << "," << Yerror << "," << Zerror << "," << rollError << "," << pitchError << "," << yawError << "," << majorAxisError << "," << minorAxisError << "," << endl;
     }
-    //add correct object in green
-    objects.push_back(correctObject);
-    colors.push_back(Vector3(0,255,0));
 
-    //Visualization
-    std::vector<std::pair<Point3,Point3>> rays = makeRayTracingPairs(tracks,camPoses);
-    drawMserObjects(camPoses,objects,colors,rays);
+    MserObject finalEstimatedObject = objects[objects.size() - 1]; //last object in list is our best estimate
 
+    if (visualize){
+        //add correct object in green for visualization
+        objects.push_back(correctObject);
+        colors.push_back(Vector3(0,255,0));
+
+        //Visualization
+        std::vector<std::pair<Point3,Point3>> rays = makeRayTracingPairs(tracks,camPoses);
+        drawMserObjects(camPoses,objects,colors,rays);
+    }
     csvData.close();
+
+    if (gtsam::traits<MserObject>::Equals(finalEstimatedObject,correctObject,0.01)){
+        cerr << "TEST: SYNTHETIC TEST PASSED" << endl;
+    } else {
+        cerr << "TEST: SYNTHETIC TEST FAILED" << endl;
+        gtsam::traits<MserObject>::Print(correctObject,"CORRECT OBJECT PARAMETERS \n");
+        gtsam::traits<MserObject>::Print(finalEstimatedObject,"RESULT OBJECT PARAMETERS \n");
+    }
 }
 
 void testMeasurementFunction(){

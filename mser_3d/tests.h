@@ -22,7 +22,7 @@ void testEllipse2DOrientation();
 void testPrintSuperimposedMeasurementImages(const InputManager& input);
 
 //MeasurementFunction tests
-void syntheticTestOptimization();
+void syntheticTestOptimization(bool visualize = false, bool showEachStep = false, int levMarIterations = 100);
 void testMeasurementFunction();
 
 //3D Reconstruction tests
