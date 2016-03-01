@@ -55,7 +55,7 @@ add_executable(testExpressions
 		${PROJECT_SOURCE_DIR}/CppUnitLite/TestRegistry.cpp
 		${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.h
 		${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.cpp
-        testExperssions.cpp)
+        testExpressions.cpp)
 
 # Tutorial 4
 add_executable(mser_3d
