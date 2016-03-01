@@ -5,9 +5,14 @@
 #include "tests.h"
 #include "InputManager.h"
 #include "optimization.h"
+
 using namespace gtsam;
 using namespace std;
 using namespace noiseModel;
+
+void testMeasurementFunctionExpression(){
+
+}
 
 //Unit test for 3D object location
 void testLocateObject(){
@@ -262,34 +267,79 @@ void syntheticTestOptimization(bool visualize, bool showEachStep, int levMarIter
 }
 
 void testMeasurementFunction(){
-    //Make object
-    Point3 objectCenter(0,0,0);
-    Rot3 objectOrientation(1,0,0,
-                           0,1,0,
-                           0,0,1);
-    Point2 objectAxes(3,1);
-    Pose3 objectPose(objectOrientation, objectCenter);
-    MserObject object(objectPose,objectAxes);
     //Make camera
     Cal3_S2::shared_ptr K(new Cal3_S2(500.0, 500.0, 0.1, 640/2, 480/2));
     Point3 cameraPosition(0,0,10);// = objectCenter + Point3(0,0,100);
     Point3 up = Point3(0,1,0);
-    SimpleCamera camera = SimpleCamera::Lookat(cameraPosition, objectCenter, up, *K);
+    SimpleCamera camera = SimpleCamera::Lookat(cameraPosition, Point3(0,0,0), up, *K);
+
+
+    //Make object
+    Point3 objectCenter1(0,0,0);
+    Rot3 objectOrientation1(1,0,0,
+                           0,1,0,
+                           0,0,1);
+    Point2 objectAxes1(3,1);
+    Pose3 objectPose1(objectOrientation1, objectCenter1);
+    MserObject object1(objectPose1,objectAxes1);
+
+
     //Jacobian matrices
     Eigen::MatrixXd Dcamera(5,11);
     Matrix58 Dobject;
     //Take measurement
-    MserMeasurement returnedMeasurement = measurementFunction(camera, object, Dcamera, Dobject);
+    MserMeasurement returnedMeasurement1 = measurementFunction(camera, object1, Dcamera, Dobject);
+    /*
     //Hand calculated measurement
     MserMeasurement correctMeasurement(Pose2(320,240,0),Point2(150,50));
     //Check correctness
     if (gtsam::traits<MserMeasurement>::Equals(correctMeasurement,returnedMeasurement,0.001)){
-        cout << "MEASUREMENT FUNCTION TEST #1 PASSED" << endl;
-    } else {
-        cout << "MEASUREMENT FUNCTION TEST #1 FAILED" << endl;
+        cerr << "TEST: MEASUREMENT FUNCTION TEST #1 PASSED" << endl;
         gtsam::traits<MserMeasurement>::Print(correctMeasurement, "CORRECT");
         gtsam::traits<MserMeasurement>::Print(returnedMeasurement, "RETURNED");
-    }
+    } else {
+        cerr << "TEST: MEASUREMENT FUNCTION TEST #1 FAILED" << endl;
+        gtsam::traits<MserMeasurement>::Print(correctMeasurement, "CORRECT");
+        gtsam::traits<MserMeasurement>::Print(returnedMeasurement, "RETURNED");
+    } */
+    cerr << "TEST 1 RESULTS: OBJECT AT ORIGIN" << endl; //
+    gtsam::traits<MserMeasurement>::Print(returnedMeasurement1, "RETURNED");
+    //test 2
+    Point3 objectCenter2(1,0,0);
+    Rot3 objectOrientation2(1,0,0,
+                            0,1,0,
+                            0,0,1);
+    Point2 objectAxes2(3,1);
+    Pose3 objectPose2(objectOrientation2, objectCenter2);
+    MserObject object2(objectPose2,objectAxes2);
+
+    MserMeasurement returnedMeasurement2 = measurementFunction(camera, object2, Dcamera, Dobject);
+    cerr << "TEST 2 RESULTS: X POSITION INCREASED" << endl;
+    gtsam::traits<MserMeasurement>::Print(returnedMeasurement2, "RETURNED");
+    //test 3
+    Point3 objectCenter3(0,1,0);
+    Rot3 objectOrientation3(1,0,0,
+                            0,1,0,
+                            0,0,1);
+    Point2 objectAxes3(3,1);
+    Pose3 objectPose3(objectOrientation3, objectCenter3);
+    MserObject object3(objectPose3,objectAxes3);
+
+    MserMeasurement returnedMeasurement3 = measurementFunction(camera, object3, Dcamera, Dobject);
+    cerr << "TEST 3 RESULTS: Y POSITION INCREASED" << endl;
+    gtsam::traits<MserMeasurement>::Print(returnedMeasurement3, "RETURNED");
+    //test 4
+    Point3 objectCenter4(0,0,1);
+    Rot3 objectOrientation4(1,0,0,
+                            0,1,0,
+                            0,0,1);
+    Point2 objectAxes4(3,1);
+    Pose3 objectPose4(objectOrientation4, objectCenter4);
+    MserObject object4(objectPose4,objectAxes4);
+
+    MserMeasurement returnedMeasurement4 = measurementFunction(camera, object4, Dcamera, Dobject);
+    cerr << "TEST 4 RESULTS: Y POSITION INCREASED" << endl;
+    gtsam::traits<MserMeasurement>::Print(returnedMeasurement4, "RETURNED");
 }
 
 //Draw all of the poses that we get from visual odometry

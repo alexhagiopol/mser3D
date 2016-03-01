@@ -62,6 +62,7 @@ Values expressionsOptimization(MserObject& initialGuess, std::vector<MserMeasure
     return result;
 }
 
+//Helper function ofr showing measurement stats
 float standardDeviation(std::vector<float> data)
 {
     int n = data.size();
@@ -81,8 +82,8 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
     Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
-    float sumMeasurements;
-    std::vector<float> measurementsSizes;
+    float sumMeasurements; //use for measurement stats
+    std::vector<float> measurementsSizes; //use for measurement stats
     for (int t = 0; t < tracks.size(); t++){
         std::vector<MserMeasurement> measurements = tracks[t].measurements;
         std::cerr << "OPTIMIZER: Track #" << t << " has " << measurements.size() << " measurements." << std::endl;

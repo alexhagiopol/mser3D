@@ -19,6 +19,7 @@ include_directories(
 	external/bullet-2.81-rev2613/src/
 	${Eigen3_INCLUDE_DIRS}
 	/usr/include/eigen3
+	/home/gtsam
 	.
 )
 
@@ -42,6 +43,19 @@ find_package(GTSAM REQUIRED) #CRAZY ISSUE adding this along with the other find_
 include_directories(${GTSAM_INCLUDE_DIRS}) #see above
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
+#find_package(CppUnitLite REQUIRED)
+
+
+add_executable(testExpressions
+		${PROJECT_SOURCE_DIR}/CppUnitLite/Failure.h
+		${PROJECT_SOURCE_DIR}/CppUnitLite/Test.h
+		${PROJECT_SOURCE_DIR}/CppUnitLite/Test.cpp
+		${PROJECT_SOURCE_DIR}/CppUnitLite/TestHarness.h
+		${PROJECT_SOURCE_DIR}/CppUnitLite/TestRegistry.h
+		${PROJECT_SOURCE_DIR}/CppUnitLite/TestRegistry.cpp
+		${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.h
+		${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.cpp
+        testExperssions.cpp)
 
 # Tutorial 4
 add_executable(mser_3d
@@ -69,6 +83,13 @@ target_link_libraries(mser_3d
 	gtsam
 	${OpenCV_LIBS}
 )
+
+target_link_libraries(testExpressions
+        ${ALL_LIBS}
+        gtsam
+        ${OpenCV_LIBS}		
+)
+
 
 SOURCE_GROUP(common REGULAR_EXPRESSION ".*/common/.*" )
 SOURCE_GROUP(shaders REGULAR_EXPRESSION ".*/.*shader$" )
