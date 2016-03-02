@@ -18,9 +18,11 @@
  * @brief  Unit tests for Point3 class
  */
 
-#include <gtsam/geometry/Point3.h>
+#include "measurementFunction.h"
 #include <gtsam/base/Testable.h>
 #include <gtsam/base/numericalDerivative.h>
+#include <gtsam/geometry/Point3.h>
+#include <gtsam/nonlinear/expressionTesting.h>
 #include <CppUnitLite/TestHarness.h>
 
 using namespace gtsam;
@@ -39,6 +41,14 @@ TEST(Point3, cross) {
     omega.cross(theta, aH1, aH2);
     EXPECT(assert_equal(numericalDerivative21(f, omega, theta), aH1));
     EXPECT(assert_equal(numericalDerivative22(f, omega, theta), aH2));
+}
+
+TEST(measurementFunction, convertObjectToObjectPointsPose){
+    //MserObject_
+    //EXPECT_CORRECT_EXPRESSION_JACOBIANS();
+    Eigen::MatrixXd H1(12,8);
+    boost::function<>
+
 }
 
 /* ************************************************************************* */

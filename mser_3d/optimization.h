@@ -6,6 +6,6 @@
 
 Values expressionsOptimization(MserObject& initialGuess, std::vector<MserMeasurement>& measurements, std::vector<SimpleCamera>& cameras, int iterations);
 std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(std::vector<MserTrack>& tracks, std::vector<Pose3>& VOposes);
-
+std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurementsViaTriangulation(std::vector<MserTrack>& tracks, std::vector<Pose3>& VOposes);
 
 
