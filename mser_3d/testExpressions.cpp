@@ -4,13 +4,15 @@
 
 #include "measurementFunction.h"
 #include "PointsPose.h"
+#include "TripleManifold.h"
 #include <gtsam/base/Testable.h>
 #include <gtsam/base/numericalDerivative.h>
 #include <gtsam/geometry/Point3.h>
 #include <gtsam/nonlinear/expressionTesting.h>
 #include <CppUnitLite/TestHarness.h>
-
 using namespace gtsam;
+
+
 
 TEST(measurementFunction, measurementFunction){
     Eigen::MatrixXd H1(5,1);
@@ -74,5 +76,3 @@ int main() {
     TestResult tr;
     return TestRegistry::runAllTests(tr);
 }
-
-
