@@ -2,21 +2,6 @@
 // Created by alex on 2/24/16.
 //
 
-/* ----------------------------------------------------------------------------
-
- * GTSAM Copyright 2010, Georgia Tech Research Corporation,
- * Atlanta, Georgia 30332-0415
- * All Rights Reserved
- * Authors: Frank Dellaert, et al. (see THANKS for the full author list)
-
- * See LICENSE for the license information
-
- * -------------------------------------------------------------------------- */
-
-/**
- * @file   testPoint3.cpp
- * @brief  Unit tests for Point3 class
- */
 #include "measurementFunction.h"
 #include "PointsPose.h"
 #include <gtsam/base/Testable.h>
@@ -26,39 +11,6 @@
 #include <CppUnitLite/TestHarness.h>
 
 using namespace gtsam;
-
-GTSAM_CONCEPT_TESTABLE_INST(Point3)
-GTSAM_CONCEPT_LIE_INST(Point3)
-
-static Point3 P(0.2, 0.7, -2);
-
-TEST(Point3, cross) {
-    Matrix aH1, aH2;
-    boost::function<Point3(const Point3&, const Point3&)> f = boost::bind(&Point3::cross, _1, _2, boost::none, boost::none);
-    const Point3 omega(0, 1, 0), theta(4, 6, 8);
-    omega.cross(theta, aH1, aH2);
-    EXPECT(assert_equal(numericalDerivative21(f, omega, theta), aH1));
-    EXPECT(assert_equal(numericalDerivative22(f, omega, theta), aH2));
-}
-
-//Tests convertObjectToObjectPointsPose() in measurementFunction.h
-TEST(measurementFunction, convertObjectToObjectPointsPose){
-    Eigen::MatrixXd H1(12,8);
-    boost::function<PointsPose(const MserObject&)> f = boost::bind(&convertObjectToObjectPointsPose, _1, boost::none);
-    //Make object
-    const Point3 objectCenter(0,0,0);
-    const Rot3 objectOrientation(1,0,0,
-                           0,1,0,
-                           0,0,1);
-    const Point2 objectAxes(3,1);
-    const Pose3 objectPose(objectOrientation, objectCenter);
-    const MserObject object(objectPose,objectAxes);
-    const PointsPose objectPointsPose = convertObjectToObjectPointsPose(object, H1);
-    EXPECT(assert_equal(objectPointsPose.majAxisTip, Point3(3,0,0)));
-    EXPECT(assert_equal(objectPointsPose.minAxisTip, Point3(0,1,0)));
-    EXPECT(assert_equal(objectPointsPose.objectPose, Pose3()));
-    //EXPECT(assert_equal(numericalDerivative11(f,object),H1)); //TODO: Ask Frank if I need to make traits for PointsPose to make this work
-}
 
 TEST(measurementFunction, measurementFunction){
     Eigen::MatrixXd H1(5,1);
@@ -80,6 +32,42 @@ TEST(measurementFunction, measurementFunction){
     MserMeasurement measurement = measurementFunction(camera,object,H1,H2);
     EXPECT(assert_equal(numericalDerivative21(f,camera,object),H1));
     EXPECT(assert_equal(numericalDerivative22(f,camera,object),H2));
+}
+
+//Tests convertObjectToObjectPointsPose() in measurementFunction.h
+TEST(measurementFunction, convertObjectToObjectPointsPose){
+    Eigen::MatrixXd H1(12,8);
+    boost::function<PointsPose(const MserObject&)> f = boost::bind(&convertObjectToObjectPointsPose, _1, boost::none);
+    //Make object
+    const Point3 objectCenter(0,0,0);
+    const Rot3 objectOrientation(1,0,0,
+                                 0,1,0,
+                                 0,0,1);
+    const Point2 objectAxes(3,1);
+    const Pose3 objectPose(objectOrientation, objectCenter);
+    const MserObject object(objectPose,objectAxes);
+    const PointsPose objectPointsPose = convertObjectToObjectPointsPose(object, H1);
+    EXPECT(assert_equal(objectPointsPose.majAxisTip_, Point3(3,0,0)));
+    EXPECT(assert_equal(objectPointsPose.minAxisTip_, Point3(0,1,0)));
+    EXPECT(assert_equal(objectPointsPose.objectPose_, Pose3()));
+    EXPECT(assert_equal(numericalDerivative11(f,object),H1));
+}
+
+TEST(PointsPose, manifold){
+    BOOST_CONCEPT_ASSERT((internal::HasManifoldPrereqs<PointsPose>));
+    BOOST_CONCEPT_ASSERT((IsManifold<PointsPose>));
+    Point3 majAxisTip(1,2,3);
+    Point3 minAxisTip(4,5,6);
+    Pose3 objectPose;
+    const PointsPose a(majAxisTip,minAxisTip,objectPose);
+    const PointsPose b(majAxisTip + Point3(1,2,3),minAxisTip,objectPose);
+    Vector zero = Vector::Zero(12);
+    EXPECT(assert_equal(zero,a.localCoordinates(a)));
+    EXPECT(assert_equal(a,a.retract(zero)));
+    Vector12 v = a.localCoordinates(b);
+    PointsPose c  = a.retract(v);
+    EXPECT(assert_equal(b,c));
+    EXPECT(check_manifold_invariants(a,b));
 }
 
 int main() {
