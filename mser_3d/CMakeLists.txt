@@ -5,7 +5,6 @@ project (mser_3d)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 find_package(OpenGL REQUIRED)
-find_package(Eigen3 REQUIRED)
 
 # Compile external dependencies 
 add_subdirectory (external)
@@ -18,7 +17,6 @@ include_directories(
 	external/assimp-3.0.1270/include/
 	external/bullet-2.81-rev2613/src/
 	${Eigen3_INCLUDE_DIRS}
-	/usr/include/eigen3
 	/home/gtsam
 	.
 )
@@ -27,7 +25,6 @@ set(ALL_LIBS
 	${OPENGL_LIBRARY}
 	GLFW_303
 	GLEW_190
-	${Eigen3_LIBRARIES}
 )
 
 add_definitions(
