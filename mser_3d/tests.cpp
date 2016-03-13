@@ -11,6 +11,7 @@ using namespace gtsam;
 using namespace std;
 using namespace noiseModel;
 
+
 //Unit test for 3D object location
 void testLocateObject(){
     //test for object localization via back projection

@@ -41,20 +41,45 @@ TEST(Point3, cross) {
     EXPECT(assert_equal(numericalDerivative22(f, omega, theta), aH2));
 }
 
+//Tests convertObjectToObjectPointsPose() in measurementFunction.h
 TEST(measurementFunction, convertObjectToObjectPointsPose){
     Eigen::MatrixXd H1(12,8);
-    boost::function<PointsPose(MserObject&)> f = boost::bind(&convertObjectToObjectPointsPose, _1, boost::none);
+    boost::function<PointsPose(const MserObject&)> f = boost::bind(&convertObjectToObjectPointsPose, _1, boost::none);
     //Make object
-    Point3 objectCenter(0,0,0);
-    Rot3 objectOrientation(1,0,0,
+    const Point3 objectCenter(0,0,0);
+    const Rot3 objectOrientation(1,0,0,
                            0,1,0,
                            0,0,1);
-    Point2 objectAxes(3,1);
-    Pose3 objectPose(objectOrientation, objectCenter);
-    MserObject object(objectPose,objectAxes);
-    PointsPose objectPointsPose = convertObjectToObjectPointsPose(object, H1);
-    EXPECT(objectPointsPose.majAxisTip == Point3(3,0,0));
-    EXPECT(objectPointsPose.minAxisTip == Point3(0,1,0));
+    const Point2 objectAxes(3,1);
+    const Pose3 objectPose(objectOrientation, objectCenter);
+    const MserObject object(objectPose,objectAxes);
+    const PointsPose objectPointsPose = convertObjectToObjectPointsPose(object, H1);
+    EXPECT(assert_equal(objectPointsPose.majAxisTip, Point3(3,0,0)));
+    EXPECT(assert_equal(objectPointsPose.minAxisTip, Point3(0,1,0)));
+    EXPECT(assert_equal(objectPointsPose.objectPose, Pose3()));
+    //EXPECT(assert_equal(numericalDerivative11(f,object),H1)); //TODO: Ask Frank if I need to make traits for PointsPose to make this work
+}
+
+TEST(measurementFunction, measurementFunction){
+    Eigen::MatrixXd H1(5,1);
+    Eigen::MatrixXd H2(5,8);
+    boost::function<MserMeasurement(const SimpleCamera&, const MserObject&)> f = boost::bind(&measurementFunction, _1, _2, boost::none, boost::none);
+    const Point3 objectCenter(0,0,0);
+    const Rot3 objectOrientation(1,0,0,
+                                 0,1,0,
+                                 0,0,1);
+    const Point2 objectAxes(3,1);
+    const Pose3 objectPose(objectOrientation, objectCenter);
+    const MserObject object(objectPose,objectAxes);
+
+    Cal3_S2::shared_ptr K(new Cal3_S2(500.0, 500.0, 0.1, 640/2, 480/2));
+    Point3 up = Point3(0,1,0);
+    Point3 camPosition = Point3(10,0,0);
+    const SimpleCamera camera = SimpleCamera::Lookat(camPosition, objectCenter, up, *K);
+
+    MserMeasurement measurement = measurementFunction(camera,object,H1,H2);
+    EXPECT(assert_equal(numericalDerivative21(f,camera,object),H1));
+    EXPECT(assert_equal(numericalDerivative22(f,camera,object),H2));
 }
 
 int main() {
