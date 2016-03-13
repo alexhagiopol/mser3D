@@ -52,7 +52,24 @@ add_executable(testExpressions
 		${PROJECT_SOURCE_DIR}/CppUnitLite/TestRegistry.cpp
 		${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.h
 		${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.cpp
-        testExpressions.cpp)
+        testExpressions.cpp
+		visualization.h
+		visualization.cpp
+		geometryFunctions.h
+		measurementFunction.h
+		common/shader.cpp
+		common/shader.hpp
+		common/controls.cpp
+		common/controls.hpp
+		TransformVertexShader.vertexshader
+		ColorFragmentShader.fragmentshader
+		MserObject.h
+		MserMeasurement.h
+		MserTrack.h
+		tests.h
+		tests.cpp
+		InputManager.cpp
+		InputManager.h optimization.cpp optimization.h measurementFunction.cpp geometryFunctions.cpp PointsPose.h)
 
 # Tutorial 4
 add_executable(mser_3d
@@ -73,7 +90,7 @@ add_executable(mser_3d
 	tests.h
 	tests.cpp
 	InputManager.cpp
-	InputManager.h optimization.cpp optimization.h measurementFunction.cpp geometryFunctions.cpp)
+	InputManager.h optimization.cpp optimization.h measurementFunction.cpp geometryFunctions.cpp PointsPose.h)
 
 target_link_libraries(mser_3d
 	${ALL_LIBS}

@@ -4,27 +4,24 @@
 
 #include "measurementFunction.h"
 
-pointsPose convertObjectToObjectPointsPose(const MserObject& object, OptionalJacobian<12,8> Dobject){
-    pointsPose myPointsPose;
-    myPointsPose.majAxisTip = Point3(object.second.x(),0,0);
-    myPointsPose.minAxisTip = Point3(0,object.second.y(),0);
-    myPointsPose.objectPose = object.first;
+PointsPose convertObjectToObjectPointsPose(const MserObject& object, OptionalJacobian<12,8> Dobject){
+    PointsPose myPointsPose(Point3(object.second.x(),0,0), Point3(0,object.second.y(),0),object.first);
     if (Dobject) *Dobject << 0,0,0,0,0,0,1,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,1,
-                0,0,0,0,0,0,0,0,
-                1,0,0,0,0,0,0,0,
-                0,1,0,0,0,0,0,0,
-                0,0,1,0,0,0,0,0,
-                0,0,0,1,0,0,0,0,
-                0,0,0,0,1,0,0,0,
-                0,0,0,0,0,1,0,0;
+                            0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,1,
+                            0,0,0,0,0,0,0,0,
+                            1,0,0,0,0,0,0,0,
+                            0,1,0,0,0,0,0,0,
+                            0,0,1,0,0,0,0,0,
+                            0,0,0,1,0,0,0,0,
+                            0,0,0,0,1,0,0,0,
+                            0,0,0,0,0,1,0,0;
     return myPointsPose;
 }
 
-std::vector<Point3> convertObjectPointsPoseToWorldPoint3s(const pointsPose& objectPointsPose, OptionalJacobian<9,12> Dpointspose){
+std::vector<Point3> convertObjectPointsPoseToWorldPoint3s(const PointsPose& objectPointsPose, OptionalJacobian<9,12> Dpointspose){
     Matrix36 centerDpose, majAxisDpose, minAxisDpose; //Matrices to store results from optional jacobians
     Matrix33 majAxisDpoint, minAxisDpoint; //Matrices to store results from optional jacobians
     const Point3 objectCenter = objectPointsPose.objectPose.translation(centerDpose);
@@ -126,7 +123,7 @@ MserMeasurement convertCameraPoint2sToMeasurement(std::vector<Point2>& cameraPoi
 MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject& object, OptionalJacobian<5,11> Dcamera, OptionalJacobian<5,8> Dobject){
     //Part 1: object -> 2X Point3 in object Frame + 1X Pose3
     Eigen::MatrixXd objectpointsposeDobject12_8(12,8);
-    pointsPose objectPointsPose = convertObjectToObjectPointsPose(object, objectpointsposeDobject12_8);
+    PointsPose objectPointsPose = convertObjectToObjectPointsPose(object, objectpointsposeDobject12_8);
 
     //Part 2: 2X Point3s in object frame + Pose 3 -> 3X Point3s in world frame
     Eigen::MatrixXd worldpointsDobjectpointspose9_12(9,12);

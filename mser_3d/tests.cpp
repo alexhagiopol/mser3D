@@ -6,13 +6,10 @@
 #include "InputManager.h"
 #include "optimization.h"
 
+
 using namespace gtsam;
 using namespace std;
 using namespace noiseModel;
-
-void testMeasurementFunctionExpression(){
-
-}
 
 //Unit test for 3D object location
 void testLocateObject(){
