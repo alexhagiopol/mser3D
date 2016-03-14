@@ -34,7 +34,7 @@ namespace gtsam{
         /// Retract delta to manifold
         TripleManifold retract(const TangentVector& xi) const {
             M1 m1 = traits<M1>::Retract(get<0>(*this), xi.template head<dimension1>());
-            M2 m2 = traits<M2>::Retract(get<1>(*this), xi.template segment<dimension1>(dimension2));
+            M2 m2 = traits<M2>::Retract(get<1>(*this), xi.template segment<dimension2>(dimension1)); //get dimension2 items starting at index dimension1
             M3 m3 = traits<M3>::Retract(get<2>(*this), xi.template tail<dimension3>());
             return TripleManifold(m1,m2,m3);
         }
