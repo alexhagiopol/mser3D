@@ -33,17 +33,17 @@ namespace gtsam{
 
         /// Retract delta to manifold
         TripleManifold retract(const TangentVector& xi) const {
-            M1 m1 = traits<M1>::Retract(this->get<0>(), xi.template head<dimension1>());
-            M2 m2 = traits<M2>::Retract(this->get<1>(), xi.template segment<dimension1>(dimension2));
-            M3 m3 = traits<M3>::Retract(this->get<2>(), xi.template tail<dimension3>());
+            M1 m1 = traits<M1>::Retract(get<0>(*this), xi.template head<dimension1>());
+            M2 m2 = traits<M2>::Retract(get<1>(*this), xi.template segment<dimension1>(dimension2));
+            M3 m3 = traits<M3>::Retract(get<2>(*this), xi.template tail<dimension3>());
             return TripleManifold(m1,m2,m3);
         }
 
         /// Compute the coordinates in the tangent space
         TangentVector localCoordinates(const TripleManifold& other) const {
-            typename traits<M1>::TangentVector v1 = traits<M1>::Local(this->get<0>(),  other.get<0>());
-            typename traits<M2>::TangentVector v2 = traits<M2>::Local(this->get<1>(),  other.get<1>());
-            typename traits<M3>::TangentVector v3 = traits<M3>::Local(this->get<2>(),  other.get<2>());
+            typename traits<M1>::TangentVector v1 = traits<M1>::Local(get<0>(*this),  get<0>(other));
+            typename traits<M2>::TangentVector v2 = traits<M2>::Local(get<1>(*this),  get<1>(other));
+            typename traits<M3>::TangentVector v3 = traits<M3>::Local(get<2>(*this),  get<2>(other));
             TangentVector v;
             v << v1, v2, v3;
             return v;

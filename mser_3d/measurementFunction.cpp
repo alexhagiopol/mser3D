@@ -24,11 +24,12 @@ PointsPose convertObjectToObjectPointsPose(const MserObject& object, OptionalJac
 std::vector<Point3> convertObjectPointsPoseToWorldPoint3s(const PointsPose& objectPointsPose, OptionalJacobian<9,12> Dpointspose){
     Matrix36 centerDpose, majAxisDpose, minAxisDpose; //Matrices to store results from optional jacobians
     Matrix33 majAxisDpoint, minAxisDpoint; //Matrices to store results from optional jacobians
-    const Point3 objectCenter = objectPointsPose.objectPose_.translation(centerDpose);
-    const Point3 majAxisInObjectFrame = objectPointsPose.majAxisTip_;
-    const Point3 minAxisInObjectFrame = objectPointsPose.minAxisTip_;
-    const Point3 majAxisInWorldFrame = objectPointsPose.objectPose_.transform_from(majAxisInObjectFrame,majAxisDpose,majAxisDpoint);
-    const Point3 minAxisInWorldFrame = objectPointsPose.objectPose_.transform_from(minAxisInObjectFrame,minAxisDpose,minAxisDpoint);
+    const Pose3 objectPose = gtsam::traits<PointsPose>::objectPose(objectPointsPose);
+    const Point3 objectCenter = objectPose.translation(centerDpose);
+    const Point3 majAxisInObjectFrame = gtsam::traits<PointsPose>::majAxisTip(objectPointsPose);
+    const Point3 minAxisInObjectFrame = gtsam::traits<PointsPose>::minAxisTip(objectPointsPose);
+    const Point3 majAxisInWorldFrame = objectPose.transform_from(majAxisInObjectFrame,majAxisDpose,majAxisDpoint);
+    const Point3 minAxisInWorldFrame = objectPose.transform_from(minAxisInObjectFrame,minAxisDpose,minAxisDpoint);
     const std::vector<Point3> pointRepresentation = {objectCenter, majAxisInWorldFrame, minAxisInWorldFrame};
     //pointRepresentation.push_back(objectCenter);
     //pointRepresentation.push_back(majAxisInWorldFrame);

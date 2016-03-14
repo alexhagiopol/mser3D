@@ -49,9 +49,9 @@ TEST(measurementFunction, convertObjectToObjectPointsPose){
     const Pose3 objectPose(objectOrientation, objectCenter);
     const MserObject object(objectPose,objectAxes);
     const PointsPose objectPointsPose = convertObjectToObjectPointsPose(object, H1);
-    EXPECT(assert_equal(objectPointsPose.majAxisTip_, Point3(3,0,0)));
-    EXPECT(assert_equal(objectPointsPose.minAxisTip_, Point3(0,1,0)));
-    EXPECT(assert_equal(objectPointsPose.objectPose_, Pose3()));
+    EXPECT(assert_equal(gtsam::traits<PointsPose>::majAxisTip(objectPointsPose), Point3(3,0,0)));
+    EXPECT(assert_equal(gtsam::traits<PointsPose>::minAxisTip(objectPointsPose), Point3(0,1,0)));
+    EXPECT(assert_equal(gtsam::traits<PointsPose>::objectPose(objectPointsPose), Pose3()));
     EXPECT(assert_equal(numericalDerivative11(f,object),H1));
 }
 
