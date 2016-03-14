@@ -58,9 +58,9 @@ TEST(measurementFunction, convertObjectToObjectPointsPose){
 TEST(PointsPose, manifold){
     BOOST_CONCEPT_ASSERT((internal::HasManifoldPrereqs<PointsPose>));
     BOOST_CONCEPT_ASSERT((IsManifold<PointsPose>));
+    Pose3 objectPose;
     Point3 majAxisTip(1,2,3);
     Point3 minAxisTip(4,5,6);
-    Pose3 objectPose;
     const PointsPose a(objectPose,majAxisTip,minAxisTip);
     const PointsPose b(objectPose,majAxisTip + Point3(1,2,3),minAxisTip);
     Vector zero = Vector::Zero(12);
@@ -75,11 +75,11 @@ TEST(PointsPose, manifold){
 TEST(WorldPoints, manifold){
     BOOST_CONCEPT_ASSERT((internal::HasManifoldPrereqs<WorldPoints>));
     BOOST_CONCEPT_ASSERT((IsManifold<WorldPoints>));
+    Point3 centroid(0,0,0);
     Point3 majAxisTip(1,2,3);
     Point3 minAxisTip(4,5,6);
-    Point3 centroid(0,0,0);
-    const WorldPoints a(majAxisTip, minAxisTip, centroid);
-    const WorldPoints b(majAxisTip + Point3(1,2,3), minAxisTip, centroid);
+    const WorldPoints a(centroid, majAxisTip, minAxisTip);
+    const WorldPoints b(centroid, majAxisTip + Point3(1,2,3), minAxisTip);
     Vector zero = Vector::Zero(9);
     EXPECT(assert_equal(zero,a.localCoordinates(a)));
     EXPECT(assert_equal(a,a.retract(zero)));
@@ -92,11 +92,11 @@ TEST(WorldPoints, manifold){
 TEST(CameraPoints, manifold){
     BOOST_CONCEPT_ASSERT((internal::HasManifoldPrereqs<CameraPoints>));
     BOOST_CONCEPT_ASSERT((IsManifold<CameraPoints>));
+    Point2 centroid(0,0);
     Point2 majAxisTip(1,2);
     Point2 minAxisTip(4,5);
-    Point2 centroid(0,0);
-    const CameraPoints a(majAxisTip, minAxisTip, centroid);
-    const CameraPoints b(majAxisTip + Point2(1,2), minAxisTip, centroid);
+    const CameraPoints a(centroid, majAxisTip, minAxisTip);
+    const CameraPoints b(centroid, majAxisTip + Point2(1,2), minAxisTip);
     Vector zero = Vector::Zero(6);
     EXPECT(assert_equal(zero,a.localCoordinates(a)));
     EXPECT(assert_equal(a,a.retract(zero)));
