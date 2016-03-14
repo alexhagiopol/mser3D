@@ -90,7 +90,7 @@ add_executable(mser_3d
 	tests.h
 	tests.cpp
 	InputManager.cpp
-	InputManager.h optimization.cpp optimization.h measurementFunction.cpp geometryFunctions.cpp PointsPose.h TripleManifold.h)
+	InputManager.h optimization.cpp optimization.h measurementFunction.cpp geometryFunctions.cpp PointsPose.h TripleManifold.h WorldPoints.h CameraPoints.h)
 
 target_link_libraries(mser_3d
 	${ALL_LIBS}

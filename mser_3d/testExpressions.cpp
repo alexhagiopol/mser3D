@@ -12,8 +12,6 @@
 #include <CppUnitLite/TestHarness.h>
 using namespace gtsam;
 
-
-
 TEST(measurementFunction, measurementFunction){
     Eigen::MatrixXd H1(5,1);
     Eigen::MatrixXd H2(5,8);
