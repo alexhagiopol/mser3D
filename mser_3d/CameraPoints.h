@@ -12,13 +12,13 @@ namespace gtsam{
     typedef TripleManifold<Point2, Point2, Point2> CameraPoints;
     template<>
     struct traits<CameraPoints> : internal::ManifoldTraits<CameraPoints> {
-        static Point2 minAxisTip(const CameraPoints& p){
+        static Point2 centroid(const CameraPoints& p){
             return get<0>(p);
         }
         static Point2 majAxisTip(const CameraPoints& p){
             return get<1>(p);
         }
-        static Point2 centroid(const CameraPoints& p){
+        static Point2 minAxisTip(const CameraPoints& p){
             return get<2>(p);
         }
         static void Print(const CameraPoints &o, const string &s = "") {

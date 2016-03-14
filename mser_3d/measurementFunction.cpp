@@ -5,19 +5,19 @@
 #include "measurementFunction.h"
 
 PointsPose convertObjectToObjectPointsPose(const MserObject& object, OptionalJacobian<12,8> Dobject){
-    PointsPose myPointsPose(Point3(object.second.x(),0,0), Point3(0,object.second.y(),0),object.first);
-    if (Dobject) *Dobject << 0,0,0,0,0,0,1,0,
-                            0,0,0,0,0,0,0,0,
-                            0,0,0,0,0,0,0,0,
-                            0,0,0,0,0,0,0,0,
-                            0,0,0,0,0,0,0,1,
-                            0,0,0,0,0,0,0,0,
-                            1,0,0,0,0,0,0,0,
+    PointsPose myPointsPose(object.first, Point3(object.second.x(),0,0), Point3(0,object.second.y(),0));
+    if (Dobject) *Dobject <<1,0,0,0,0,0,0,0,
                             0,1,0,0,0,0,0,0,
                             0,0,1,0,0,0,0,0,
                             0,0,0,1,0,0,0,0,
                             0,0,0,0,1,0,0,0,
-                            0,0,0,0,0,1,0,0;
+                            0,0,0,0,0,1,0,0,
+                            0,0,0,0,0,0,1,0,
+                            0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,1,
+                            0,0,0,0,0,0,0,0;
     return myPointsPose;
 }
 

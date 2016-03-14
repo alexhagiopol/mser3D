@@ -3,6 +3,7 @@
 //
 #pragma once
 #include "PointsPose.h"
+#include "WorldPoints.h"
 #include "MserMeasurement.h"
 #include "MserObject.h"
 #include "geometryFunctions.h"

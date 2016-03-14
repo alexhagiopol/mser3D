@@ -10,16 +10,16 @@
 #include <gtsam/base/Manifold.h>
 
 namespace gtsam{
-    typedef TripleManifold<Point3, Point3, Pose3> PointsPose;
+    typedef TripleManifold<Pose3, Point3, Point3> PointsPose;
     template<>
     struct traits<PointsPose> : internal::ManifoldTraits<PointsPose> {
-        static Point3 majAxisTip(const PointsPose& p){
+        static Pose3 objectPose(const PointsPose& p){
             return get<0>(p);
         }
-        static Point3 minAxisTip(const PointsPose& p){
+        static Point3 majAxisTip(const PointsPose& p){
             return get<1>(p);
         }
-        static Pose3 objectPose(const PointsPose& p){
+        static Point3 minAxisTip(const PointsPose& p){
             return get<2>(p);
         }
         static void Print(const PointsPose &o, const string &s = "") {

@@ -11,13 +11,13 @@ namespace gtsam{
     typedef TripleManifold<Point3, Point3, Point3> WorldPoints;
     template<>
     struct traits<WorldPoints> : internal::ManifoldTraits<WorldPoints> {
-        static Point3 minAxisTip(const WorldPoints& p){
+        static Point3 centroid(const WorldPoints& p){
             return get<0>(p);
         }
         static Point3 majAxisTip(const WorldPoints& p){
             return get<1>(p);
         }
-        static Point3 centroid(const WorldPoints& p){
+        static Point3 minAxisTip(const WorldPoints& p){
             return get<2>(p);
         }
         static void Print(const WorldPoints &o, const string &s = "") {
