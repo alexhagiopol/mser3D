@@ -107,15 +107,19 @@ MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoint
     double theta = ellipse2DOrientation(measurementCenter, majAxisTip, thetaDcenter, thetaDmajor);
     double A1 = majAxisTip.distance(measurementCenter, A1Dmajor, A1Dcenter);
     double A2 = minAxisTip.distance(measurementCenter, A2Dminor, A2Dcenter);
-    Pose2 ellipsePose(measurementCenter.x(),measurementCenter.y(),theta);
+    Pose2 ellipsePose(theta,measurementCenter);
     Point2 axisLengths(A1,A2);
     MserMeasurement measurement(ellipsePose,axisLengths);
     if (Dpoints){
-        *Dpoints <<                 1,                 0,                0,                0,             0,             0,
-                0,                 1,                0,                0,             0,             0,
-                thetaDcenter(0,0), thetaDcenter(0,1), thetaDmajor(0,0), thetaDmajor(0,1),             0,             0,
-                A1Dcenter(0,0),    A1Dcenter(0,1),    A1Dmajor(0,0),    A1Dmajor(0,1),             0,             0,
-                A2Dcenter(0,0),    A2Dcenter(0,1),                0,                0, A2Dminor(0,0), A2Dminor(0,1);
+        Eigen::MatrixXd Dpoints_(5,6);
+
+        Dpoints_<<                 1,                 0,                0,                0,             0,             0,
+                                   0,                 1,                0,                0,             0,             0,
+                   thetaDcenter(0,0), thetaDcenter(0,1), thetaDmajor(0,0), thetaDmajor(0,1),             0,             0,
+                      A1Dcenter(0,0),    A1Dcenter(0,1),    A1Dmajor(0,0),    A1Dmajor(0,1),             0,             0,
+                      A2Dcenter(0,0),    A2Dcenter(0,1),                0,                0, A2Dminor(0,0), A2Dminor(0,1);
+        cout << "msmtDpoints \n" << Dpoints_ << endl;
+        *Dpoints << Dpoints_;
     }
     return measurement;
 }
@@ -142,6 +146,8 @@ MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject
     if (Dcamera) {
         Eigen::MatrixXd Dcamera_(5,11);
         Dcamera_ << msmtDcampoints56*campointsDcamera; //5x6 x 6x11 = 5x11
+        cout << "msmtDcampoints \n" << msmtDcampoints56 << endl;
+        cout << "campointsDcamera \n" << campointsDcamera << endl;
         *Dcamera << Dcamera_;
     }
     if (Dobject) *Dobject << msmtDcampoints56*campointsDworldpoints69*worldpointsDobjectpointspose9_12*objectpointsposeDobject12_8;

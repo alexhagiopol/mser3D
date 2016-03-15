@@ -28,7 +28,7 @@ namespace gtsam{
         /// Default constructor needs default constructors to be defined
         TripleManifold():std::tuple<M1,M2,M3>(M1(),M2(),M3()) {}
 
-        // Construct from two original manifold values
+        // Construct from three original manifold values
         TripleManifold(const M1& m1, const M2& m2, const M3& m3):std::tuple<M1,M2,M3>(m1,m2,m3) {}
 
         /// Retract delta to manifold
