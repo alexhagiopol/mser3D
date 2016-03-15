@@ -24,9 +24,9 @@ PointsPose convertObjectToPointsPose(const MserObject& object, OptionalJacobian<
 
 WorldPoints convertPointsPoseToWorldPoints(const PointsPose& objectPointsPose, OptionalJacobian<9,12> Dpointspose = boost::none);
 
-CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, WorldPoints& points, OptionalJacobian<6,6> Dpose = boost::none, OptionalJacobian<6,5> Dcal = boost::none, OptionalJacobian<6,9> Dpoints = boost::none);
+CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, WorldPoints& points, OptionalJacobian<6,11> Dcamera = boost::none, OptionalJacobian<6,9> Dpoints = boost::none);
 
-MserMeasurement convertCameraPointsToMeasurement(const std::vector<Point2>& cameraPoint2s, OptionalJacobian<5,6> Dpoints = boost::none);
+MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoints, OptionalJacobian<5,6> Dpoints = boost::none);
 
 MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject& object, OptionalJacobian<5,11> Dcamera = boost::none, OptionalJacobian<5,8> Dobject = boost::none);
 

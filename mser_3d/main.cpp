@@ -1,4 +1,4 @@
-#include "tests.h"
+#include "oldTests.h"
 #include "InputManager.h"
 
 int main(int argc, char ** argv) {

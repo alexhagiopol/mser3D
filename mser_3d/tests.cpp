@@ -35,13 +35,29 @@ TEST(measurementFunction, convertObjectToPointsPose){
 TEST(measurementFunction, convertPointsPoseToWorldPoints){
     Eigen::MatrixXd H1(9,12);
     boost::function<WorldPoints(const PointsPose&)> f = boost::bind(&convertPointsPoseToWorldPoints, _1, boost::none);
-
     const PointsPose input = PointsPose(Pose3(), Point3(2,0,0), Point3(0,1,0));
     const WorldPoints actual = convertPointsPoseToWorldPoints(input, H1);
     WorldPoints correct = WorldPoints(Point3(0,0,0), Point3(2,0,0), Point3(0,1,0));
     EXPECT(assert_equal(actual,correct));
     EXPECT(assert_equal(numericalDerivative11(f,input),H1));
 }
+
+/*
+TEST(measurementFunction, convertWorldPointsToCameraPoints){
+    Eigen::MatrixXd H1(6,6);C
+    Eigen::MatrixXd H2(6,5);
+    Eigen::MatrixXd H3(6,9);
+    boost::function<CameraPoints(const SimpleCamera&, const WorldPoints&)> f = boost::bind(&convertWorldPointsToCameraPoints, _1, _2, boost::none, boost::none);
+    Cal3_S2::shared_ptr K(new Cal3_S2(500.0, 500.0, 0.1, 640/2, 480/2));
+    const WorldPoints input = WorldPoints(Point3(0,0,0), Point3(2,0,0), Point3(0,1,0));
+    Point3 up = Point3(0,1,0);
+    Point3 camPosition = Point3(10,0,0);
+    const SimpleCamera camera = SimpleCamera::Lookat(camPosition, gtsam::traits<WorldPoints>::centroid(input), up, *K);
+
+    CameraPoints actual = convertWorldPointsToCameraPoints(camera, input, H1, H2, H3);
+    EXPECT(assert_equal(numericalDerivative31(f,camera,input),H1));
+}
+*/
 
 TEST(measurementFunction, measurementFunction){
     Eigen::MatrixXd H1(5,1);

@@ -55,7 +55,7 @@ WorldPoints convertPointsPoseToWorldPoints(const PointsPose& objectPointsPose, O
     return myWorldPoints;
 }
 
-CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, WorldPoints& points, OptionalJacobian<6,6> Dpose, OptionalJacobian<6,5> Dcal, OptionalJacobian<6,9> Dpoints){
+CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, WorldPoints& points, OptionalJacobian<6,11> Dcamera, OptionalJacobian<6,9> Dpoints){
     const Point3 objectCenter = gtsam::traits<WorldPoints>::centroid(points);
     const Point3 majorAxisTip = gtsam::traits<WorldPoints>::majAxisTip(points);
     const Point3 minorAxisTip = gtsam::traits<WorldPoints>::minAxisTip(points);
@@ -67,19 +67,20 @@ CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, WorldP
     const Point2 projectedMinorAxisTip = camera.project(minorAxisTip, minorDpose, minorDpoint, minorDcal);
     CameraPoints myCameraPoints = CameraPoints(projectedObjectCenter,projectedMajorAxisTip,projectedMinorAxisTip);
 
-    if (Dpose) {
-        Eigen::MatrixXd Dpose_(6,6);
-        Dpose_ << centerDpose,
+    if (Dcamera) {
+        Eigen::MatrixXd Dpose(6,6);
+        Dpose << centerDpose,
                 majorDpose,
                 minorDpose;
-        *Dpose << Dpose_;
-    }
-    if (Dcal){
-        Eigen::MatrixXd Dcal_(6,5);
-        Dcal_ << centerDcal,
+
+        Eigen::MatrixXd Dcal(6,5);
+        Dcal << centerDcal,
                 majorDcal,
                 minorDcal;
-        *Dcal <<  Dcal_;
+
+        Eigen::MatrixXd Dcamera_(6,11);
+        Dcamera_ << Dpose, Dcal;
+        *Dcamera <<  Dcamera_;
     }
     if (Dpoints){
         Eigen::MatrixXd Dpoints_(6,9);
@@ -98,7 +99,7 @@ CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, WorldP
     return myCameraPoints;
 }
 
-MserMeasurement convertCameraPointsToMeasurement(const CameraPoints cameraPoints, OptionalJacobian<5,6> Dpoints){
+MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoints, OptionalJacobian<5,6> Dpoints){
     Point2 measurementCenter = gtsam::traits<CameraPoints>::centroid(cameraPoints); //Jacobian for this is 2x2 identity matrix
     Point2 majAxisTip = gtsam::traits<CameraPoints>::majAxisTip(cameraPoints);
     Point2 minAxisTip = gtsam::traits<CameraPoints>::minAxisTip(cameraPoints);
@@ -129,10 +130,9 @@ MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject
     WorldPoints worldPoints = convertPointsPoseToWorldPoints(objectPointsPose, worldpointsDobjectpointspose9_12);
 
     //Part 3: 3X Point3s in world frame -> 3X Point2s in camera frame
-    Matrix66 campointsDpose66;
-    Matrix65 campointsDcal65;
+    Eigen::MatrixXd campointsDcamera(6,11);
     Matrix69 campointsDworldpoints69;
-    CameraPoints cameraPoints = convertWorldPointsToCameraPoints(camera, worldPoints, campointsDpose66, campointsDcal65, campointsDworldpoints69);
+    CameraPoints cameraPoints = convertWorldPointsToCameraPoints(camera, worldPoints, campointsDcamera, campointsDworldpoints69);
 
     //Part 4: 3X Point2s in camera frame -> 1X measurement
     Matrix56 msmtDcampoints56;
@@ -141,7 +141,7 @@ MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject
     //Provide Jacobians
     if (Dcamera) {
         Eigen::MatrixXd Dcamera_(5,11);
-        Dcamera_ << msmtDcampoints56*campointsDpose66, msmtDcampoints56*campointsDcal65;
+        Dcamera_ << msmtDcampoints56*campointsDcamera; //5x6 x 6x11 = 5x11
         *Dcamera << Dcamera_;
     }
     if (Dobject) *Dobject << msmtDcampoints56*campointsDworldpoints69*worldpointsDobjectpointspose9_12*objectpointsposeDobject12_8;
