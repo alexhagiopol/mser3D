@@ -5,7 +5,7 @@
 #include "measurementFunction.h"
 #include "CameraPoints.h"
 
-PointsPose convertObjectToObjectPointsPose(const MserObject& object, OptionalJacobian<12,8> Dobject){
+PointsPose convertObjectToPointsPose(const MserObject& object, OptionalJacobian<12,8> Dobject){
     PointsPose myPointsPose(object.first, Point3(object.second.x(),0,0), Point3(0,object.second.y(),0));
     if (Dobject) *Dobject <<1,0,0,0,0,0,0,0,
                             0,1,0,0,0,0,0,0,
@@ -22,7 +22,7 @@ PointsPose convertObjectToObjectPointsPose(const MserObject& object, OptionalJac
     return myPointsPose;
 }
 
-WorldPoints convertObjectPointsPoseToWorldPoints(const PointsPose& objectPointsPose, OptionalJacobian<9,12> Dpointspose){
+WorldPoints convertPointsPoseToWorldPoints(const PointsPose& objectPointsPose, OptionalJacobian<9,12> Dpointspose){
     Matrix36 centerDpose, majAxisDpose, minAxisDpose; //Matrices to store results from optional jacobians
     Matrix33 majAxisDpoint, minAxisDpoint; //Matrices to store results from optional jacobians
     const Pose3 objectPose = gtsam::traits<PointsPose>::objectPose(objectPointsPose);
@@ -33,10 +33,6 @@ WorldPoints convertObjectPointsPoseToWorldPoints(const PointsPose& objectPointsP
     const Point3 minAxisInWorldFrame = objectPose.transform_from(minAxisInObjectFrame,minAxisDpose,minAxisDpoint);
     WorldPoints myWorldPoints = WorldPoints(objectCenter,majAxisInWorldFrame,minAxisInWorldFrame);
 
-    //const std::vector<Point3> pointRepresentation = {objectCenter, majAxisInWorldFrame, minAxisInWorldFrame};
-    //pointRepresentation.push_back(objectCenter);
-    //pointRepresentation.push_back(majAxisInWorldFrame);
-    //pointRepresentation.push_back(minAxisInWorldFrame);
     if (Dpointspose){
         const Eigen::MatrixXd zeros33 = Eigen::MatrixXd::Zero(3,3);
         const Eigen::MatrixXd topLeft = Eigen::MatrixXd::Zero(3,6);
@@ -126,11 +122,11 @@ MserMeasurement convertCameraPointsToMeasurement(const CameraPoints cameraPoints
 MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject& object, OptionalJacobian<5,11> Dcamera, OptionalJacobian<5,8> Dobject){
     //Part 1: object -> 2X Point3 in object Frame + 1X Pose3
     Eigen::MatrixXd objectpointsposeDobject12_8(12,8);
-    PointsPose objectPointsPose = convertObjectToObjectPointsPose(object, objectpointsposeDobject12_8);
+    PointsPose objectPointsPose = convertObjectToPointsPose(object, objectpointsposeDobject12_8);
 
     //Part 2: 2X Point3s in object frame + Pose 3 -> 3X Point3s in world frame
     Eigen::MatrixXd worldpointsDobjectpointspose9_12(9,12);
-    WorldPoints worldPoints = convertObjectPointsPoseToWorldPoints(objectPointsPose, worldpointsDobjectpointspose9_12);
+    WorldPoints worldPoints = convertPointsPoseToWorldPoints(objectPointsPose, worldpointsDobjectpointspose9_12);
 
     //Part 3: 3X Point3s in world frame -> 3X Point2s in camera frame
     Matrix66 campointsDpose66;
@@ -143,27 +139,12 @@ MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject
     MserMeasurement measurement = convertCameraPointsToMeasurement(cameraPoints, msmtDcampoints56);
 
     //Provide Jacobians
-    //if (Dpose) *Dpose << msmtDcampoints56*campointsDpose66;
-    //if (Dcal) *Dcal << msmtDcampoints56*campointsDcal65;
     if (Dcamera) {
         Eigen::MatrixXd Dcamera_(5,11);
         Dcamera_ << msmtDcampoints56*campointsDpose66, msmtDcampoints56*campointsDcal65;
         *Dcamera << Dcamera_;
     }
     if (Dobject) *Dobject << msmtDcampoints56*campointsDworldpoints69*worldpointsDobjectpointspose9_12*objectpointsposeDobject12_8;
-
-    /*
-    //Print out Jacobians for debugging
-    cout << "objectpointsposeDobject12_8\n" << objectpointsposeDobject12_8 << endl;
-    cout << "worldpointsDobjectpointspose9_12\n" << worldpointsDobjectpointspose9_12 << endl;
-    cout << "campointsDpose66\n" << campointsDpose66 << endl;
-    cout << "campointsDcal65\n" << campointsDcal65 << endl;
-    cout << "campointsDworldpoints69\n" << campointsDworldpoints69 << endl;
-    cout << "msmtDcampoints56\n" << msmtDcampoints56 << endl;
-    cout << "Dpose\n" << *Dpose << endl;
-    cout << "Dcal\n" << *Dcal << endl;
-    cout << "Dobject\n" << *Dobject << endl;
-    */
     return measurement;
 }
 
