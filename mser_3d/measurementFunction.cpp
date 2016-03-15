@@ -55,7 +55,7 @@ WorldPoints convertPointsPoseToWorldPoints(const PointsPose& objectPointsPose, O
     return myWorldPoints;
 }
 
-CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, WorldPoints& points, OptionalJacobian<6,11> Dcamera, OptionalJacobian<6,9> Dpoints){
+CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, const WorldPoints& points, OptionalJacobian<6,11> Dcamera, OptionalJacobian<6,9> Dpoints){
     const Point3 objectCenter = gtsam::traits<WorldPoints>::centroid(points);
     const Point3 majorAxisTip = gtsam::traits<WorldPoints>::majAxisTip(points);
     const Point3 minorAxisTip = gtsam::traits<WorldPoints>::minAxisTip(points);
