@@ -4,6 +4,7 @@
 #pragma once
 #include "PointsPose.h"
 #include "WorldPoints.h"
+#include "CameraPoints.h"
 #include "MserMeasurement.h"
 #include "MserObject.h"
 #include "geometryFunctions.h"
@@ -21,15 +22,15 @@ using namespace std;
 
 PointsPose convertObjectToObjectPointsPose(const MserObject& object, OptionalJacobian<12,8> Dobject = boost::none);
 
-std::vector<Point3> convertObjectPointsPoseToWorldPoint3s(const PointsPose& objectPointsPose, OptionalJacobian<9,12> Dpointspose = boost::none);
+WorldPoints convertObjectPointsPoseToWorldPoints(const PointsPose& objectPointsPose, OptionalJacobian<9,12> Dpointspose = boost::none);
 
-std::vector<Point2> convertWorldPoint3sToCameraPoint2s(const SimpleCamera& camera, std::vector<Point3>& points, OptionalJacobian<6,6> Dpose = boost::none, OptionalJacobian<6,5> Dcal = boost::none, OptionalJacobian<6,9> Dpoints = boost::none);
+CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, WorldPoints& points, OptionalJacobian<6,6> Dpose = boost::none, OptionalJacobian<6,5> Dcal = boost::none, OptionalJacobian<6,9> Dpoints = boost::none);
 
-MserMeasurement convertCameraPoint2sToMeasurement(std::vector<Point2>& cameraPoint2s, OptionalJacobian<5,6> Dpoints = boost::none);
+MserMeasurement convertCameraPointsToMeasurement(const std::vector<Point2>& cameraPoint2s, OptionalJacobian<5,6> Dpoints = boost::none);
 
 MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject& object, OptionalJacobian<5,11> Dcamera = boost::none, OptionalJacobian<5,8> Dobject = boost::none);
 
-std::vector<MserMeasurement> createIdealMeasurements(std::vector<SimpleCamera>& cameras, MserObject& object);
+std::vector<MserMeasurement> createIdealMeasurements(const std::vector<SimpleCamera>& cameras, MserObject& object);
 
 typedef Expression<MserObject> MserObject_;
 typedef Expression<MserMeasurement> MserMeasurement_;

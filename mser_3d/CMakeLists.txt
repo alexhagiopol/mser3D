@@ -43,7 +43,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 #find_package(CppUnitLite REQUIRED)
 
 
-add_executable(testExpressions
+add_executable(tests
 		${PROJECT_SOURCE_DIR}/CppUnitLite/Failure.h
 		${PROJECT_SOURCE_DIR}/CppUnitLite/Test.h
 		${PROJECT_SOURCE_DIR}/CppUnitLite/Test.cpp
@@ -52,11 +52,13 @@ add_executable(testExpressions
 		${PROJECT_SOURCE_DIR}/CppUnitLite/TestRegistry.cpp
 		${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.h
 		${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.cpp
-        testExpressions.cpp
+        tests.cpp
 		visualization.h
 		visualization.cpp
 		geometryFunctions.h
+		geometryFunctions.cpp
 		measurementFunction.h
+		measurementFunction.cpp
 		common/shader.cpp
 		common/shader.hpp
 		common/controls.cpp
@@ -66,10 +68,14 @@ add_executable(testExpressions
 		MserObject.h
 		MserMeasurement.h
 		MserTrack.h
-		tests.h
-		tests.cpp
-		InputManager.cpp
-		InputManager.h optimization.cpp optimization.h measurementFunction.cpp geometryFunctions.cpp PointsPose.h)
+		optimization.h
+		optimization.cpp
+		PointsPose.h
+		WorldPoints.h
+		CameraPoints.h
+		TripleManifold.h
+		InputManager.h 
+		InputManager.cpp)
 
 # Tutorial 4
 add_executable(mser_3d
@@ -77,7 +83,9 @@ add_executable(mser_3d
 	visualization.h
 	visualization.cpp
 	geometryFunctions.h
+	geometryFunctions.cpp
 	measurementFunction.h
+	measurementFunction.cpp
 	common/shader.cpp
 	common/shader.hpp
 	common/controls.cpp
@@ -87,10 +95,16 @@ add_executable(mser_3d
 	MserObject.h
 	MserMeasurement.h
 	MserTrack.h
-	tests.h
-	tests.cpp
+	oldTests.h
+	oldTests.cpp
+	optimization.h
+	optimization.cpp
+	TripleManifold.h
+	PointsPose.h
+	WorldPoints.h
+	CameraPoints.h
 	InputManager.cpp
-	InputManager.h optimization.cpp optimization.h measurementFunction.cpp geometryFunctions.cpp PointsPose.h TripleManifold.h WorldPoints.h CameraPoints.h)
+	InputManager.h)
 
 target_link_libraries(mser_3d
 	${ALL_LIBS}
@@ -98,7 +112,7 @@ target_link_libraries(mser_3d
 	${OpenCV_LIBS}
 )
 
-target_link_libraries(testExpressions
+target_link_libraries(tests
         ${ALL_LIBS}
         gtsam
         ${OpenCV_LIBS}		
