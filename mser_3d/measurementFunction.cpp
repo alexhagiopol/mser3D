@@ -33,23 +33,23 @@ WorldPoints convertPointsPoseToWorldPoints(const PointsPose& objectPointsPose, O
     const Point3 minAxisInWorldFrame = objectPose.transform_from(minAxisInObjectFrame,minAxisDpose,minAxisDpoint);
     WorldPoints myWorldPoints = WorldPoints(objectCenter,majAxisInWorldFrame,minAxisInWorldFrame);
 
-    if (Dpointspose){
+    if (Dpointspose){ //compute Jacobian
         const Eigen::MatrixXd zeros33 = Eigen::MatrixXd::Zero(3,3);
-        const Eigen::MatrixXd topLeft = Eigen::MatrixXd::Zero(3,6);
-        Eigen::MatrixXd middleLeft(3,6);
-        Eigen::MatrixXd bottomLeft(3,6);
-        Eigen::MatrixXd left(9,6);
-        Eigen::MatrixXd right(9,6);
+        const Eigen::MatrixXd eye33 = Eigen::MatrixXd::Identity(3,3);
+
+        Eigen::MatrixXd worldCenterDPointsPose(3,12); //top third of output Jacobian
+        worldCenterDPointsPose << zeros33, eye33, zeros33, zeros33;
+
+        Eigen::MatrixXd worldMajAxisTipDPointsPose(3,12);
+        worldMajAxisTipDPointsPose << majAxisDpose, majAxisDpoint, zeros33; //middle third of output Jacobian
+
+        Eigen::MatrixXd worldMinAxisTipDPointsPose(3,12);
+        worldMinAxisTipDPointsPose << minAxisDpose, zeros33, minAxisDpoint; //bottom third of output Jacobian
+
         Eigen::MatrixXd Dpointspose_(9,12);
-        middleLeft << majAxisDpoint, zeros33;
-        bottomLeft << zeros33, minAxisDpoint;
-        left << topLeft,
-                middleLeft,
-                bottomLeft;
-        right << centerDpose,
-                majAxisDpose,
-                minAxisDpose;
-        Dpointspose_ << left, right;
+        Dpointspose_ << worldCenterDPointsPose,
+                        worldMajAxisTipDPointsPose,
+                        worldMinAxisTipDPointsPose;
         *Dpointspose << Dpointspose_;
     }
     return myWorldPoints;
