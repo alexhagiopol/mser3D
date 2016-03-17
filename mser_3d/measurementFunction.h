@@ -29,6 +29,8 @@ CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, const 
 
 MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoints, OptionalJacobian<5,6> Dpoints = boost::none);
 
+Pose2 toyExperiment(const Point2& center, OptionalJacobian<3,2> Dcenter = boost::none);
+
 MserMeasurement convertCameraPoints_ToMeasurement(const CameraPoints_& cameraPoints, OptionalJacobian<5,6> Dpoints = boost::none);
 
 MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject& object, OptionalJacobian<5,11> Dcamera = boost::none, OptionalJacobian<5,8> Dobject = boost::none);

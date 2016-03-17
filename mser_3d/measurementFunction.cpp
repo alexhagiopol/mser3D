@@ -125,6 +125,18 @@ MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoint
     return measurement;
 }
 
+Pose2 toyExperiment(const Point2& center, OptionalJacobian<3,2> Dcenter){
+    if(Dcenter){
+        Eigen::MatrixXd Dcenter_(3,2);
+        Dcenter_ << 1,0,
+                    0,1,
+                    0,0;
+        *Dcenter << Dcenter_;
+    }
+
+    return Pose2(0.3,center);
+}
+
 MserMeasurement convertCameraPoints_ToMeasurement(const CameraPoints_& cameraPoints, OptionalJacobian<5,6> Dpoints) {
     Point2 measurementCenter = cameraPoints.centroid_;//gtsam::traits<CameraPoints>::centroid(cameraPoints); //Jacobian for this is 2x2 identity matrix
     Point2 majAxisTip = cameraPoints.majAxisTip_;//gtsam::traits<CameraPoints>::majAxisTip(cameraPoints);
