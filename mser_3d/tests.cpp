@@ -6,6 +6,7 @@
 #include "PointsPose.h"
 #include "WorldPoints.h"
 #include "CameraPoints.h"
+#include "CameraPoints_.h"
 #include "TripleManifold.h"
 #include <gtsam/base/Testable.h>
 #include <gtsam/base/numericalDerivative.h>
@@ -62,10 +63,23 @@ TEST(measurementFunction, convertCameraPointsToMeasurement){
     double theta = 25*M_PI/180;
     double majLength = 20;
     double minLength = 10;
-    //const CameraPoints input = CameraPoints(Point2(0,0),Point2(majLength*cos(theta),majLength*sin(theta)),Point2(minLength*cos(theta+M_PI/2),minLength*sin(theta+M_PI/2)));
-    const CameraPoints input = CameraPoints(Point2(0,0),Point2(20,0),Point2(0,10));
+    const CameraPoints input = CameraPoints(Point2(0,0),Point2(majLength*cos(theta),majLength*sin(theta)),Point2(minLength*cos(theta+M_PI/2),minLength*sin(theta+M_PI/2)));
+    //const CameraPoints input = CameraPoints(Point2(0,0),Point2(20,0),Point2(0,10));
     MserMeasurement actual = convertCameraPointsToMeasurement(input, H1);
     gtsam::traits<MserMeasurement>::Print(actual, "MEASUREMENT");
+    EXPECT(assert_equal(numericalDerivative11(f,input),H1,1e-7));
+}
+
+TEST(measurementFunction, convertCameraPoints_ToMeasurement){
+    Eigen::MatrixXd H1(5,6);
+    boost::function<MserMeasurement(const CameraPoints_&)> f = boost::bind(&convertCameraPoints_ToMeasurement, _1, boost::none);
+    double theta = 25*M_PI/180;
+    double majLength = 20;
+    double minLength = 10;
+    const CameraPoints_ input = CameraPoints_(Point2(0,0),Point2(majLength*cos(theta),majLength*sin(theta)),Point2(minLength*cos(theta+M_PI/2),minLength*sin(theta+M_PI/2)));
+    //const CameraPoints input = CameraPoints(Point2(0,0),Point2(20,0),Point2(0,10));
+    MserMeasurement actual = convertCameraPoints_ToMeasurement(input, H1);
+    //gtsam::traits<MserMeasurement>::Print(actual, "MEASUREMENT");
     EXPECT(assert_equal(numericalDerivative11(f,input),H1,1e-7));
 }
 
