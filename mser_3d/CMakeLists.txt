@@ -108,7 +108,7 @@ else()
 			WorldPoints.h
 			CameraPoints.h
 			TripleManifold.h
-			CameraPoints_.h)
+			)
 	add_executable(mser_3d
 			main.cpp
 			visualization.h

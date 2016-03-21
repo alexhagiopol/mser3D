@@ -6,7 +6,6 @@
 #include "PointsPose.h"
 #include "WorldPoints.h"
 #include "CameraPoints.h"
-#include "CameraPoints_.h"
 #include "TripleManifold.h"
 #include <gtsam/base/Testable.h>
 #include <gtsam/base/numericalDerivative.h>
@@ -57,7 +56,7 @@ TEST(measurementFunction, convertWorldPointsToCameraPoints){
     EXPECT(assert_equal(numericalDerivative22(f,camera,input),H2,1e-7));
 }
 
-/*
+
 TEST(measurementFunction, convertCameraPointsToMeasurement){
     Eigen::MatrixXd H1(5,6);
     boost::function<MserMeasurement(const CameraPoints&)> f = boost::bind(&convertCameraPointsToMeasurement, _1, boost::none);
@@ -65,32 +64,19 @@ TEST(measurementFunction, convertCameraPointsToMeasurement){
     double majLength = 20;
     double minLength = 10;
     const CameraPoints input = CameraPoints(Point2(0,0),Point2(majLength*cos(theta),majLength*sin(theta)),Point2(minLength*cos(theta+M_PI/2),minLength*sin(theta+M_PI/2)));
-    //const CameraPoints input = CameraPoints(Point2(0,0),Point2(20,0),Point2(0,10));
     MserMeasurement actual = convertCameraPointsToMeasurement(input, H1);
-    gtsam::traits<MserMeasurement>::Print(actual, "MEASUREMENT");
     EXPECT(assert_equal(numericalDerivative11(f,input),H1,1e-7));
 }
-
-TEST(measurementFunction, convertCameraPoints_ToMeasurement){
-    Eigen::MatrixXd H1(5,6);
-    boost::function<MserMeasurement(const CameraPoints_&)> f = boost::bind(&convertCameraPoints_ToMeasurement, _1, boost::none);
-    double theta = 25*M_PI/180;
-    double majLength = 20;
-    double minLength = 10;
-    //const CameraPoints_ input = CameraPoints_(Point2(0,0),Point2(majLength*cos(theta),majLength*sin(theta)),Point2(minLength*cos(theta+M_PI/2),minLength*sin(theta+M_PI/2)));
-    const CameraPoints input = CameraPoints(Point2(0,0),Point2(20,0),Point2(0,10));
-    MserMeasurement actual = convertCameraPoints_ToMeasurement(input, H1);
-    //gtsam::traits<MserMeasurement>::Print(actual, "MEASUREMENT");
-    EXPECT(assert_equal(numericalDerivative11(f,input),H1,1e-7));
-}
- */
 
 TEST(toyExperiment, toyExperiment){
     Eigen::MatrixXd H1(3,2);
-    boost::function<Pose2(const Point2&)> f = boost::bind(&toyExperiment, _1, boost::none);
-    Point2 center(5,5);
-    Pose2 result = toyExperiment(center, H1);
-    EXPECT(assert_equal(numericalDerivative11(f,center),H1));
+    Eigen::MatrixXd H2(3,1);
+    boost::function<Pose2(const Point2&, const double&)> f = boost::bind(&toyExperiment, _1, _2, boost::none, boost::none);
+    Point2 center(10,5);
+    double theta = 0.3;
+    Pose2 result = toyExperiment(center, theta, H1, H2);
+    EXPECT(assert_equal(numericalDerivative21(f,center,theta),H1));
+    EXPECT(assert_equal(numericalDerivative22(f,center,theta),H2));
 }
 
 /*

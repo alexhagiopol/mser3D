@@ -3,8 +3,6 @@
 //
 
 #include "measurementFunction.h"
-#include "CameraPoints.h"
-#include "CameraPoints_.h"
 
 PointsPose convertObjectToPointsPose(const MserObject& object, OptionalJacobian<12,8> Dobject){
     PointsPose myPointsPose(object.first, Point3(object.second.x(),0,0), Point3(0,object.second.y(),0));
@@ -114,52 +112,33 @@ MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoint
     if (Dpoints){
         Eigen::MatrixXd Dpoints_(5,6);
 
-        Dpoints_<<                 1,                 0,                0,                0,             0,             0,
-                                   0,                 1,                0,                0,             0,             0,
+        Dpoints_<<        cos(theta),        sin(theta),                0,                0,             0,             0,
+                       -1*sin(theta),        cos(theta),                0,                0,             0,             0,
                    thetaDcenter(0,0), thetaDcenter(0,1), thetaDmajor(0,0), thetaDmajor(0,1),             0,             0,
                       A1Dcenter(0,0),    A1Dcenter(0,1),    A1Dmajor(0,0),    A1Dmajor(0,1),             0,             0,
                       A2Dcenter(0,0),    A2Dcenter(0,1),                0,                0, A2Dminor(0,0), A2Dminor(0,1);
-        cout << "msmtDpoints \n" << Dpoints_ << endl;
         *Dpoints << Dpoints_;
     }
     return measurement;
 }
 
-Pose2 toyExperiment(const Point2& center, OptionalJacobian<3,2> Dcenter){
+//If we can fix toy experiment, then we can fix the entire pipeline.
+Pose2 toyExperiment(const Point2& center, const double& theta, OptionalJacobian<3,2> Dcenter, OptionalJacobian<3,1> Dtheta){
     if(Dcenter){
         Eigen::MatrixXd Dcenter_(3,2);
-        Dcenter_ << 1,0,
-                    0,1,
-                    0,0;
+        Dcenter_ <<    cos(theta),  sin(theta),
+                    -1*sin(theta), cos(theta),
+                                0,          0;
         *Dcenter << Dcenter_;
     }
-
-    return Pose2(0.3,center);
-}
-
-MserMeasurement convertCameraPoints_ToMeasurement(const CameraPoints_& cameraPoints, OptionalJacobian<5,6> Dpoints) {
-    Point2 measurementCenter = cameraPoints.centroid_;//gtsam::traits<CameraPoints>::centroid(cameraPoints); //Jacobian for this is 2x2 identity matrix
-    Point2 majAxisTip = cameraPoints.majAxisTip_;//gtsam::traits<CameraPoints>::majAxisTip(cameraPoints);
-    Point2 minAxisTip = cameraPoints.minAxisTip_; //gtsam::traits<CameraPoints>::minAxisTip(cameraPoints);
-    Matrix12 thetaDcenter, thetaDmajor, A1Dmajor, A1Dcenter, A2Dminor, A2Dcenter;
-    double theta = ellipse2DOrientation(measurementCenter, majAxisTip, thetaDcenter, thetaDmajor);
-    double A1 = majAxisTip.distance(measurementCenter, A1Dmajor, A1Dcenter);
-    double A2 = minAxisTip.distance(measurementCenter, A2Dminor, A2Dcenter);
-    Pose2 ellipsePose(theta, measurementCenter);
-    Point2 axisLengths(A1, A2);
-    MserMeasurement measurement(ellipsePose, axisLengths);
-    if (Dpoints) {
-        Eigen::MatrixXd Dpoints_(5, 6);
-
-        Dpoints_ << 1, 0, 0, 0, 0, 0,
-                0, 1, 0, 0, 0, 0,
-                thetaDcenter(0, 0), thetaDcenter(0, 1), thetaDmajor(0, 0), thetaDmajor(0, 1), 0, 0,
-                A1Dcenter(0, 0), A1Dcenter(0, 1), A1Dmajor(0, 0), A1Dmajor(0, 1), 0, 0,
-                A2Dcenter(0, 0), A2Dcenter(0, 1), 0, 0, A2Dminor(0, 0), A2Dminor(0, 1);
-        cout << "msmtDpoints \n" << Dpoints_ << endl;
-        *Dpoints << Dpoints_;
+    if(Dtheta){
+        Eigen::MatrixXd Dtheta_(3,1);
+        Dtheta_ << 0,
+                   0,
+                   1;
+        *Dtheta << Dtheta_;
     }
-    return measurement;
+    return Pose2(theta,center);
 }
 
 MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject& object, OptionalJacobian<5,11> Dcamera, OptionalJacobian<5,8> Dobject){
