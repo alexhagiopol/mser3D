@@ -42,5 +42,4 @@ std::vector<gtsam::Pose3> createPoses();
 //Example optimization using 3D points. Given a set of data points
 gtsam::Values locateObject(gtsam::Point3 target, gtsam::Point3 guess, int numCams, double radius);
 
-//Returns orientation of 2D ellipse given center point and major axis point
-double ellipse2DOrientation(gtsam::Point2& center, gtsam::Point2& majorAxisPoint, gtsam::OptionalJacobian<1,2> H1 = boost::none, gtsam::OptionalJacobian<1,2> H2 = boost::none);
+

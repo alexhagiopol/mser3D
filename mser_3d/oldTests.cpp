@@ -215,7 +215,7 @@ void syntheticTestOptimization(bool visualize, bool showEachStep, int levMarIter
     for (int i = startingPoint; i < levMarIterations; i++){
         Values result = expressionsOptimization(initialGuess,measurements,cameras,i); //Note number of Lev Mar iterations increases with each loop. This is to see how error changes over time.
         MserObject retObject = result.at<MserObject>(Symbol('o',0));
-        Vector3 objectColor = Vector3(255-i*(255 / levMarIterations),255-i*(255 / levMarIterations),255-i*(255 / levMarIterations)); //deeper shades of red mean more optimal objects
+        Vector3 objectColor = Vector3(255 /*-i*(255 / levMarIterations)*/,200-i*(255 / levMarIterations),200-i*(255 / levMarIterations)); //deeper shades mean more optimal objects
         objects.push_back(retObject);
         colors.push_back(objectColor);
 

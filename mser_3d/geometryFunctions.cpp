@@ -122,14 +122,3 @@ Values locateObject(Point3 target, Point3 guess, int numCams, double radius){
     return result;
 }
 
-//Returns orientation of 2D ellipse given center point and major axis point
-double ellipse2DOrientation(Point2& center, Point2& majorAxisPoint, OptionalJacobian<1,2> H1, OptionalJacobian<1,2> H2){
-    //Math reference: https://en.wikipedia.org/wiki/Atan2
-    //C++ atan2(y,x) reference: http://en.cppreference.com/w/c/numeric/math/atan2
-    double y = majorAxisPoint.y() - center.y();
-    double x = majorAxisPoint.x() - center.x();
-    double orientation = atan2(y,x);
-    if (H1) *H1 << y/(x*x + y*y), -1*x/(x*x + y*y); //derivative wrt center point
-    if (H2) *H2 << -1*y/(x*x + y*y), x/(x*x + y*y);//derivative wrt axis point
-    return orientation;
-}

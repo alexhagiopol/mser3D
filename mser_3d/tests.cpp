@@ -68,6 +68,7 @@ TEST(measurementFunction, convertCameraPointsToMeasurement){
     EXPECT(assert_equal(numericalDerivative11(f,input),H1,1e-7));
 }
 
+
 TEST(toyExperiment, toyExperiment){
     Eigen::MatrixXd H1(3,2);
     Eigen::MatrixXd H2(3,1);
@@ -79,7 +80,6 @@ TEST(toyExperiment, toyExperiment){
     EXPECT(assert_equal(numericalDerivative22(f,center,theta),H2));
 }
 
-/*
 TEST(measurementFunction, measurementFunction){
     Eigen::MatrixXd H1(5,11);
     Eigen::MatrixXd H2(5,8);
@@ -88,20 +88,19 @@ TEST(measurementFunction, measurementFunction){
     const Rot3 objectOrientation(1,0,0,
                                  0,1,0,
                                  0,0,1);
-    const Point2 objectAxes(3,1);
+    const Point2 objectAxes(30,10);
     const Pose3 objectPose(objectOrientation, objectCenter);
     const MserObject object(objectPose,objectAxes);
 
     Cal3_S2::shared_ptr K(new Cal3_S2(500.0, 500.0, 0.1, 640/2, 480/2));
     Point3 up = Point3(0,1,0);
-    Point3 camPosition = Point3(10,0,0);
+    Point3 camPosition = Point3(0,0,10);
     const SimpleCamera camera = SimpleCamera::Lookat(camPosition, objectCenter, up, *K);
 
     MserMeasurement measurement = measurementFunction(camera,object,H1,H2);
-    EXPECT(assert_equal(numericalDerivative21(f,camera,object),H1));
-    EXPECT(assert_equal(numericalDerivative22(f,camera,object),H2));
+    EXPECT(assert_equal(numericalDerivative21(f,camera,object),H1,1e-5));
+    EXPECT(assert_equal(numericalDerivative22(f,camera,object),H2,1e-5));
 }
-*/
 
 TEST(PointsPose, manifold){
     BOOST_CONCEPT_ASSERT((internal::HasManifoldPrereqs<PointsPose>));
