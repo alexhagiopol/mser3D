@@ -46,7 +46,7 @@ WorldPoints convertPointsPoseToWorldPoints(const PointsPose& objectPointsPose, O
         const Eigen::MatrixXd eye33 = Eigen::MatrixXd::Identity(3,3);
 
         Eigen::MatrixXd worldCenterDPointsPose(3,12); //top third of output Jacobian
-        worldCenterDPointsPose << zeros33, eye33, zeros33, zeros33;
+        worldCenterDPointsPose << centerDpose, zeros33, zeros33;
 
         Eigen::MatrixXd worldMajAxisTipDPointsPose(3,12);
         worldMajAxisTipDPointsPose << majAxisDpose, majAxisDpoint, zeros33; //middle third of output Jacobian
@@ -59,7 +59,8 @@ WorldPoints convertPointsPoseToWorldPoints(const PointsPose& objectPointsPose, O
                         worldMajAxisTipDPointsPose,
                         worldMinAxisTipDPointsPose;
         *Dpointspose << Dpointspose_;
-
+        boost::function<WorldPoints(const PointsPose&)> f = boost::bind(&convertPointsPoseToWorldPoints, _1, boost::none);
+        assert_equal(numericalDerivative11(f,objectPointsPose),Dpointspose_);
     }
     return myWorldPoints;
 }
