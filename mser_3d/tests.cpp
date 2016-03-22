@@ -56,6 +56,23 @@ TEST(measurementFunction, convertWorldPointsToCameraPoints){
     EXPECT(assert_equal(numericalDerivative22(f,camera,input),H2,1e-7));
 }
 
+TEST(measurementFunction, ellipse2Dorientation){
+    Eigen::MatrixXd Dcenter(1,2);
+    Eigen::MatrixXd Dmajaxis(1,2);
+    boost::function<double(const Point2&, const Point2&)> f = boost::bind(&ellipse2DOrientation, _1, _2, boost::none, boost::none);
+    const Point2 center = Point2(5,10);
+    const Point2 majaxis = Point2(10,17);
+    double theta = ellipse2DOrientation(center,majaxis,Dcenter,Dmajaxis);
+    EXPECT(assert_equal(numericalDerivative21(f,center,majaxis),Dcenter,1e-5));
+    EXPECT(assert_equal(numericalDerivative22(f,center,majaxis),Dmajaxis,1e-5));
+
+    //Case that causes division by zero doesn't pass
+    const Point2 center2 = Point2(5,10);
+    const Point2 majaxis2 = Point2(5,10);
+    double theta2 = ellipse2DOrientation(center2,majaxis2,Dcenter,Dmajaxis);
+    EXPECT(assert_equal(numericalDerivative21(f,center,majaxis),Dcenter,1e-5));
+    EXPECT(assert_equal(numericalDerivative22(f,center,majaxis),Dmajaxis,1e-5));
+}
 
 TEST(measurementFunction, convertCameraPointsToMeasurement){
     Eigen::MatrixXd H1(5,6);
@@ -67,7 +84,6 @@ TEST(measurementFunction, convertCameraPointsToMeasurement){
     MserMeasurement actual = convertCameraPointsToMeasurement(input, H1);
     EXPECT(assert_equal(numericalDerivative11(f,input),H1,1e-7));
 }
-
 
 TEST(toyExperiment, toyExperiment){
     Eigen::MatrixXd H1(3,2);

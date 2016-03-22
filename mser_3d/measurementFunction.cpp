@@ -119,6 +119,7 @@ double ellipse2DOrientation(const Point2& center, const Point2& majorAxisPoint, 
     double y = majorAxisPoint.y() - center.y();
     double x = majorAxisPoint.x() - center.x();
     double orientation = atan2(y,x);
+
     //center.print("CENTER \n");
     //majorAxisPoint.print("Maj Axis Point \n");
     //cout << "X = " << x << endl;
@@ -127,6 +128,7 @@ double ellipse2DOrientation(const Point2& center, const Point2& majorAxisPoint, 
         if ((x < 1e-8) && (x > -1e-8) && (y < 1e-8) && (y > -1e-8)){ //divide by zero
             *Dcenter << inf, inf;
             //cout << "DIVIDE BY ZERO!" << endl;
+            //cout << orientation << endl;
         } else {
             *Dcenter << y/(x*x + y*y), -1*x/(x*x + y*y);
         }
@@ -134,8 +136,9 @@ double ellipse2DOrientation(const Point2& center, const Point2& majorAxisPoint, 
     }
     if (Dmajaxis) { //derivative wrt axis point
         if ((x < 1e-8) && (x > -1e-8) && (y < 1e-8) && (y > -1e-8)){ //divide by zero
-            //cout << "DIVIDE BY ZERO!" << endl;
             *Dcenter << inf, inf;
+            //cout << "DIVIDE BY ZERO!" << endl;
+            //cout << orientation << endl;
         } else {
             *Dmajaxis << -1*y / (x*x + y*y), x / (x*x + y*y);
         }
