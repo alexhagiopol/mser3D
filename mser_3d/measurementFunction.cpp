@@ -25,7 +25,7 @@ PointsPose convertObjectToPointsPose(const MserObject& object, OptionalJacobian<
                     0,0,0,0,0,0,0,0;
         *Dobject << Dobject_;
         boost::function<PointsPose(const MserObject&)> f = boost::bind(&convertObjectToPointsPose, _1, boost::none);
-        assert_equal(numericalDerivative11(f,object),Dobject_);
+        assert_equal(numericalDerivative11(f,object),Dobject_,1e-5);
     }
     return myPointsPose;
 }
@@ -60,7 +60,7 @@ WorldPoints convertPointsPoseToWorldPoints(const PointsPose& objectPointsPose, O
                         worldMinAxisTipDPointsPose;
         *Dpointspose << Dpointspose_;
         boost::function<WorldPoints(const PointsPose&)> f = boost::bind(&convertPointsPoseToWorldPoints, _1, boost::none);
-        assert_equal(numericalDerivative11(f,objectPointsPose),Dpointspose_);
+        assert_equal(numericalDerivative11(f,objectPointsPose),Dpointspose_,1e-5);
     }
     return myWorldPoints;
 }
@@ -77,6 +77,7 @@ CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, const 
     const Point2 projectedMinorAxisTip = camera.project(minorAxisTip, minorDpose, minorDpoint, minorDcal);
     CameraPoints myCameraPoints = CameraPoints(projectedObjectCenter,projectedMajorAxisTip,projectedMinorAxisTip);
     //gtsam::traits<CameraPoints>::Print(myCameraPoints, "CAMERA POINTS \n");
+    boost::function<CameraPoints(const SimpleCamera&, const WorldPoints&)> f = boost::bind(&convertWorldPointsToCameraPoints, _1, _2, boost::none, boost::none);
     if (Dcamera) {
         Eigen::MatrixXd Dpose(6,6);
         Dpose << centerDpose,
@@ -91,6 +92,7 @@ CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, const 
         Eigen::MatrixXd Dcamera_(6,11);
         Dcamera_ << Dpose, Dcal;
         *Dcamera <<  Dcamera_;
+        assert_equal(numericalDerivative21(f,camera,points),Dcamera_,1e-5);
     }
     if (Dpoints){
         Eigen::MatrixXd Dpoints_(6,9);
@@ -105,6 +107,7 @@ CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, const 
                 middle,
                 bottom;
         *Dpoints << Dpoints_;
+        assert_equal(numericalDerivative22(f,camera,points),Dpoints_,1e-5);
     }
     return myCameraPoints;
 }
