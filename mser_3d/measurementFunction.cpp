@@ -3,22 +3,30 @@
 //
 
 #include "measurementFunction.h"
+#include <gtsam/base/numericalDerivative.h>
+#include <gtsam/base/Testable.h>
 
 PointsPose convertObjectToPointsPose(const MserObject& object, OptionalJacobian<12,8> Dobject){
     PointsPose myPointsPose(object.first, Point3(object.second.x(),0,0), Point3(0,object.second.y(),0));
     //gtsam::traits<PointsPose>::Print(myPointsPose, "POINTS POSE \n");
-    if (Dobject) *Dobject <<1,0,0,0,0,0,0,0,
-                            0,1,0,0,0,0,0,0,
-                            0,0,1,0,0,0,0,0,
-                            0,0,0,1,0,0,0,0,
-                            0,0,0,0,1,0,0,0,
-                            0,0,0,0,0,1,0,0,
-                            0,0,0,0,0,0,1,0,
-                            0,0,0,0,0,0,0,0,
-                            0,0,0,0,0,0,0,0,
-                            0,0,0,0,0,0,0,0,
-                            0,0,0,0,0,0,0,1,
-                            0,0,0,0,0,0,0,0;
+    if (Dobject){
+        Eigen::MatrixXd Dobject_(12,8);
+        Dobject_ << 1,0,0,0,0,0,0,0,
+                    0,1,0,0,0,0,0,0,
+                    0,0,1,0,0,0,0,0,
+                    0,0,0,1,0,0,0,0,
+                    0,0,0,0,1,0,0,0,
+                    0,0,0,0,0,1,0,0,
+                    0,0,0,0,0,0,1,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,1,
+                    0,0,0,0,0,0,0,0;
+        *Dobject << Dobject_;
+        boost::function<PointsPose(const MserObject&)> f = boost::bind(&convertObjectToPointsPose, _1, boost::none);
+        assert_equal(numericalDerivative11(f,object),Dobject_);
+    }
     return myPointsPose;
 }
 
@@ -51,6 +59,7 @@ WorldPoints convertPointsPoseToWorldPoints(const PointsPose& objectPointsPose, O
                         worldMajAxisTipDPointsPose,
                         worldMinAxisTipDPointsPose;
         *Dpointspose << Dpointspose_;
+
     }
     return myWorldPoints;
 }
@@ -174,14 +183,22 @@ MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject
     MserMeasurement measurement = convertCameraPointsToMeasurement(cameraPoints, msmtDcampoints56);
 
     //Provide Jacobians
+    boost::function<MserMeasurement(const SimpleCamera&, const MserObject&)> f = boost::bind(&measurementFunction, _1, _2, boost::none, boost::none);
+
     if (Dcamera) {
+        //std::cerr << "MSMT FCN: VERIFYING msmtDcamera" << std::endl;
         Eigen::MatrixXd Dcamera_(5,11);
         Dcamera_ << msmtDcampoints56*campointsDcamera; //5x6 x 6x11 = 5x11
-        //cout << "msmtDcampoints \n" << msmtDcampoints56 << endl;
-        //cout << "campointsDcamera \n" << campointsDcamera << endl;
         *Dcamera << Dcamera_;
+        //assert_equal(numericalDerivative21(f,camera,object),Dcamera_,1e-5);
     }
-    if (Dobject) *Dobject << msmtDcampoints56*campointsDworldpoints69*worldpointsDobjectpointspose9_12*objectpointsposeDobject12_8;
+    if (Dobject){
+        //std::cerr << "MSMT FCN: VERIFYING msmtDobject" << std::endl;
+        Eigen::MatrixXd Dobject_(5,8);
+        Dobject_ << msmtDcampoints56*campointsDworldpoints69*worldpointsDobjectpointspose9_12*objectpointsposeDobject12_8;
+        *Dobject << Dobject_;
+        //assert_equal(numericalDerivative22(f,camera,object),Dobject_,1e-5);
+    }
     return measurement;
 }
 
