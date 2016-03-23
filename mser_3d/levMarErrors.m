@@ -14,49 +14,49 @@ i = linspace(1,levMarIterations,levMarIterations);
 figure;
 %X
 subplot(2,4,1);
-plot(i,xErrors,'r.');
+plot(i,xErrors,'r-');
 xlabel('# Lev Mar Iterations');
 ylabel('X Error');
 title('X Error');
 %Y
 subplot(2,4,2);
-plot(i,yErrors,'g.');
+plot(i,yErrors,'r-');
 xlabel('# Lev Mar Iterations');
 ylabel('Y Error');
 title('Y Error');
 %Z
 subplot(2,4,3);
-plot(i,zErrors,'b.');
+plot(i,zErrors,'r-');
 xlabel('# Lev Mar Iterations');
 ylabel('Z Error');
 title('Z Error');
 %Roll
 subplot(2,4,4);
-plot(i,rollErrors,'c.');
+plot(i,rollErrors,'r-');
 xlabel('# Lev Mar Iterations');
 ylabel('Roll Error');
 title('Roll Error');
 %Pitch
 subplot(2,4,5);
-plot(i,pitchErrors,'m.');
+plot(i,pitchErrors,'r-');
 xlabel('# Lev Mar Iterations');
 ylabel('Pitch Error');
 title('Pitch Error');
 %Yaw
 subplot(2,4,6);
-plot(i,yawErrors,'y.');
+plot(i,yawErrors,'r-');
 xlabel('# Lev Mar Iterations');
 ylabel('Yaw Error');
 title('Yaw Error');
 %Maj Axis
 subplot(2,4,7);
-plot(i,majAxisErrors,'k.');
+plot(i,majAxisErrors,'r-');
 xlabel('# Lev Mar Iterations');
 ylabel('Maj Axis Error');
 title('Maj Axis Error');
 %Min Axis
 subplot(2,4,8);
-plot(i,minAxisErrors,'k*');
+plot(i,minAxisErrors,'r-');
 xlabel('# Lev Mar Iterations');
 ylabel('Min Axis Error');
 title('Min Axis Error');
