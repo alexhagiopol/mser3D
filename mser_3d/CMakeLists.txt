@@ -17,7 +17,7 @@ if(APPLE)
 	find_package(OpenCV REQUIRED)
 	include_directories(${OpenCV_INCLUDE_DIRS})
 
-	add_executable(tests
+	add_executable(testManifolds
 			${PROJECT_SOURCE_DIR}/CppUnitLite/Failure.h
 			${PROJECT_SOURCE_DIR}/CppUnitLite/Test.h
 			${PROJECT_SOURCE_DIR}/CppUnitLite/Test.cpp
@@ -26,7 +26,7 @@ if(APPLE)
 			${PROJECT_SOURCE_DIR}/CppUnitLite/TestRegistry.cpp
 			${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.h
 			${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.cpp
-			tests.cpp
+			testsManifolds.cpp
 			geometryFunctions.h
 			geometryFunctions.cpp
 			measurementFunction.h
@@ -40,9 +40,9 @@ if(APPLE)
 			WorldPoints.h
 			CameraPoints.h
 			TripleManifold.h
-			)
+	)
 
-	target_link_libraries(tests
+	target_link_libraries(testManifolds
 			${ALL_LIBS}
 			gtsam
 			${OpenCV_LIBS}
@@ -85,7 +85,7 @@ else()
 	find_package(OpenCV REQUIRED)
 	include_directories(${OpenCV_INCLUDE_DIRS})
 
-	add_executable(tests
+	add_executable(testManifolds
 			${PROJECT_SOURCE_DIR}/CppUnitLite/Failure.h
 			${PROJECT_SOURCE_DIR}/CppUnitLite/Test.h
 			${PROJECT_SOURCE_DIR}/CppUnitLite/Test.cpp
@@ -94,9 +94,27 @@ else()
 			${PROJECT_SOURCE_DIR}/CppUnitLite/TestRegistry.cpp
 			${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.h
 			${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.cpp
-			tests.cpp
-			geometryFunctions.h
-			geometryFunctions.cpp
+			testManifolds.cpp
+			MserMeasurement.h
+			MserTrack.h
+			PointsPose.h
+			WorldPoints.h
+			CameraPoints.h
+			TripleManifold.h
+			)
+
+	add_executable(testMeasurementFunction
+			${PROJECT_SOURCE_DIR}/CppUnitLite/Failure.h
+			${PROJECT_SOURCE_DIR}/CppUnitLite/Test.h
+			${PROJECT_SOURCE_DIR}/CppUnitLite/Test.cpp
+			${PROJECT_SOURCE_DIR}/CppUnitLite/TestHarness.h
+			${PROJECT_SOURCE_DIR}/CppUnitLite/TestRegistry.h
+			${PROJECT_SOURCE_DIR}/CppUnitLite/TestRegistry.cpp
+			${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.h
+			${PROJECT_SOURCE_DIR}/CppUnitLite/TestResult.cpp
+			testMeasurementFunction.cpp
+			#geometryFunctions.h
+			#geometryFunctions.cpp
 			measurementFunction.h
 			measurementFunction.cpp
 			MserObject.h
@@ -143,11 +161,18 @@ else()
 			${OpenCV_LIBS}
 			)
 
-	target_link_libraries(tests
+	target_link_libraries(testManifolds
 			${ALL_LIBS}
 			gtsam
 			${OpenCV_LIBS}
 			)
+
+	target_link_libraries(testMeasurementFunction
+			${ALL_LIBS}
+			gtsam
+			${OpenCV_LIBS}
+			)
+
 	SOURCE_GROUP(common REGULAR_EXPRESSION ".*/common/.*" )
 	SOURCE_GROUP(shaders REGULAR_EXPRESSION ".*/.*shader$" )
 endif()
