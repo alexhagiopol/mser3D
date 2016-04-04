@@ -52,7 +52,7 @@ Values expressionsOptimization(MserObject& initialGuess, std::vector<MserMeasure
     initial.insert(Symbol('o', 0), initialGuess);
     //cout << "initial error = " << graph.error(initial) << endl;
     LevenbergMarquardtParams params = LevenbergMarquardtParams();
-    std::string verbosity = "SUMMARY";
+    std::string verbosity = "SILENT";
     params.setVerbosityLM(verbosity);
     params.setlambdaUpperBound(1e32);
     params.setMaxIterations(iterations);

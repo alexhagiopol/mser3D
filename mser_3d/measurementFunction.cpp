@@ -25,7 +25,8 @@ PointsPose convertObjectToPointsPose(const MserObject& object, OptionalJacobian<
                     0,0,0,0,0,0,0,0;
         *Dobject << Dobject_;
         boost::function<PointsPose(const MserObject&)> f = boost::bind(&convertObjectToPointsPose, _1, boost::none);
-        assert_equal(numericalDerivative11(f,object),Dobject_,1e-5);
+        //printf("Computing: convertObjectToPointsPose(): Dobject \n");
+        //assert_equal(numericalDerivative11(f,object),Dobject_,1e-5);
     }
     return myPointsPose;
 }
@@ -60,7 +61,8 @@ WorldPoints convertPointsPoseToWorldPoints(const PointsPose& objectPointsPose, O
                         worldMinAxisTipDPointsPose;
         *Dpointspose << Dpointspose_;
         boost::function<WorldPoints(const PointsPose&)> f = boost::bind(&convertPointsPoseToWorldPoints, _1, boost::none);
-        assert_equal(numericalDerivative11(f,objectPointsPose),Dpointspose_,1e-5);
+        //printf("Computing: convertPoiintsPoseToWorldPoints(): Dpointspose \n");
+        //assert_equal(numericalDerivative11(f,objectPointsPose),Dpointspose_,1e-5);
     }
     return myWorldPoints;
 }
@@ -92,7 +94,8 @@ CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, const 
         Eigen::MatrixXd Dcamera_(6,11);
         Dcamera_ << Dpose, Dcal;
         *Dcamera <<  Dcamera_;
-        assert_equal(numericalDerivative21(f,camera,points),Dcamera_,1e-5);
+        //printf("Computing: convertWorldPointsToCameraPoints(): Dcamera \n");
+        //assert_equal(numericalDerivative21(f,camera,points),Dcamera_,1e-5);
     }
     if (Dpoints){
         Eigen::MatrixXd Dpoints_(6,9);
@@ -107,7 +110,8 @@ CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, const 
                 middle,
                 bottom;
         *Dpoints << Dpoints_;
-        assert_equal(numericalDerivative22(f,camera,points),Dpoints_,1e-5);
+        //printf("Computing: convertWorldPointsToCameraPoints(): Dpoints \n");
+        //assert_equal(numericalDerivative22(f,camera,points),Dpoints_,1e-5);
     }
     return myCameraPoints;
 }
@@ -119,34 +123,19 @@ double ellipse2DOrientation(const Point2& center, const Point2& majorAxisPoint, 
     double y = majorAxisPoint.y() - center.y();
     double x = majorAxisPoint.x() - center.x();
     double orientation = atan2(y,x);
-    boost::function<double(const Point2&, const Point2&)> f = boost::bind(&ellipse2DOrientation, _1, _2, boost::none, boost::none);
-    if (Dcenter) { //derivative wrt center point
-        if ((x < 1e-8) && (x > -1e-8) && (y < 1e-8) && (y > -1e-8)){ //divide by zero
-            *Dcenter << 0, 0; //make them 0 instead on INF to avoid messing up calculations?
-            //cout << "DIVIDE BY ZERO!" << endl;
-            //cout << "x " << x << endl;
-            //cout << "y " << y << endl;
-            //cout << "orientation " << orientation << endl;
-        } else {
-            *Dcenter << y/(x*x + y*y), -1*x/(x*x + y*y);
-        }
-        //Eigen::MatrixXd Dcenter_(1,2);
-        //Dcenter_ << *Dcenter;
-        //assert_equal(numericalDerivative21(f,center,majorAxisPoint),Dcenter_,1e-5);
-        //cout << "thetaDcenter\n" << *Dcenter << endl;
+
+    if ((Dcenter) && (Dmajaxis) && (x > -1e-5) && (x < 1e-5) && (y > -1e-5) && (y < 1e-5)) { //divide by zero
+        cerr << "****************DIVIDE BY ZERO DERIVATIVE IMMINENT**************** \n" << endl;
+        center.print("Center \n");
+        majorAxisPoint.print("Major Axis Point \n");
+        *Dcenter << inf,inf;
+        *Dmajaxis << inf,inf;
     }
-    if (Dmajaxis) { //derivative wrt axis pointdivide by zero
-        if ((x < 1e-8) && (x > -1e-8) && (y < 1e-8) && (y > -1e-8)){ //
-            //cout << "y " << y << endl;
-            //cout << "orientation " << orientation << endl;
-            *Dmajaxis << 0, 0; //make them 0 instead on INF to avoid messing up calculations?
-        } else {
-            *Dmajaxis << -1*y / (x*x + y*y), x / (x*x + y*y);
-        }
-        //Eigen::MatrixXd Dmajaxis_(1,2);
-        //Dmajaxis_ << *Dmajaxis;
-        //assert_equal(numericalDerivative22(f,center,majorAxisPoint),Dmajaxis_,1e-5);
-        //cout << "thetaDmajaxis\n" << *Dmajaxis << endl;
+    if (Dcenter) { //derivative wrt center point
+        *Dcenter << y/(x*x + y*y), -1*x/(x*x + y*y);
+    }
+    if (Dmajaxis) { //derivative wrt axis point
+        *Dmajaxis << -1*y / (x*x + y*y), x / (x*x + y*y);
     }
     return orientation;
 }
@@ -171,9 +160,9 @@ MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoint
                       A1Dcenter(0,0),    A1Dcenter(0,1),    A1Dmajor(0,0),    A1Dmajor(0,1),             0,             0,
                       A2Dcenter(0,0),    A2Dcenter(0,1),                0,                0, A2Dminor(0,0), A2Dminor(0,1);
         *Dpoints << Dpoints_;
-
         boost::function<MserMeasurement(const CameraPoints&)> f = boost::bind(&convertCameraPointsToMeasurement, _1, boost::none);
-        //assert_equal(numericalDerivative11(f,cameraPoints),Dpoints_,1e-5);
+        //printf("Computing: convertCameraPointsToMeasurement(): Dpoints \n");
+        assert_equal(numericalDerivative11(f,cameraPoints),Dpoints_,1e-5);
     }
     return measurement;
 }
@@ -197,6 +186,7 @@ MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject
     MserMeasurement measurement = convertCameraPointsToMeasurement(cameraPoints, msmtDcampoints56);
 
     //Provide Jacobians
+    //Auto test for correct derivatives
     boost::function<MserMeasurement(const SimpleCamera&, const MserObject&)> f = boost::bind(&measurementFunction, _1, _2, boost::none, boost::none);
 
     if (Dcamera) {
@@ -204,6 +194,7 @@ MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject
         Eigen::MatrixXd Dcamera_(5,11);
         Dcamera_ << msmtDcampoints56*campointsDcamera; //5x6 x 6x11 = 5x11
         *Dcamera << Dcamera_;
+        //printf("Computing: measurementFunction(): Dcamera \n");
         //assert_equal(numericalDerivative21(f,camera,object),Dcamera_,1e-5);
     }
     if (Dobject){
@@ -211,6 +202,7 @@ MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject
         Eigen::MatrixXd Dobject_(5,8);
         Dobject_ << msmtDcampoints56*campointsDworldpoints69*worldpointsDobjectpointspose9_12*objectpointsposeDobject12_8;
         *Dobject << Dobject_;
+        //printf("Computing: measurementFunction(): Dobject \n");
         //assert_equal(numericalDerivative22(f,camera,object),Dobject_,1e-5);
     }
     return measurement;
