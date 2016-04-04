@@ -80,25 +80,25 @@ void testPrintSuperimposedMeasurementImages(const InputManager& input){
 
 void syntheticTestOptimization(bool visualize, bool showEachStep, int levMarIterations){
     //Make correct object
-    Point3 objectCenter(12,12,12);
-    Rot3 objectOrientation(1,0,0,
+    const Point3 objectCenter(12,12,12);
+    const Rot3 objectOrientation(1,0,0,
               0,1,0,
               0,0,1);
     //Rot3 objectOrientation = zero.Yaw(0.3);
     //objectOrientation = objectOrientation.Roll(0.1);
     //objectOrientation = objectOrientation.Pitch(-0.3);
-    Point2 objectAxes(3,1);
-    Pose3 objectPose(objectOrientation, objectCenter);
-    MserObject correctObject(objectPose,objectAxes); //ground truth object
+    const Point2 objectAxes(3,1);
+    const Pose3 objectPose(objectOrientation, objectCenter);
+    const MserObject correctObject(objectPose,objectAxes); //ground truth object
 
     //Make slightly wrong initial guess
-    Point3 initialGuessCenter = objectCenter + Point3(2,2,-2);
+    const Point3 initialGuessCenter = objectCenter + Point3(2,2,-2);
     Rot3 initialGuessOrientation = objectOrientation.Yaw(0.8);
     initialGuessOrientation = initialGuessOrientation.Roll(0.8);
     initialGuessOrientation = initialGuessOrientation.Pitch(-0.8);
-    Point2 initialGuessAxes(1.7,0.1);
-    Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
-    MserObject initialGuess(initialGuessPose, initialGuessAxes);
+    const Point2 initialGuessAxes(1.7,0.1);
+    const Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
+    const MserObject initialGuess(initialGuessPose, initialGuessAxes);
 
     //Create cameras looking directly at correct object
     Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
