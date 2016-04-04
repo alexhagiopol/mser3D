@@ -35,8 +35,6 @@ MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject
 
 std::vector<MserMeasurement> createIdealMeasurements(const std::vector<SimpleCamera>& cameras, MserObject& object);
 
-Pose2 toyExperiment(const Point2& center, const double& theta, OptionalJacobian<3,2> Dcenter = boost::none, OptionalJacobian<3,1> Dtheta = boost::none);
-
 typedef Expression<MserObject> MserObject_;
 typedef Expression<MserMeasurement> MserMeasurement_;
 typedef Expression<SimpleCamera> SimpleCamera_;
