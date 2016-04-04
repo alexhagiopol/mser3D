@@ -29,9 +29,6 @@ WorldPoints convertPointsPoseToWorldPoints(const PointsPose& objectPointsPose, O
 
 CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, const WorldPoints& points, OptionalJacobian<6,11> Dcamera = boost::none, OptionalJacobian<6,9> Dpoints = boost::none);
 
-//Returns orientation of 2D ellipse given center point and major axis point
-double ellipse2DOrientation(const Point2& center, const Point2& majorAxisPoint, OptionalJacobian<1,2> Dcenter = boost::none, OptionalJacobian<1,2> Dmajaxis = boost::none);
-
 MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoints, OptionalJacobian<5,6> Dpoints = boost::none);
 
 MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject& object, OptionalJacobian<5,11> Dcamera = boost::none, OptionalJacobian<5,8> Dobject = boost::none);

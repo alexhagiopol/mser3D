@@ -56,26 +56,6 @@ TEST(measurementFunction, convertWorldPointsToCameraPoints){
     EXPECT(assert_equal(numericalDerivative22(f,camera,input),H2,1e-7));
 }
 
-TEST(measurementFunction, ellipse2Dorientation){
-    Eigen::MatrixXd Dcenter(1,2);
-    Eigen::MatrixXd Dmajaxis(1,2);
-    boost::function<double(const Point2&, const Point2&)> f = boost::bind(&ellipse2DOrientation, _1, _2, boost::none, boost::none);
-    const Point2 center = Point2(5,10);
-    const Point2 majaxis = Point2(10,17);
-    double theta = ellipse2DOrientation(center,majaxis,Dcenter,Dmajaxis);
-    EXPECT(assert_equal(numericalDerivative21(f,center,majaxis),Dcenter,1e-5));
-    EXPECT(assert_equal(numericalDerivative22(f,center,majaxis),Dmajaxis,1e-5));
-
-    //Case that causes division by zero doesn't pass. Atan2() doesn't have a derivative defined everywhere.
-    /*
-    const Point2 center2 = Point2(5,10);
-    const Point2 majaxis2 = Point2(5,10);
-    double theta2 = ellipse2DOrientation(center2,majaxis2,Dcenter,Dmajaxis);
-    EXPECT(assert_equal(numericalDerivative21(f,center,majaxis),Dcenter,1e-5));
-    EXPECT(assert_equal(numericalDerivative22(f,center,majaxis),Dmajaxis,1e-5));
-     */
-}
-
 TEST(measurementFunction, convertCameraPointsToMeasurement){
     Eigen::MatrixXd H1(5,6);
     boost::function<MserMeasurement(const CameraPoints&)> f = boost::bind(&convertCameraPointsToMeasurement, _1, boost::none);
@@ -85,17 +65,6 @@ TEST(measurementFunction, convertCameraPointsToMeasurement){
     const CameraPoints input = CameraPoints(Point2(0,0),Point2(majLength*cos(theta),majLength*sin(theta)),Point2(minLength*cos(theta+M_PI/2),minLength*sin(theta+M_PI/2)));
     MserMeasurement actual = convertCameraPointsToMeasurement(input, H1);
     EXPECT(assert_equal(numericalDerivative11(f,input),H1,1e-7));
-}
-
-TEST(toyExperiment, toyExperiment){
-    Eigen::MatrixXd H1(3,2);
-    Eigen::MatrixXd H2(3,1);
-    boost::function<Pose2(const Point2&, const double&)> f = boost::bind(&toyExperiment, _1, _2, boost::none, boost::none);
-    Point2 center(10,5);
-    double theta = 0.3;
-    Pose2 result = toyExperiment(center, theta, H1, H2);
-    EXPECT(assert_equal(numericalDerivative21(f,center,theta),H1));
-    EXPECT(assert_equal(numericalDerivative22(f,center,theta),H2));
 }
 
 TEST(measurementFunction, measurementFunction){

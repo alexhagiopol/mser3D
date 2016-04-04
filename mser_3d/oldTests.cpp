@@ -30,32 +30,6 @@ void testLocateObject(){
     }
 }
 
-void testEllipse2DOrientation(){
-    Point2 center(5,5);
-    Point2 majorAxisTip(10,10);
-    Matrix12 H1, H2, correctCenterJacobian, correctAxisPointJacobian;
-    double orientation = ellipse2DOrientation(center, majorAxisTip, H1, H2);
-    //cout << orientation << H1 << H2 << endl;
-    correctCenterJacobian << 0.1, -0.1; //hand calculated value
-    correctAxisPointJacobian << -0.1, 0.1; //hand calculated value
-    double correctOrientation = 0.7854; //(radians) hand calculated value
-    Values correct;
-    Values tested;
-    correct.insert(1, correctCenterJacobian);
-    correct.insert(2, correctAxisPointJacobian);
-    correct.insert(3, correctOrientation);
-    tested.insert(1, H1);
-    tested.insert(2, H2);
-    tested.insert(3, orientation);
-    if (correct.equals(tested, 0.00001)){
-        cout << "ellipse2DOrientation PASSED" << endl;
-    } else {
-        cout << "ellipse2DOrientation FAILED" << endl;
-        correct.print();
-        tested.print();
-    }
-}
-
 //Write video images with superimposed MSER measurements to disk in order to test/verify
 void testPrintSuperimposedMeasurementImages(const InputManager& input){
     std::vector<MserTrack> tracks;// = input.MSERmeasurementTracks;
@@ -383,7 +357,6 @@ void realWorldTestOptimization(const InputManager& input){
 
 void testAll(const InputManager& input){
     testLocateObject();
-    testEllipse2DOrientation();
     testPrintSuperimposedMeasurementImages(input);
     syntheticTestOptimization();
     realWorldTestOptimization(input);

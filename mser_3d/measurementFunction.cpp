@@ -116,30 +116,6 @@ CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, const 
     return myCameraPoints;
 }
 
-//Returns orientation of 2D ellipse given center point and major axis point
-double ellipse2DOrientation(const Point2& center, const Point2& majorAxisPoint, OptionalJacobian<1,2> Dcenter, OptionalJacobian<1,2> Dmajaxis){
-    //Math reference: https://en.wikipedia.org/wiki/Atan2
-    //C++ atan2(y,x) reference: http://en.cppreference.com/w/c/numeric/math/atan2
-    double y = majorAxisPoint.y() - center.y();
-    double x = majorAxisPoint.x() - center.x();
-    double orientation = atan2(y,x);
-
-    if ((Dcenter) && (Dmajaxis) && (x > -1e-5) && (x < 1e-5) && (y > -1e-5) && (y < 1e-5)) { //divide by zero
-        cerr << "****************DIVIDE BY ZERO DERIVATIVE IMMINENT**************** \n" << endl;
-        center.print("Center \n");
-        majorAxisPoint.print("Major Axis Point \n");
-        *Dcenter << inf,inf;
-        *Dmajaxis << inf,inf;
-    }
-    if (Dcenter) { //derivative wrt center point
-        *Dcenter << y/(x*x + y*y), -1*x/(x*x + y*y);
-    }
-    if (Dmajaxis) { //derivative wrt axis point
-        *Dmajaxis << -1*y / (x*x + y*y), x / (x*x + y*y);
-    }
-    return orientation;
-}
-
 MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoints, OptionalJacobian<5,6> Dpoints){
     Point2 measurementCenter = gtsam::traits<CameraPoints>::centroid(cameraPoints); //Jacobian for this is 2x2 identity matrix
     Point2 majAxisTip = gtsam::traits<CameraPoints>::majAxisTip(cameraPoints);
@@ -249,23 +225,4 @@ std::vector<MserMeasurement> createIdealMeasurements(const std::vector<SimpleCam
         measurements.push_back(measurement);
     }
     return measurements;
-}
-
-//If we can fix toy experiment, then we can fix the entire pipeline.
-Pose2 toyExperiment(const Point2& center, const double& theta, OptionalJacobian<3,2> Dcenter, OptionalJacobian<3,1> Dtheta){
-    if(Dcenter){
-        Eigen::MatrixXd Dcenter_(3,2);
-        Dcenter_ <<    cos(theta),  sin(theta),
-                -1*sin(theta), cos(theta),
-                0,          0;
-        *Dcenter << Dcenter_;
-    }
-    if(Dtheta){
-        Eigen::MatrixXd Dtheta_(3,1);
-        Dtheta_ << 0,
-                0,
-                1;
-        *Dtheta << Dtheta_;
-    }
-    return Pose2(theta,center);
 }
