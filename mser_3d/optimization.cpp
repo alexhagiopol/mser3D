@@ -17,7 +17,7 @@
 using namespace gtsam;
 using namespace noiseModel;
 
-Values expressionsOptimization(MserObject& initialGuess, std::vector<MserMeasurement>& measurements, std::vector<SimpleCamera>& cameras, int iterations){
+Values expressionsOptimization(const MserObject& initialGuess, const std::vector<MserMeasurement>& measurements, const std::vector<SimpleCamera>& cameras, int iterations){
     Vector5 measurementSigmasVector;
     measurementSigmasVector << 4, 4, 0.1, 4, 4;
     Diagonal::shared_ptr measurementNoise = Diagonal::Sigmas(measurementSigmasVector); // one pixel in every dimension
@@ -78,7 +78,7 @@ float standardDeviation(std::vector<float> data)
     return sqrt(sum_deviation/n);
 }
 
-std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(std::vector<MserTrack>& tracks, std::vector<Pose3>& VOposes){
+std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(const std::vector<MserTrack>& tracks, const std::vector<Pose3>& VOposes){
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
     Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
@@ -144,10 +144,12 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
         Values result = expressionsOptimization(initialGuess, measurements, cameras, 30);
         MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
         objects.push_back(returnedObject);
+        //objects.push_back(initialGuess);
         //gtsam::traits<MserObject>::Print(returnedObject);
         //gtsam::Vector3 trackColor(tracks[t].colorR,tracks[t].colorG,tracks[t].colorB);
         gtsam::Vector3 trackColor(tracks[t].colorR,tracks[t].colorG,tracks[t].colorB);
         colors.push_back(trackColor);
+        //colors.push_back(trackColor*2);
         cerr << "OPTIMIZER: Finished optimizing track #" << t << " of " << tracks.size() - 1 << endl;
     }
     std::pair<std::vector<MserObject>,std::vector<Vector3>> pair(objects,colors);
@@ -156,7 +158,7 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
     return pair;
 }
 
-std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurementsViaTriangulation(std::vector<MserTrack>& tracks, std::vector<Pose3>& VOposes){
+std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurementsViaTriangulation(const std::vector<MserTrack>& tracks, const std::vector<Pose3>& VOposes){
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
     Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/

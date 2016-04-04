@@ -33,7 +33,9 @@ MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoint
 
 MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject& object, OptionalJacobian<5,11> Dcamera = boost::none, OptionalJacobian<5,8> Dobject = boost::none);
 
-std::vector<MserMeasurement> createIdealMeasurements(const std::vector<SimpleCamera>& cameras, MserObject& object);
+std::vector<MserMeasurement> createIdealMeasurements(const std::vector<SimpleCamera>& cameras, const MserObject& object);
+
+std::vector<MserMeasurement> createNoisyMeasurements(const std::vector<SimpleCamera>& cameras, const MserObject& object);
 
 typedef Expression<MserObject> MserObject_;
 typedef Expression<MserMeasurement> MserMeasurement_;

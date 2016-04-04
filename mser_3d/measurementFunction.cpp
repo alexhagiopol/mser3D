@@ -210,7 +210,16 @@ MserMeasurement measurementFunction(const SimpleCamera& camera, const MserObject
     return measurement;
 }
 
-std::vector<MserMeasurement> createIdealMeasurements(const std::vector<SimpleCamera>& cameras, MserObject& object){
+std::vector<MserMeasurement> createIdealMeasurements(const std::vector<SimpleCamera>& cameras, const MserObject& object){
+    std::vector<MserMeasurement> measurements;
+    for (size_t i = 0; i < cameras.size(); i++){
+        MserMeasurement measurement = measurementFunction(cameras[i], object);
+        measurements.push_back(measurement);
+    }
+    return measurements;
+}
+
+std::vector<MserMeasurement> createNoisyMeasurements(const std::vector<SimpleCamera>& cameras, const MserObject& object){
     std::vector<MserMeasurement> measurements;
     for (size_t i = 0; i < cameras.size(); i++){
         MserMeasurement measurement = measurementFunction(cameras[i], object);
