@@ -144,25 +144,59 @@ MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoint
     Point2 measurementCenter = gtsam::traits<CameraPoints>::centroid(cameraPoints); //Jacobian for this is 2x2 identity matrix
     Point2 majAxisTip = gtsam::traits<CameraPoints>::majAxisTip(cameraPoints);
     Point2 minAxisTip = gtsam::traits<CameraPoints>::minAxisTip(cameraPoints);
-    Matrix12 thetaDcenter, thetaDmajor, A1Dmajor, A1Dcenter, A2Dminor, A2Dcenter;
-    double theta = ellipse2DOrientation(measurementCenter, majAxisTip, thetaDcenter, thetaDmajor);
+
+    //derivatives matrices
+    Matrix12 thetaDdifference, A1Dmajor, A1Dcenter, A2Dminor, A2Dcenter;
+    const Point2 difference = majAxisTip - measurementCenter;
+    const Rot2 theta = Rot2::relativeBearing(difference,thetaDdifference);
+    /*
+    Matrix21 rotpointDtheta;
+    Matrix22 rotpointDcenter;
+    Point2 rotatedCenter = theta.rotate(measurementCenter);
+    Point2 unrotatedCenter = theta.unrotate(measurementCenter);
+    */
+    Pose2 ellipsePose = Pose2(theta,measurementCenter);
     double A1 = majAxisTip.distance(measurementCenter, A1Dmajor, A1Dcenter);
     double A2 = minAxisTip.distance(measurementCenter, A2Dminor, A2Dcenter);
-    Pose2 ellipsePose(theta,measurementCenter);
     Point2 axisLengths(A1,A2);
     MserMeasurement measurement(ellipsePose,axisLengths);
+
+
+    //rotatedCenter.print("ROTATED CENTER");
+    //unrotatedCenter.print("UNROTATED CENTER");
+
     if (Dpoints){
         Eigen::MatrixXd Dpoints_(5,6);
+        Matrix22 differenceDcenter, differenceDmajor, differenceDminor;
+        Matrix26 differenceDpoints;
+        Matrix16 thetaDpoints;
+        Matrix26 msmtctrDpoints;
+        Matrix26 axesDpoints;
 
-        Dpoints_<<        cos(theta),        sin(theta),                0,                0,             0,             0,
-                       -1*sin(theta),        cos(theta),                0,                0,             0,             0,
-                   thetaDcenter(0,0), thetaDcenter(0,1), thetaDmajor(0,0), thetaDmajor(0,1),             0,             0,
-                      A1Dcenter(0,0),    A1Dcenter(0,1),    A1Dmajor(0,0),    A1Dmajor(0,1),             0,             0,
-                      A2Dcenter(0,0),    A2Dcenter(0,1),                0,                0, A2Dminor(0,0), A2Dminor(0,1);
+        differenceDcenter = -1*eye(2);
+        differenceDmajor = eye(2);
+        differenceDminor = zeros(2,2);
+        differenceDpoints << differenceDcenter, differenceDmajor, differenceDminor;
+        double t = theta.theta();
+        //first 2 rows
+        msmtctrDpoints << cos(t),        sin(t),                0,                0,             0,             0,
+                       -1*sin(t),        cos(t),                0,                0,             0,             0;
+        //third row
+        thetaDpoints << thetaDdifference*differenceDpoints;
+        //last 2 rows
+        axesDpoints << A1Dcenter(0,0),    A1Dcenter(0,1),    A1Dmajor(0,0),    A1Dmajor(0,1),             0,             0,
+                       A2Dcenter(0,0),    A2Dcenter(0,1),                0,                0, A2Dminor(0,0), A2Dminor(0,1);
+
+        Dpoints_<< msmtctrDpoints, thetaDpoints, axesDpoints;
         *Dpoints << Dpoints_;
         boost::function<MserMeasurement(const CameraPoints&)> f = boost::bind(&convertCameraPointsToMeasurement, _1, boost::none);
         //printf("Computing: convertCameraPointsToMeasurement(): Dpoints \n");
-        assert_equal(numericalDerivative11(f,cameraPoints),Dpoints_,1e-5);
+        //gtsam::traits<CameraPoints>::Print(cameraPoints,"CAM POINTS");
+        //gtsam::traits<MserMeasurement>::Print(measurement, "MEASUREMENT");
+        //theta.print("THETA");
+        //sleep(0.01);
+        assert_equal(numericalDerivative11(f,cameraPoints),Dpoints_,1e-2);
+        //sleep(0.01);
     }
     return measurement;
 }
