@@ -14,20 +14,13 @@
 #include <gtsam/slam/expressions.h>
 #include <sys/stat.h> //need for mkdir
 
-//Geometry tests
-void testLocateObject();
-void testEllipse2DOrientation();
 
 //Visualization tests
 void testPrintSuperimposedMeasurementImages(const InputManager& input);
 
 //MeasurementFunction tests
 void syntheticTestOptimization(bool visualize = false, bool showEachStep = false, int levMarIterations = 100);
-void testMeasurementFunction();
 
 //3D Reconstruction tests
-void testDisplayPoses(const InputManager& input);
 void realWorldTestOptimization(const InputManager& input);
 
-//test everything
-void testAll(const InputManager& input);

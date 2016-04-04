@@ -11,25 +11,6 @@ using namespace gtsam;
 using namespace std;
 using namespace noiseModel;
 
-
-//Unit test for 3D object location
-void testLocateObject(){
-    //test for object localization via back projection
-    Point3 target = Point3(1.5,1.5,1.5);
-    Point3 guess = Point3(1.1,1.1,1.1);
-    int numCameras = 8;
-    double cameraMotionRadius = 10.0;
-    Values correct1;
-    correct1.insert(1,target);
-    Values result1 = locateObject(target, guess, numCameras, cameraMotionRadius);
-    if (result1.equals(correct1,0.0001)){
-        cout << "Localization PASSED." << endl;
-    }
-    else{
-        cout << "Localization FAILED." << endl;
-    }
-}
-
 //Write video images with superimposed MSER measurements to disk in order to test/verify
 void testPrintSuperimposedMeasurementImages(const InputManager& input){
     std::vector<MserTrack> tracks;// = input.MSERmeasurementTracks;
@@ -238,99 +219,6 @@ void syntheticTestOptimization(bool visualize, bool showEachStep, int levMarIter
     }
 }
 
-void testMeasurementFunction(){
-    //Make camera
-    Cal3_S2::shared_ptr K(new Cal3_S2(500.0, 500.0, 0.1, 640/2, 480/2));
-    Point3 cameraPosition(0,0,10);// = objectCenter + Point3(0,0,100);
-    Point3 up = Point3(0,1,0);
-    SimpleCamera camera = SimpleCamera::Lookat(cameraPosition, Point3(0,0,0), up, *K);
-
-
-    //Make object
-    Point3 objectCenter1(0,0,0);
-    Rot3 objectOrientation1(1,0,0,
-                           0,1,0,
-                           0,0,1);
-    Point2 objectAxes1(3,1);
-    Pose3 objectPose1(objectOrientation1, objectCenter1);
-    MserObject object1(objectPose1,objectAxes1);
-
-
-    //Jacobian matrices
-    Eigen::MatrixXd Dcamera(5,11);
-    Matrix58 Dobject;
-    //Take measurement
-    MserMeasurement returnedMeasurement1 = measurementFunction(camera, object1, Dcamera, Dobject);
-    /*
-    //Hand calculated measurement
-    MserMeasurement correctMeasurement(Pose2(320,240,0),Point2(150,50));
-    //Check correctness
-    if (gtsam::traits<MserMeasurement>::Equals(correctMeasurement,returnedMeasurement,0.001)){
-        cerr << "TEST: MEASUREMENT FUNCTION TEST #1 PASSED" << endl;
-        gtsam::traits<MserMeasurement>::Print(correctMeasurement, "CORRECT");
-        gtsam::traits<MserMeasurement>::Print(returnedMeasurement, "RETURNED");
-    } else {
-        cerr << "TEST: MEASUREMENT FUNCTION TEST #1 FAILED" << endl;
-        gtsam::traits<MserMeasurement>::Print(correctMeasurement, "CORRECT");
-        gtsam::traits<MserMeasurement>::Print(returnedMeasurement, "RETURNED");
-    } */
-    cerr << "TEST 1 RESULTS: OBJECT AT ORIGIN" << endl; //
-    gtsam::traits<MserMeasurement>::Print(returnedMeasurement1, "RETURNED");
-    //test 2
-    Point3 objectCenter2(1,0,0);
-    Rot3 objectOrientation2(1,0,0,
-                            0,1,0,
-                            0,0,1);
-    Point2 objectAxes2(3,1);
-    Pose3 objectPose2(objectOrientation2, objectCenter2);
-    MserObject object2(objectPose2,objectAxes2);
-
-    MserMeasurement returnedMeasurement2 = measurementFunction(camera, object2, Dcamera, Dobject);
-    cerr << "TEST 2 RESULTS: X POSITION INCREASED" << endl;
-    gtsam::traits<MserMeasurement>::Print(returnedMeasurement2, "RETURNED");
-    //test 3
-    Point3 objectCenter3(0,1,0);
-    Rot3 objectOrientation3(1,0,0,
-                            0,1,0,
-                            0,0,1);
-    Point2 objectAxes3(3,1);
-    Pose3 objectPose3(objectOrientation3, objectCenter3);
-    MserObject object3(objectPose3,objectAxes3);
-
-    MserMeasurement returnedMeasurement3 = measurementFunction(camera, object3, Dcamera, Dobject);
-    cerr << "TEST 3 RESULTS: Y POSITION INCREASED" << endl;
-    gtsam::traits<MserMeasurement>::Print(returnedMeasurement3, "RETURNED");
-    //test 4
-    Point3 objectCenter4(0,0,1);
-    Rot3 objectOrientation4(1,0,0,
-                            0,1,0,
-                            0,0,1);
-    Point2 objectAxes4(3,1);
-    Pose3 objectPose4(objectOrientation4, objectCenter4);
-    MserObject object4(objectPose4,objectAxes4);
-
-    MserMeasurement returnedMeasurement4 = measurementFunction(camera, object4, Dcamera, Dobject);
-    cerr << "TEST 4 RESULTS: Y POSITION INCREASED" << endl;
-    gtsam::traits<MserMeasurement>::Print(returnedMeasurement4, "RETURNED");
-}
-
-//Draw all of the poses that we get from visual odometry
-void testDisplayPoses(const InputManager& input){
-    std::vector<Pose3> poses;
-    input.getVOCameraPoses(poses);
-    std::vector<MserObject> dummyObjects;
-    Vector3 color = Vector3(0,0,0);
-    std::vector<Vector3> colors;
-    for (int p = 0; p < poses.size(); p++){
-        poses[p].print();
-        Point2 axes = Point2(0,0); //Hack: Draw "invisible" ellipse. Only axes will show.
-        MserObject dummyObject = MserObject(poses[p],axes);
-        dummyObjects.push_back(dummyObject);
-        colors.push_back(color);
-    }
-    drawMserObjects(poses, dummyObjects, colors);
-}
-
 void realWorldTestOptimization(const InputManager& input){
     std::vector<MserTrack> tracks;// = getMserTracksFromCSV();
     std::vector<Pose3> allCameraPoses;// = getPosesFromBAL();
@@ -353,13 +241,4 @@ void realWorldTestOptimization(const InputManager& input){
     cerr << "TEST 3D: # of colors " << pair.second.size() << endl;
     cerr << "TEST 3D: # of rays " << rays.size() << endl;
     drawMserObjects(relevantCameraPoses, pair.first, pair.second, rays); //only display relevant poses
-}
-
-void testAll(const InputManager& input){
-    testLocateObject();
-    testPrintSuperimposedMeasurementImages(input);
-    syntheticTestOptimization();
-    realWorldTestOptimization(input);
-    testMeasurementFunction();
-    testDisplayPoses(input);
 }
