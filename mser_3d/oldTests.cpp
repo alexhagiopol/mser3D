@@ -92,11 +92,11 @@ void syntheticTestOptimization(bool visualize, bool showEachStep, int levMarIter
     MserObject correctObject(objectPose,objectAxes); //ground truth object
 
     //Make slightly wrong initial guess
-    Point3 initialGuessCenter = objectCenter + Point3(0.2,0.2,-0.2);
-    Rot3 initialGuessOrientation = objectOrientation.Yaw(0.2);
-    initialGuessOrientation = initialGuessOrientation.Roll(0.2);
-    initialGuessOrientation = initialGuessOrientation.Pitch(-0.2);
-    Point2 initialGuessAxes(2.7,0.5);
+    Point3 initialGuessCenter = objectCenter + Point3(2,2,-2);
+    Rot3 initialGuessOrientation = objectOrientation.Yaw(0.8);
+    initialGuessOrientation = initialGuessOrientation.Roll(0.8);
+    initialGuessOrientation = initialGuessOrientation.Pitch(-0.8);
+    Point2 initialGuessAxes(1.7,0.1);
     Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
     MserObject initialGuess(initialGuessPose, initialGuessAxes);
 
