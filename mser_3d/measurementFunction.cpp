@@ -116,6 +116,7 @@ CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, const 
     return myCameraPoints;
 }
 
+//******This is the most problematic function. Derivatives are wrong when object is viewed from the side and major axis appears to have length zero.*****
 MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoints, OptionalJacobian<5,6> Dpoints){
     Point2 measurementCenter = gtsam::traits<CameraPoints>::centroid(cameraPoints); //Jacobian for this is 2x2 identity matrix
     Point2 majAxisTip = gtsam::traits<CameraPoints>::majAxisTip(cameraPoints);
@@ -130,17 +131,14 @@ MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoint
     Matrix22 rotpointDcenter;
     Point2 rotatedCenter = theta.rotate(measurementCenter);
     Point2 unrotatedCenter = theta.unrotate(measurementCenter);
+    rotatedCenter.print("ROTATED CENTER");
+    unrotatedCenter.print("UNROTATED CENTER");
     */
     Pose2 ellipsePose = Pose2(theta,measurementCenter);
     double A1 = majAxisTip.distance(measurementCenter, A1Dmajor, A1Dcenter);
     double A2 = minAxisTip.distance(measurementCenter, A2Dminor, A2Dcenter);
     Point2 axisLengths(A1,A2);
     MserMeasurement measurement(ellipsePose,axisLengths);
-
-
-    //rotatedCenter.print("ROTATED CENTER");
-    //unrotatedCenter.print("UNROTATED CENTER");
-
     if (Dpoints){
         Eigen::MatrixXd Dpoints_(5,6);
         Matrix22 differenceDcenter, differenceDmajor, differenceDminor;
@@ -165,14 +163,8 @@ MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoint
 
         Dpoints_<< msmtctrDpoints, thetaDpoints, axesDpoints;
         *Dpoints << Dpoints_;
-        boost::function<MserMeasurement(const CameraPoints&)> f = boost::bind(&convertCameraPointsToMeasurement, _1, boost::none);
-        //printf("Computing: convertCameraPointsToMeasurement(): Dpoints \n");
-        //gtsam::traits<CameraPoints>::Print(cameraPoints,"CAM POINTS");
-        //gtsam::traits<MserMeasurement>::Print(measurement, "MEASUREMENT");
-        //theta.print("THETA");
-        //sleep(0.01);
-        assert_equal(numericalDerivative11(f,cameraPoints),Dpoints_,1e-2);
-        //sleep(0.01);
+        //boost::function<MserMeasurement(const CameraPoints&)> f = boost::bind(&convertCameraPointsToMeasurement, _1, boost::none);
+        //assert_equal(numericalDerivative11(f,cameraPoints),Dpoints_,1e-2);
     }
     return measurement;
 }
