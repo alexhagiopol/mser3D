@@ -163,8 +163,8 @@ MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoint
 
         Dpoints_<< msmtctrDpoints, thetaDpoints, axesDpoints;
         *Dpoints << Dpoints_;
-        //boost::function<MserMeasurement(const CameraPoints&)> f = boost::bind(&convertCameraPointsToMeasurement, _1, boost::none);
-        //assert_equal(numericalDerivative11(f,cameraPoints),Dpoints_,1e-2);
+        boost::function<MserMeasurement(const CameraPoints&)> f = boost::bind(&convertCameraPointsToMeasurement, _1, boost::none);
+        assert_equal(numericalDerivative11(f,cameraPoints),Dpoints_,1e-2);
     }
     return measurement;
 }

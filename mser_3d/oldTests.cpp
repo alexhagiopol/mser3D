@@ -92,11 +92,11 @@ void syntheticTestOptimization(bool visualize, bool showEachStep, int levMarIter
     const MserObject correctObject(objectPose,objectAxes); //ground truth object
 
     //Make slightly wrong initial guess
-    const Point3 initialGuessCenter = objectCenter + Point3(2,2,-2);
+    const Point3 initialGuessCenter = objectCenter + Point3(4,4,-4);
     Rot3 initialGuessOrientation = objectOrientation.Yaw(0.8);
     initialGuessOrientation = initialGuessOrientation.Roll(0.8);
     initialGuessOrientation = initialGuessOrientation.Pitch(-0.8);
-    const Point2 initialGuessAxes(1.7,0.1);
+    const Point2 initialGuessAxes(0.7,7.1);
     const Pose3 initialGuessPose(initialGuessOrientation, initialGuessCenter);
     const MserObject initialGuess(initialGuessPose, initialGuessAxes);
 
@@ -219,9 +219,9 @@ void syntheticTestOptimization(bool visualize, bool showEachStep, int levMarIter
     }
 }
 
-void realWorldTestOptimization(const InputManager& input){
-    std::vector<MserTrack> tracks;// = getMserTracksFromCSV();
-    std::vector<Pose3> allCameraPoses;// = getPosesFromBAL();
+void realWorldTestOptimization(const InputManager& input, bool showEachStep, int levMarIterations){
+    std::vector<MserTrack> tracks;
+    std::vector<Pose3> allCameraPoses;
     input.getMSERMeasurementTracks(tracks);
     input.getVOCameraPoses(allCameraPoses);
     //shows only relevant camera poses; VERY INEFFICIENT!!!
@@ -231,7 +231,7 @@ void realWorldTestOptimization(const InputManager& input){
             relevantCameraPoses.push_back(allCameraPoses[tracks[t].frameNumbers[f]]);
         }
     }
-    std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, allCameraPoses); //use all poses because this function expects to look through everything from getPosesFromBAL()
+    std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, allCameraPoses, showEachStep, levMarIterations); //use all poses because this function expects to look through everything from getPosesFromBAL()
     std::vector<std::pair<Point3,Point3>> rays;
     if (input.showRays()) rays = makeRayTracingPairs(tracks, allCameraPoses);
     //Draw robot axes: causes seg fault for big track datasets because we cross the vertex memory limit.
