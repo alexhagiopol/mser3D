@@ -78,7 +78,6 @@ CameraPoints convertWorldPointsToCameraPoints(const SimpleCamera& camera, const 
     const Point2 projectedMajorAxisTip = camera.project(majorAxisTip, majorDpose, majorDpoint, majorDcal);
     const Point2 projectedMinorAxisTip = camera.project(minorAxisTip, minorDpose, minorDpoint, minorDcal);
     CameraPoints myCameraPoints = CameraPoints(projectedObjectCenter,projectedMajorAxisTip,projectedMinorAxisTip);
-    //gtsam::traits<CameraPoints>::Print(myCameraPoints, "CAMERA POINTS \n");
     boost::function<CameraPoints(const SimpleCamera&, const WorldPoints&)> f = boost::bind(&convertWorldPointsToCameraPoints, _1, _2, boost::none, boost::none);
     if (Dcamera) {
         Eigen::MatrixXd Dpose(6,6);
@@ -126,14 +125,6 @@ MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoint
     Matrix12 thetaDdifference, A1Dmajor, A1Dcenter, A2Dminor, A2Dcenter;
     const Point2 difference = majAxisTip - measurementCenter;
     const Rot2 theta = Rot2::relativeBearing(difference,thetaDdifference);
-    /*
-    Matrix21 rotpointDtheta;
-    Matrix22 rotpointDcenter;
-    Point2 rotatedCenter = theta.rotate(measurementCenter);
-    Point2 unrotatedCenter = theta.unrotate(measurementCenter);
-    rotatedCenter.print("ROTATED CENTER");
-    unrotatedCenter.print("UNROTATED CENTER");
-    */
     Pose2 ellipsePose = Pose2(theta,measurementCenter);
     double A1 = majAxisTip.distance(measurementCenter, A1Dmajor, A1Dcenter);
     double A2 = minAxisTip.distance(measurementCenter, A2Dminor, A2Dcenter);
@@ -163,8 +154,9 @@ MserMeasurement convertCameraPointsToMeasurement(const CameraPoints& cameraPoint
 
         Dpoints_<< msmtctrDpoints, thetaDpoints, axesDpoints;
         *Dpoints << Dpoints_;
-        boost::function<MserMeasurement(const CameraPoints&)> f = boost::bind(&convertCameraPointsToMeasurement, _1, boost::none);
-        assert_equal(numericalDerivative11(f,cameraPoints),Dpoints_,1e-2);
+        /*MOST COMMONLY NEEDED TEST*/
+        //boost::function<MserMeasurement(const CameraPoints&)> f = boost::bind(&convertCameraPointsToMeasurement, _1, boost::none);
+        //assert_equal(numericalDerivative11(f,cameraPoints),Dpoints_,1e-2);
     }
     return measurement;
 }
@@ -222,8 +214,8 @@ std::vector<MserMeasurement> createIdealMeasurements(const std::vector<SimpleCam
 std::vector<MserMeasurement> createNoisyMeasurements(const std::vector<SimpleCamera>& cameras, const MserObject& object){
     std::vector<MserMeasurement> measurements;
     std::default_random_engine generator;
-    std::normal_distribution<double> pixelDistribution(0.0,30); //noisy as hell, 30 pixel stdev
-    std::normal_distribution<double> thetaDistribution(0.0,1.0); //noisy as hell 1 radian stdev
+    std::normal_distribution<double> pixelDistribution(0.0,15); //15 pixel stdev
+    std::normal_distribution<double> thetaDistribution(0.0,0.5); //0.5 radian stdev
 
     for (size_t i = 0; i < cameras.size(); i++){
         MserMeasurement measurement = measurementFunction(cameras[i], object);

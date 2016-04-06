@@ -201,9 +201,14 @@ void syntheticTestOptimization(bool visualize, bool showEachStep, bool noisy, in
         double minorAxisError = abs(correctMinorAxis - retMinorAxis);
         csvData << i << "," << Xerror << "," << Yerror << "," << Zerror << "," << rollError << "," << pitchError << "," << yawError << "," << majorAxisError << "," << minorAxisError << "," << endl;
     }
-
+    csvData.close();
     MserObject finalEstimatedObject = objects[objects.size() - 1]; //last object in list is our best estimate
-
+    cout << "SYNTHETIC TEST RESULTS" << endl;
+    if (noisy){
+        cout << "Using NOISY measurements and " << levMarIterations << " Lev Mar iterations." << endl;
+    } else {
+        cout << "Using IDEAL measurements and " << levMarIterations << " Lev Mar iterations." << endl;
+    }
     if (visualize){
         //add correct object in green for visualization
         objects.push_back(correctObject);
@@ -213,15 +218,9 @@ void syntheticTestOptimization(bool visualize, bool showEachStep, bool noisy, in
         std::vector<std::pair<Point3,Point3>> rays = makeRayTracingPairs(tracks,camPoses);
         drawMserObjects(camPoses,objects,colors,rays);
     }
-    csvData.close();
-
-    if (gtsam::traits<MserObject>::Equals(finalEstimatedObject,correctObject,0.01)){
-        cerr << "TEST: SYNTHETIC TEST PASSED" << endl;
-    } else {
-        cerr << "TEST: SYNTHETIC TEST FAILED" << endl;
-        gtsam::traits<MserObject>::Print(correctObject,"CORRECT OBJECT PARAMETERS \n");
-        gtsam::traits<MserObject>::Print(finalEstimatedObject,"RESULT OBJECT PARAMETERS \n");
-    }
+    gtsam::traits<MserObject>::Print(initialGuess,"INITIAL GUESS OBJECT\n");
+    gtsam::traits<MserObject>::Print(correctObject,"CORRECT OBJECT \n");
+    gtsam::traits<MserObject>::Print(finalEstimatedObject,"RESULT OBJECT \n");
 }
 
 void realWorldTestOptimization(const InputManager& input, bool showEachStep, int levMarIterations){
