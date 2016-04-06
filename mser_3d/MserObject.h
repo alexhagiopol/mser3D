@@ -27,4 +27,4 @@ namespace gtsam { //required to keep GCC from complaining
             return ((o1.first.equals(o2.first, tol)) && (o1.second.equals(o2.second, tol)));
         }
     };
-}//namesoace gtsam
+}//namespace gtsam

@@ -16,53 +16,10 @@
 #include "optimization.h"
 using namespace gtsam;
 using namespace noiseModel;
-Values expressionsOptimizationSynthetic(MserObject& object, MserObject& initialGuess, int iterations){
+
+Values expressionsOptimization(const MserObject& initialGuess, const std::vector<MserMeasurement>& measurements, const std::vector<SimpleCamera>& cameras, int iterations){
     Vector5 measurementSigmasVector;
-    measurementSigmasVector << 4, 4, 0.1, 4, 4;
-    Diagonal::shared_ptr measurementNoise = Diagonal::Sigmas(measurementSigmasVector); // one pixel in every dimension
-
-    //Ground truth object is passed to this function. Create vectors with measurements, cameras, and camera poses.
-    std::vector<SimpleCamera> cameras = alexCreateCameras(20,object.first.translation(),10); //make a bunch of cameras to pass to measurement function
-    std::vector<MserMeasurement> measurements = createIdealMeasurements(cameras, object); //synthetic measurements directly from measurement function
-    std::vector<Pose3> poses;
-    for (size_t i = 0; i < cameras.size(); i++){
-        poses.push_back(cameras[i].pose());
-    }
-
-    // Create a factor graph
-    ExpressionFactorGraph graph;
-
-    for (size_t i = 0; i < poses.size(); ++i) {
-        const SimpleCamera_ camera_(cameras[i]); //expression for the camera created here
-        MserMeasurement measurement = measurements[i];
-        // Below an expression for the prediction of the measurement:
-        MserObject_ object_('o',0);
-        MserMeasurement_ prediction_ = measurementFunctionExpr(camera_,object_);
-        graph.addExpressionFactor(prediction_,measurement,measurementNoise);
-    }
-    // Add prior on object to constrain scale, again with ExpressionFactor[
-    Vector8 guessSigmasVector;
-    guessSigmasVector << 0.1,0.1,0.1,1,1,1,5,5;
-    Diagonal::shared_ptr objectNoise = Diagonal::Sigmas(guessSigmasVector);
-    graph.addExpressionFactor(MserObject_('o', 0), initialGuess, objectNoise); //use initial guess as prior
-
-    // Create perturbed initial
-    Values initial;
-    initial.insert(Symbol('o', 0), initialGuess);
-    //cout << "initial error = " << graph.error(initial) << endl;
-    LevenbergMarquardtParams params = LevenbergMarquardtParams();
-    std::string verbosity = "SUMMARY";
-    params.setVerbosityLM(verbosity);
-    params.setlambdaUpperBound(1e32);
-    params.setMaxIterations(iterations);
-    Values result = LevenbergMarquardtOptimizer(graph, initial).optimize();
-    //cout << "final error = " << graph.error(result) << endl;
-    return result;
-}
-
-Values expressionsOptimizationRealWorld(MserObject& initialGuess, std::vector<MserMeasurement>& measurements, std::vector<SimpleCamera>& cameras, int iterations){
-    Vector5 measurementSigmasVector;
-    measurementSigmasVector << 4, 4, 0.1, 4, 4;
+    measurementSigmasVector << 15,15,0.5,15,15; //4, 4, 0.1, 4, 4;
     Diagonal::shared_ptr measurementNoise = Diagonal::Sigmas(measurementSigmasVector); // one pixel in every dimension
 
     //Ground truth object is passed to this function. Create vectors with measurements, cameras, and camera poses.
@@ -84,9 +41,9 @@ Values expressionsOptimizationRealWorld(MserObject& initialGuess, std::vector<Ms
         MserMeasurement_ prediction_ = measurementFunctionExpr(camera_,object_);
         graph.addExpressionFactor(prediction_,measurement,measurementNoise);
     }
-    // Add prior on object to constrain scale, again with ExpressionFactor[
+    // Add prior on object to constrain scale, again with ExpressionFactor
     Vector8 guessSigmasVector;
-    guessSigmasVector << 0.1,0.1,0.1,1,1,1,5,5;
+    guessSigmasVector << 0.2,0.2,0.2,2,2,2,10,10; //0.1,0.1,0.1,1,1,1,5,5;
     Diagonal::shared_ptr objectNoise = Diagonal::Sigmas(guessSigmasVector);
     graph.addExpressionFactor(MserObject_('o', 0), initialGuess, objectNoise); //use initial guess as prior
 
@@ -95,7 +52,7 @@ Values expressionsOptimizationRealWorld(MserObject& initialGuess, std::vector<Ms
     initial.insert(Symbol('o', 0), initialGuess);
     //cout << "initial error = " << graph.error(initial) << endl;
     LevenbergMarquardtParams params = LevenbergMarquardtParams();
-    std::string verbosity = "SUMMARY";
+    std::string verbosity = "SILENT";
     params.setVerbosityLM(verbosity);
     params.setlambdaUpperBound(1e32);
     params.setMaxIterations(iterations);
@@ -105,10 +62,28 @@ Values expressionsOptimizationRealWorld(MserObject& initialGuess, std::vector<Ms
     return result;
 }
 
-std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(std::vector<MserTrack>& tracks, std::vector<Pose3>& VOposes){
+//Helper function ofr showing measurement stats
+float standardDeviation(std::vector<float> data)
+{
+    int n = data.size();
+    float mean=0.0, sum_deviation=0.0;
+    int i;
+    for(i=0; i<n;++i)
+    {
+        mean+=data[i];
+    }
+    mean=mean/n;
+    for(i=0; i<n;++i)
+        sum_deviation+=(data[i]-mean)*(data[i]-mean);
+    return sqrt(sum_deviation/n);
+}
+
+std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(const std::vector<MserTrack>& tracks, const std::vector<Pose3>& VOposes, bool showEachStep, int levMarIterations){
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
     Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
+    float sumMeasurements; //use for measurement stats
+    std::vector<float> measurementsSizes; //use for measurement stats
     for (int t = 0; t < tracks.size(); t++){
         std::vector<MserMeasurement> measurements = tracks[t].measurements;
         std::cerr << "OPTIMIZER: Track #" << t << " has " << measurements.size() << " measurements." << std::endl;
@@ -116,13 +91,14 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
         std::vector<Point2> centroidMeasurements;
         std::vector<Point2> majorAxisMeasurements;
         std::vector<Point2> minorAxisMeasurements;
+        sumMeasurements += measurements.size();
+        measurementsSizes.push_back(measurements.size());
         for (int m = 0; m < measurements.size(); m++){
             MserMeasurement measurement = tracks[t].measurements[m];
             //make cameras with poses from Jing's Visual Odometry
             Pose3 pose = VOposes[tracks[t].frameNumbers[m]];
             SimpleCamera camera(pose,*K);
             cameras.push_back(camera);
-
             //extract contents of measurement
             double theta = measurement.first.theta();
             double majAxis  = measurement.second.x();
@@ -165,15 +141,36 @@ std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMser
         Point2 initialGuessAxes = Point2(majAxisLengthEstimate,minAxisLengthEstimate);
         //initialGuessAxes.print("AXES LENGTH GUESS");
         MserObject initialGuess(initialGuessPose, initialGuessAxes);
-        Values result = expressionsOptimizationRealWorld(initialGuess, measurements, cameras, 30);
+
+        if (showEachStep) {
+            for (int i = 0; i < levMarIterations; i++) {
+                Values result = expressionsOptimization(initialGuess, measurements, cameras, i);
+                MserObject returnedObject = result.at<MserObject>(Symbol('o', 0));
+                objects.push_back(returnedObject);
+                /*
+                Vector3 trackColor = Vector3(tracks[t].colorR-i*(tracks[t].colorR / levMarIterations),
+                                              tracks[t].colorG-i*(tracks[t].colorG / levMarIterations),
+                                              tracks[t].colorB-i*(tracks[t].colorB / levMarIterations));
+                */
+                Vector3 trackColor = Vector3(255-i*(255 / levMarIterations),
+                                             255-i*(255 / levMarIterations),
+                                             255-i*(255 / levMarIterations));
+
+                colors.push_back(trackColor);
+            }
+        }
+        Values result = expressionsOptimization(initialGuess, measurements, cameras, levMarIterations);
         MserObject returnedObject = result.at<MserObject>(Symbol('o',0));
         objects.push_back(returnedObject);
-        //gtsam::traits<MserObject>::Print(returnedObject);
-        //gtsam::Vector3 trackColor(tracks[t].colorR,tracks[t].colorG,tracks[t].colorB);
         gtsam::Vector3 trackColor(tracks[t].colorR,tracks[t].colorG,tracks[t].colorB);
         colors.push_back(trackColor);
+
+
+        //colors.push_back(trackColor*2);
         cerr << "OPTIMIZER: Finished optimizing track #" << t << " of " << tracks.size() - 1 << endl;
     }
     std::pair<std::vector<MserObject>,std::vector<Vector3>> pair(objects,colors);
+    cerr << "OPTIMIZER: Average # of measurements / track = " << sumMeasurements / tracks.size() << endl;
+    cerr << "OPTIMIZER: STDEV of # of measurements / track = " << standardDeviation(measurementsSizes) << endl;
     return pair;
 }

@@ -3,7 +3,12 @@
 #File paths
 VideoPath: "/home/alex/mser/datasets/through_the_cracks_jing.mov" #input video
 BALPath: "/home/alex/mser/datasets/fpv_bal_280_nf2.txt" #BAL file with visual odometry results
-CSVPath: "/home/alex/mser/datasets/firstManualMeasurementGroup.csv" #CSV file with MSER track results
+#CSVPath: "/home/alex/mser/datasets/firstManualMeasurementGroup.csv" #CSV file with MSER track results
+#CSVPath: "/home/alex/mser/datasets/bothManualMeasurementGroups.csv" #CSV file with MSER track results
+CSVPath: "/home/alex/mser/datasets/mserMeasurements.csv" #CSV file with MSER track results
+#CSVPath: "/home/alex/mser/datasets/track9.csv" #CSV file with MSER track results
+#CSVPath: "/home/alex/mser/datasets/first29Tracks.csv" #CSV file with MSER track results
+#CSVPath: "/home/alex/mser/datasets/first14Tracks.csv" #CSV file with MSER track results
 
 #Camera parameters. Assuming 720p GoPro
 Camera.fx: 857.483

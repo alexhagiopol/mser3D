@@ -12,9 +12,7 @@ disp('Starting Video Import');
 readerobj = VideoReader('../datasets/through_the_cracks_jing.mov', 'tag', 'myreader1');
 vidFrames = read(readerobj);
 N = get(readerobj, 'NumberOfFrames');
-disp('Video Import Finished');
-
- 
+disp('Video Import Finished'); 
 
 %% Set tuning constants 
 %VL Feat tuning constants
@@ -28,7 +26,7 @@ manualMatching = true;
 visualization = false;
 resize = false; %reduce image to speed up computation
 threshold = -1; %-1 %Score threshold needed for two regions to be considered to come from the same object. A higher score indicates higher similarity.
-measurementsOutputFileName = '/home/alex/mser/mser_2d/tempManualMserMeasurements.csv';
+measurementsOutputFileName = '/home/alex/mser/datatsets/tempManualMserMeasurements.csv';
 videoOutputFileName = 'Alex_Tracking_Movie';
 
 %% Set up video output
