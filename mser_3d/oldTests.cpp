@@ -78,7 +78,7 @@ void testPrintSuperimposedMeasurementImages(const InputManager& input){
     }
 }
 
-void syntheticTestOptimization(bool visualize, bool showEachStep, int levMarIterations){
+void syntheticTestOptimization(bool visualize, bool showEachStep, bool noisy, int levMarIterations){
     //Make correct object
     const Point3 objectCenter(12,12,12);
     const Rot3 objectOrientation(1,0,0,
@@ -117,8 +117,13 @@ void syntheticTestOptimization(bool visualize, bool showEachStep, int levMarIter
         theta += maxTheta/numCams;
     }
 
-    //Create ideal measurements taken by cameras of correct object
-    std::vector<MserMeasurement> measurements = createIdealMeasurements(cameras,correctObject);
+    //Create noisy or ideal measurements taken by cameras of correct object
+    std::vector<MserMeasurement> measurements;
+    if (noisy) {
+        measurements = createNoisyMeasurements(cameras,correctObject);
+    } else {
+        measurements = createIdealMeasurements(cameras,correctObject);
+    }
 
     //Create a single MserTrack for all of the measurements
     std::vector<MserTrack> tracks;

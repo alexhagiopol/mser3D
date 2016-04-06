@@ -221,9 +221,18 @@ std::vector<MserMeasurement> createIdealMeasurements(const std::vector<SimpleCam
 
 std::vector<MserMeasurement> createNoisyMeasurements(const std::vector<SimpleCamera>& cameras, const MserObject& object){
     std::vector<MserMeasurement> measurements;
+    std::default_random_engine generator;
+    std::normal_distribution<double> pixelDistribution(0.0,30); //noisy as hell, 30 pixel stdev
+    std::normal_distribution<double> thetaDistribution(0.0,1.0); //noisy as hell 1 radian stdev
+
     for (size_t i = 0; i < cameras.size(); i++){
         MserMeasurement measurement = measurementFunction(cameras[i], object);
-        measurements.push_back(measurement);
+        Pose2 idealPose2 = measurement.first;
+        Point2 idealPoint2 = measurement.second;
+        Pose2 noisyPose2 = Pose2(idealPose2.x() + pixelDistribution(generator), idealPose2.y() + pixelDistribution(generator), idealPose2.theta() + thetaDistribution(generator));
+        Point2 noisyPoint2 = Point2(idealPoint2.x() + pixelDistribution(generator), idealPoint2.y() + pixelDistribution(generator));
+        MserMeasurement noisyMeasurement = MserMeasurement(noisyPose2,noisyPoint2);
+        measurements.push_back(noisyMeasurement);
     }
     return measurements;
 }

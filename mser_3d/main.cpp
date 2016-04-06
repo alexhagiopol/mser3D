@@ -5,8 +5,7 @@ int main(int argc, char ** argv) {
     assert(argc == 2);
     std::string settingsFileLocation = argv[1];
     InputManager myInput(settingsFileLocation);
-    //testMeasurementFunction();
-    syntheticTestOptimization(true,false,20);
-    //realWorldTestOptimization(myInput);
+    syntheticTestOptimization(true,true,false,30);
+    //realWorldTestOptimization(myInput, false, 30);
     return 0;
 }
