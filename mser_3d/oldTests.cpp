@@ -55,7 +55,7 @@ void testPrintSuperimposedMeasurementImages(const InputManager& input){
             cv::Point minAxisTip = cv::Point(center.x + minAxisLength*cos(theta + M_PI/2), center.y + minAxisLength*sin(theta + M_PI/2));
             /* double majX = ctrX + majAxis*cos(theta);
             double majY = ctrY + majAxis*sin(theta); */
-            cv::Scalar color = cv::Scalar(tracks[t].colorB,tracks[t].colorG,tracks[t].colorR);
+            cv::Scalar color = cv::Scalar(0,0,255);//cv::Scalar(tracks[t].colorB,tracks[t].colorG,tracks[t].colorR);
             int thickness = 5;
             int startAngle = 0;
             int endAngle = 360;//draw entire ellipse

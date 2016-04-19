@@ -44,6 +44,8 @@ InputManager::InputManager(std::string settingsPath) {
           videoPath_ = (std::string) settings["VideoPath"];
           BALPath_ = (std::string) settings["BALPath"];
           CSVPath_ = (std::string) settings["CSVPath"];
+          VertexShaderPath_ = (std::string) settings["VertexShaderPath"];
+          FragmentShaderPath_ = (std::string) settings["FragmentShaderPath"];
           cameraFx_ = settings["Camera.fx"];
           cameraFy_ = settings["Camera.fy"];
           cameraS_ = settings["Camera.fy"];
@@ -51,6 +53,9 @@ InputManager::InputManager(std::string settingsPath) {
           cameraCy_ = settings["Camera.cy"];
           MSERMeasurementTracks_ = getMserTracksFromCSV(CSVPath_);
           VOCameraPoses_ = getPosesFromBAL(BALPath_);
+          minDiversity_ = settings["MinDiversity"];
+          minArea_ = settings["MinArea"];
+          maxArea_ = settings["MaxArea"];
           std::cerr << "INPUT MANAGER: Reading " << CSVPath_ << std::endl;
           std::cerr << "INPUT MANAGER: Found " << MSERMeasurementTracks_.size() << " MSER tracks." << std::endl;
           std::cerr << "INPUT MANAGER: Reading " << BALPath_ << std::endl;
