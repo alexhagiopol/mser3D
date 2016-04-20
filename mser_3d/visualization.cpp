@@ -28,7 +28,7 @@ std::vector<std::pair<Point3,Point3>> makeRayTracingPairs(std::vector<MserTrack>
     return rayTracingPairs;
 }
 
-int drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vector<MserObject>& inputObjects, const std::vector<Vector3>& inputColors, const std::vector<std::pair<Point3,Point3>>& rays){
+int drawMserObjects(const InputManager& input, const std::vector<Pose3>& inputCameraPoses, const std::vector<MserObject>& inputObjects, const std::vector<Vector3>& inputColors, const std::vector<std::pair<Point3,Point3>>& rays){
     //make local copies to modify
     std::vector<MserObject> objects = inputObjects;
     std::vector<Vector3> colors = inputColors;
@@ -88,8 +88,8 @@ int drawMserObjects(const std::vector<Pose3>& inputCameraPoses, const std::vecto
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
-    GLuint programID = LoadShaders("../../TransformVertexShader.vertexshader",
-                                   "../../ColorFragmentShader.fragmentshader"); // Create and compile our GLSL program from the shaders
+    GLuint programID = LoadShaders(input.VertexShaderPath().c_str(),
+                                   input.FragmentShaderPath().c_str()); // Create and compile our GLSL program from the shaders
     GLuint MatrixID = glGetUniformLocation(programID, "MVP"); // Get a handle for our "MVP" uniform
     glm::mat4 Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f,
                                             100.0f); // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units

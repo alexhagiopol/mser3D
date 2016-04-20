@@ -1,6 +1,8 @@
-//
-// Created by alex on 2/16/16.
-//
+/*
+ Created by alex on 2/16/16.
+ This class reads all forms of raw data (.mp4, CSV, BAL, etc) and converts them to algorithm inputs such as MSER measurements, camera poses,
+
+*/
 #pragma once
 #include "MserMeasurement.h"
 #include "MserObject.h"
@@ -20,17 +22,19 @@ std::istream& operator >> (std::istream& ins, data_t& data);
 class InputManager {
 public:
     InputManager(std::string settingsPath);
-    bool successfulInput() { return successfulInput_;}
-    std::string videoPath(){ return videoPath_;}
-    std::string BALPath() { return BALPath_;}
-    std::string CSVPath() { return CSVPath_;}
-    std::string VertexShaderPath() {return VertexShaderPath_;}
-    std::string FragmentShaderPath() {return FragmentShaderPath_;}
+    bool successfulInput() const { return successfulInput_;}
+    std::string videoPath() const { return videoPath_;}
+    std::string BALPath() const { return BALPath_;}
+    std::string CSVPath() const { return CSVPath_;}
+    std::string VertexShaderPath() const {return VertexShaderPath_;}
+    std::string FragmentShaderPath() const {return FragmentShaderPath_;}
+
     double cameraFx() const { return cameraFx_;}
     double cameraFy() const { return cameraFy_;}
     double cameraS() const { return cameraS_;}
     double cameraCx() const { return cameraCx_;}
     double cameraCy() const { return cameraCy_;}
+
     double minDiversity() const { return minDiversity_;}
     double minArea() const { return minArea_;}
     double maxArea() const { return maxArea_;}

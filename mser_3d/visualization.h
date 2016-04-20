@@ -2,6 +2,7 @@
 // Created by alex on 10/11/15.
 //
 #pragma once
+#include "InputManager.h"
 #include "MserMeasurement.h"
 #include "MserObject.h"
 #include "MserTrack.h"
@@ -31,6 +32,6 @@ using namespace gtsam;
 
 std::vector<std::pair<Point3,Point3>> makeRayTracingPairs(std::vector<gtsam::MserTrack>& tracks, std::vector<Pose3>& VOposes);
 
-int drawMserObjects(const std::vector<Pose3>& cameraPoses, const std::vector<MserObject>& objects, const std::vector<Vector3>& colors = std::vector<Vector3>(), const std::vector<std::pair<Point3,Point3>>& rays = std::vector<std::pair<Point3,Point3>>());
+int drawMserObjects(const InputManager& input, const std::vector<Pose3>& cameraPoses, const std::vector<MserObject>& objects, const std::vector<Vector3>& colors = std::vector<Vector3>(), const std::vector<std::pair<Point3,Point3>>& rays = std::vector<std::pair<Point3,Point3>>());
 
 void addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(const std::vector<Pose3>& cameraPoses, std::vector<MserObject>& objects, std::vector<Vector3>& colors);

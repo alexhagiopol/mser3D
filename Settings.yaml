@@ -12,7 +12,6 @@ FragmentShaderPath: "/home/alex/mser/mser_3d/ColorFragmentShader.fragmentshader"
 #CSVPath: "/home/alex/mser/datasets/first29Tracks.csv" #CSV file with MSER track results
 #CSVPath: "/home/alex/mser/datasets/first14Tracks.csv" #CSV file with MSER track results
 
-
 #Camera parameters. Assuming 720p GoPro
 Camera.fx: 857.483
 Camera.fy: 876.718

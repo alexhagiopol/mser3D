@@ -78,7 +78,7 @@ void testPrintSuperimposedMeasurementImages(const InputManager& input){
     }
 }
 
-void syntheticTestOptimization(bool visualize, bool showEachStep, bool noisy, int levMarIterations){
+void syntheticTestOptimization(const InputManager& input, bool visualize, bool showEachStep, bool noisy, int levMarIterations){
     //Make correct object
     const Point3 objectCenter(12,12,12);
     const Rot3 objectOrientation(1,0,0,
@@ -101,7 +101,7 @@ void syntheticTestOptimization(bool visualize, bool showEachStep, bool noisy, in
     const MserObject initialGuess(initialGuessPose, initialGuessAxes);
 
     //Create cameras looking directly at correct object
-    Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
+    Cal3_S2::shared_ptr K(new Cal3_S2(input.cameraFx(), input.cameraFy(), input.cameraS(), input.cameraCx(), input.cameraCy()));
     std::vector<SimpleCamera> cameras;
     std::vector<Pose3> camPoses;
     double maxTheta = M_PI/2;
@@ -216,7 +216,7 @@ void syntheticTestOptimization(bool visualize, bool showEachStep, bool noisy, in
 
         //Visualization
         std::vector<std::pair<Point3,Point3>> rays = makeRayTracingPairs(tracks,camPoses);
-        drawMserObjects(camPoses,objects,colors,rays);
+        drawMserObjects(input,camPoses,objects,colors,rays);
     }
     gtsam::traits<MserObject>::Print(initialGuess,"INITIAL GUESS OBJECT\n");
     gtsam::traits<MserObject>::Print(correctObject,"CORRECT OBJECT \n");
@@ -244,5 +244,5 @@ void realWorldTestOptimization(const InputManager& input, bool showEachStep, int
     cerr << "TEST 3D: # of objects " << pair.first.size() << endl;
     cerr << "TEST 3D: # of colors " << pair.second.size() << endl;
     cerr << "TEST 3D: # of rays " << rays.size() << endl;
-    drawMserObjects(relevantCameraPoses, pair.first, pair.second, rays); //only display relevant poses
+    drawMserObjects(input, relevantCameraPoses, pair.first, pair.second, rays); //only display relevant poses
 }
