@@ -235,6 +235,7 @@ void realWorldTestOptimization(const InputManager& input, bool showEachStep, int
             relevantCameraPoses.push_back(allCameraPoses[tracks[t].frameNumbers[f]]);
         }
     }
+    //TODO: change inferObjectsFromRealMserMeasurements to accept cameras instead of camera poses. Use camera paramters from InputManager class.
     std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, allCameraPoses, showEachStep, levMarIterations); //use all poses because this function expects to look through everything from getPosesFromBAL()
     std::vector<std::pair<Point3,Point3>> rays;
     if (input.showRays()) rays = makeRayTracingPairs(tracks, allCameraPoses);
