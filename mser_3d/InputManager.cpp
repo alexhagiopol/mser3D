@@ -51,27 +51,34 @@ InputManager::InputManager(std::string settingsPath) {
           cameraS_ = settings["Camera.fy"];
           cameraCx_ = settings["Camera.cx"];
           cameraCy_ = settings["Camera.cy"];
-          MSERMeasurementTracks_ = getMserTracksFromCSV(CSVPath_);
-          VOCameraPoses_ = getPosesFromBAL(BALPath_);
           minDiversity_ = settings["MinDiversity"];
           minArea_ = settings["MinArea"];
           maxArea_ = settings["MaxArea"];
-          std::cerr << "INPUT MANAGER: Reading " << CSVPath_ << std::endl;
-          std::cerr << "INPUT MANAGER: Found " << MSERMeasurementTracks_.size() << " MSER tracks." << std::endl;
-          std::cerr << "INPUT MANAGER: Reading " << BALPath_ << std::endl;
-          std::cerr << "INPUT MANAGER: Found " << VOCameraPoses_.size() << " VO poses." << std::endl;
           int intShowRays = settings["Vis.ShowRays"];
           showRays_ = (bool) intShowRays;
           successfulInput_ = true;
+          getMSERMeasurementTracks();
+          getVOCameraPoses();
      }
 }
 
-std::vector<MserTrack> InputManager::getMserTracksFromCSV(std::string csvFile){
-     std::ifstream infile(csvFile);
+void InputManager::getVOCameraPoses(){
+     std::cerr << "INPUT MANAGER: Reading " << BALPath_ << std::endl;
+     SfM_data mydata;
+     readBAL(BALPath_, mydata);
+     BOOST_FOREACH(const SfM_Camera& camera, mydata.cameras){
+                         const Pose3 pose = camera.pose();
+                         VOCameraPoses_.push_back(pose);
+                    }
+     std::cerr << "INPUT MANAGER: Found " << VOCameraPoses_.size() << " VO poses." << std::endl;
+}
+
+void InputManager::getMSERMeasurementTracks(){
+     std::cerr << "INPUT MANAGER: Reading " << CSVPath_ << std::endl;
+     std::ifstream infile(CSVPath_);
      data_t data;
      infile >> data;
      infile.close();
-     std::vector<MserTrack> tracks;
      for (int r = 1; r < data.size(); r++){ //start at row 1 because row 0 does not contain data
           MserTrack track;
           int numMSERS = data[r][1];
@@ -95,19 +102,10 @@ std::vector<MserTrack> InputManager::getMserTracksFromCSV(std::string csvFile){
                track.colorG = G;
                track.colorB = B;
           }
-          tracks.push_back(track);
+          MSERMeasurementTracks_.push_back(track);
      }
-     return tracks;
+     std::cerr << "INPUT MANAGER: Found " << MSERMeasurementTracks_.size() << " MSER tracks." << std::endl;
 }
 
-std::vector<Pose3> InputManager::getPosesFromBAL(std::string balFile){
-     SfM_data mydata;
-     readBAL(balFile, mydata);
-     std::vector<Pose3> poses;
-     BOOST_FOREACH(const SfM_Camera& camera, mydata.cameras){
-          const Pose3 pose = camera.pose();
-          poses.push_back(pose);
-     }
-     return poses;
-}
+
 

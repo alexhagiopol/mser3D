@@ -38,9 +38,10 @@ public:
     double minDiversity() const { return minDiversity_;}
     double minArea() const { return minArea_;}
     double maxArea() const { return maxArea_;}
-    bool showRays() const {return showRays_;}
-    void getMSERMeasurementTracks(std::vector<gtsam::MserTrack>& tracks) const {tracks = MSERMeasurementTracks_;}
-    void getVOCameraPoses(std::vector<gtsam::Pose3>& poses) const {poses = VOCameraPoses_;}
+    bool showRays() const { return showRays_;}
+    //Use these functions to get tracks and poses
+    void MSERTracks(std::vector<gtsam::MserTrack>& tracks) const {tracks = MSERMeasurementTracks_;}
+    void VOCameraPoses(std::vector<gtsam::Pose3>& poses) const {poses = VOCameraPoses_;}
 private:
     bool successfulInput_;
     //File paths
@@ -64,7 +65,7 @@ private:
     //Data structures for MSER tracks and camera poses
     std::vector<gtsam::MserTrack> MSERMeasurementTracks_;
     std::vector<gtsam::Pose3> VOCameraPoses_;
-    //Functions for getting tracks and poses
-    std::vector<gtsam::MserTrack> getMserTracksFromCSV(std::string csvFile);
-    std::vector<gtsam::Pose3> getPosesFromBAL(std::string balFile);
+    //Functions for getting tracks and poses from raw files. Used internally.
+    void getMSERMeasurementTracks();
+    void getVOCameraPoses();
 };
