@@ -5,7 +5,9 @@
 #include "InputManager.h"
 #include <opencv2/core/core.hpp> //need for reading YAML files
 #include <gtsam/slam/dataset.h>
+#include <opencv2/highgui/highgui.hpp>
 #include "boost/optional.hpp"
+#include <sys/stat.h> //need for mkdir
 
 using namespace gtsam;
 
@@ -33,19 +35,21 @@ std::istream& operator >> (std::istream& ins, data_t& data){
      return ins;
 }
 
-InputManager::InputManager(std::string settingsPath) {
-     cv::FileStorage settings(settingsPath.c_str(), cv::FileStorage::READ);
+void InputManager::processSettingsFile(const std::string& settingsPath){
+     SettingsPath_ = settingsPath;
+     cv::FileStorage settings(SettingsPath_.c_str(), cv::FileStorage::READ);
      if (!settings.isOpened()){
-          std::cerr << std::endl << "INPUT MANAGER: Wrong path to settings! Was given " << settingsPath << std::endl;
+          std::cerr << std::endl << "INPUT MANAGER: Wrong path to settings! Was given " << SettingsPath_ << std::endl;
           std::cerr << "INPUT MANAGER: Fix settings file location and re-execute!" << std::endl;
           successfulInput_ = false;
      } else {
-          std::cerr << "INPUT MANAGER: Reading settings from " << settingsPath << std::endl;
-          videoPath_ = (std::string) settings["VideoPath"];
+          std::cerr << "INPUT MANAGER: Reading settings from " << SettingsPath_ << std::endl;
+          VideoPath_ = (std::string) settings["VideoPath"];
           BALPath_ = (std::string) settings["BALPath"];
           CSVPath_ = (std::string) settings["CSVPath"];
           VertexShaderPath_ = (std::string) settings["VertexShaderPath"];
           FragmentShaderPath_ = (std::string) settings["FragmentShaderPath"];
+          ImagePath_ = (std::string) settings["ImagePath"];
           cameraFx_ = settings["Camera.fx"];
           cameraFy_ = settings["Camera.fy"];
           cameraS_ = settings["Camera.fy"];
@@ -105,6 +109,36 @@ void InputManager::getMSERMeasurementTracks(){
           MSERMeasurementTracks_.push_back(track);
      }
      std::cerr << "INPUT MANAGER: Found " << MSERMeasurementTracks_.size() << " MSER tracks." << std::endl;
+}
+
+void InputManager::observeMSERs() {
+     //Extract video frames and store in memory
+     cv::VideoCapture capture(VideoPath_);
+     std::vector<cv::Mat> allVideoFrames;
+     int f = 0;
+     if (!capture.isOpened()) {
+          cerr << "The video file could not be opened successfully!!!" << endl;
+     } else {
+          bool readSuccess = true;
+          while (readSuccess == true) {
+               cv::Mat videoFrame;
+               readSuccess = capture.read(videoFrame);
+               if (f > 13) { //remove first 14 frames because Matlab and OpenCV don't open the same video in the same way :(
+                    allVideoFrames.push_back(videoFrame);
+               }
+               f++;
+          }
+     }
+     capture.release();
+     int imgDirectorySuccess = mkdir(ImagePath_.c_str(), 0777);
+     for (int f = 0; f < allVideoFrames.size(); f++){
+          char imgFileName[200];
+          cv::Mat videoFrame = allVideoFrames[f];
+          strcpy(imgFileName,ImagePath_.c_str());
+          strcat(imgFileName,"Frame%04i.bmp");
+          sprintf(imgFileName, imgFileName,f);
+          cv::imwrite(imgFileName, videoFrame);
+     }
 }
 
 

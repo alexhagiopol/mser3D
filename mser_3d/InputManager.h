@@ -20,36 +20,16 @@ std::istream& operator >> (std::istream& ins, record_t& record);
 std::istream& operator >> (std::istream& ins, data_t& data);
 
 class InputManager {
-public:
-    InputManager(std::string settingsPath);
-    bool successfulInput() const { return successfulInput_;}
-    std::string videoPath() const { return videoPath_;}
-    std::string BALPath() const { return BALPath_;}
-    std::string CSVPath() const { return CSVPath_;}
-    std::string VertexShaderPath() const {return VertexShaderPath_;}
-    std::string FragmentShaderPath() const {return FragmentShaderPath_;}
-
-    double cameraFx() const { return cameraFx_;}
-    double cameraFy() const { return cameraFy_;}
-    double cameraS() const { return cameraS_;}
-    double cameraCx() const { return cameraCx_;}
-    double cameraCy() const { return cameraCy_;}
-
-    double minDiversity() const { return minDiversity_;}
-    double minArea() const { return minArea_;}
-    double maxArea() const { return maxArea_;}
-    bool showRays() const { return showRays_;}
-    //Use these functions to get tracks and poses
-    void MSERTracks(std::vector<gtsam::MserTrack>& tracks) const {tracks = MSERMeasurementTracks_;}
-    void VOCameraPoses(std::vector<gtsam::Pose3>& poses) const {poses = VOCameraPoses_;}
 private:
     bool successfulInput_;
     //File paths
-    std::string videoPath_;
+    std::string VideoPath_;
     std::string BALPath_;
     std::string CSVPath_;
     std::string VertexShaderPath_;
     std::string FragmentShaderPath_;
+    std::string ImagePath_;
+    std::string SettingsPath_;
     //Camera parameters
     double cameraFx_;
     double cameraFy_;
@@ -68,4 +48,30 @@ private:
     //Functions for getting tracks and poses from raw files. Used internally.
     void getMSERMeasurementTracks();
     void getVOCameraPoses();
+public:
+    InputManager(){}
+    void processSettingsFile(const std::string& settingsPath);
+    bool successfulInput() const { return successfulInput_;}
+    std::string settingsPath() const { return SettingsPath_; }
+    std::string videoPath() const { return VideoPath_;}
+    std::string BALPath() const { return BALPath_;}
+    std::string CSVPath() const { return CSVPath_;}
+    std::string VertexShaderPath() const {return VertexShaderPath_;}
+    std::string FragmentShaderPath() const {return FragmentShaderPath_;}
+
+    double cameraFx() const { return cameraFx_;}
+    double cameraFy() const { return cameraFy_;}
+    double cameraS() const { return cameraS_;}
+    double cameraCx() const { return cameraCx_;}
+    double cameraCy() const { return cameraCy_;}
+
+    double minDiversity() const { return minDiversity_;}
+    double minArea() const { return minArea_;}
+    double maxArea() const { return maxArea_;}
+    bool showRays() const { return showRays_;}
+    //Use these functions to get tracks and poses
+    void MSERTracks(std::vector<gtsam::MserTrack>& tracks) const {tracks = MSERMeasurementTracks_;}
+    void VOCameraPoses(std::vector<gtsam::Pose3>& poses) const {poses = VOCameraPoses_;}
+    //Converts video into a series of images stored on disk.
+    void observeMSERs();
 };

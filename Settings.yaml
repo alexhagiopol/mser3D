@@ -25,4 +25,5 @@ MinArea: 0.005
 MaxArea: 0.03
 
 #Visualization settings:
-Vis.ShowRays: 1 #Show lines from camera through measurement centroid (USES A LOT OF VRAM)
+Vis.ShowRays: 1 #(BOOLEAN) Show lines from camera through measurement centroid (USES A LOT OF VRAM)
+ImagePath: "/home/alex/mser/datasets/RenderedImages/"

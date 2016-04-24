@@ -146,7 +146,7 @@ else()
 			WorldPoints.h
 			CameraPoints.h
 			InputManager.cpp
-			InputManager.h)
+			InputManager.h Tracker.cpp Tracker.h Frame.cpp Frame.h MserMeasurementColor.cpp MserMeasurementColor.h)
 
 	target_link_libraries(mser_3d
 			${ALL_LIBS}
