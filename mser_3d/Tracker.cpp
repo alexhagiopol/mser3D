@@ -11,10 +11,17 @@
 #include "opencv2/imgproc/imgproc.hpp"
 
 using namespace gtsam;
-void Tracker::observeMSERs() {
+
+Tracker::Tracker(InputManager& input){
+    input_ = input;
+    readImages();
+    observeMSERs();
+}
+
+void Tracker::readImages() {
     //Extract video frames and store in memory
     cv::VideoCapture capture(input_.videoPath());
-    std::vector<cv::Mat> allVideoFrames;
+    //std::vector<cv::Mat> allVideoFrames;
     int f = 0;
     if (!capture.isOpened()) {
         cerr << "The video file could not be opened successfully!!!" << endl;
@@ -23,16 +30,19 @@ void Tracker::observeMSERs() {
         while (readSuccess == true) {
             cv::Mat videoFrame;
             readSuccess = capture.read(videoFrame);
-            if (f > 13) { //remove first 14 frames because Matlab and OpenCV don't open the same video in the same way :(
-                allVideoFrames.push_back(videoFrame);
+            if (f >
+                13) { //remove first 14 frames because Matlab and OpenCV don't open the same video in the same way :(
+                images_.push_back(videoFrame);
             }
             f++;
         }
     }
     capture.release();
+}
 
+void Tracker::observeMSERs() {
     //Observe MSERs and place results into Frame data structure.
-    for (int f = 0; f < allVideoFrames.size(); f++) {
+    for (int f = 0; f < images_.size(); f++) {
         cv::MSER mser(input_.delta(),
                       input_.minArea(),
                       input_.maxArea(),
@@ -43,7 +53,7 @@ void Tracker::observeMSERs() {
                       input_.minMargin(),
                       input_.edgeBlurSize()); //initialize MSER
         vector<vector<cv::Point>> regions; //data structure to store pixels for each region
-        cv::Mat image = allVideoFrames[f]; //grab image
+        cv::Mat image = images_[f]; //grab image
         cv::Mat gray;
         cv::cvtColor(image, gray, CV_BGR2GRAY ); //convert to gray
         const cv::Mat mask;
@@ -62,15 +72,19 @@ void Tracker::observeMSERs() {
         }
         //Frame frame = Frame(f,);
     }
+}
 
-    //Save resulting images to disk
+void Tracker::writeImages() const{
+    //Save tracker images to disk
     int imgDirectorySuccess = mkdir(input_.imagePath().c_str(), 0777);
-    for (int f = 0; f < allVideoFrames.size(); f++){
+    for (int f = 0; f < images_.size(); f++){
         char imgFileName[200];
-        cv::Mat videoFrame = allVideoFrames[f];
+        cv::Mat videoFrame = images_[f];
         strcpy(imgFileName,input_.imagePath().c_str());
         strcat(imgFileName,"Frame%04i.bmp");
         sprintf(imgFileName, imgFileName,f);
         cv::imwrite(imgFileName, videoFrame);
     }
 }
+
+
