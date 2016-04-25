@@ -7,7 +7,7 @@
 #include <gtsam/slam/dataset.h>
 #include <opencv2/highgui/highgui.hpp>
 #include "boost/optional.hpp"
-#include <sys/stat.h> //need for mkdir
+
 
 using namespace gtsam;
 
@@ -120,39 +120,6 @@ void InputManager::getMSERMeasurementTracks(){
           MSERMeasurementTracks_.push_back(track);
      }
      std::cerr << "INPUT MANAGER: Found " << MSERMeasurementTracks_.size() << " MSER tracks." << std::endl;
-}
-
-void InputManager::observeMSERs() {
-     //Extract video frames and store in memory
-     cv::VideoCapture capture(VideoPath_);
-     std::vector<cv::Mat> allVideoFrames;
-     int f = 0;
-     if (!capture.isOpened()) {
-          cerr << "The video file could not be opened successfully!!!" << endl;
-     } else {
-          bool readSuccess = true;
-          while (readSuccess == true) {
-               cv::Mat videoFrame;
-               readSuccess = capture.read(videoFrame);
-               if (f > 13) { //remove first 14 frames because Matlab and OpenCV don't open the same video in the same way :(
-                    allVideoFrames.push_back(videoFrame);
-               }
-               f++;
-          }
-     }
-
-
-
-     capture.release();
-     int imgDirectorySuccess = mkdir(ImagePath_.c_str(), 0777);
-     for (int f = 0; f < allVideoFrames.size(); f++){
-          char imgFileName[200];
-          cv::Mat videoFrame = allVideoFrames[f];
-          strcpy(imgFileName,ImagePath_.c_str());
-          strcat(imgFileName,"Frame%04i.bmp");
-          sprintf(imgFileName, imgFileName,f);
-          cv::imwrite(imgFileName, videoFrame);
-     }
 }
 
 

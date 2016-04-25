@@ -61,6 +61,7 @@ public:
     bool successfulInput() const { return successfulInput_;}
     std::string settingsPath() const { return SettingsPath_; }
     std::string videoPath() const { return VideoPath_;}
+    std::string imagePath() const { return ImagePath_;}
     std::string BALPath() const { return BALPath_;}
     std::string CSVPath() const { return CSVPath_;}
     std::string VertexShaderPath() const {return VertexShaderPath_;}
@@ -80,5 +81,4 @@ public:
     void MSERTracks(std::vector<gtsam::MserTrack>& tracks) const {tracks = MSERMeasurementTracks_;}
     void VOCameraPoses(std::vector<gtsam::Pose3>& poses) const {poses = VOCameraPoses_;}
     //Converts video into a series of images stored on disk.
-    void observeMSERs();
 };
