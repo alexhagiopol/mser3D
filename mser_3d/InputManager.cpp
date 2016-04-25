@@ -44,23 +44,34 @@ void InputManager::processSettingsFile(const std::string& settingsPath){
           successfulInput_ = false;
      } else {
           std::cerr << "INPUT MANAGER: Reading settings from " << SettingsPath_ << std::endl;
+          //Paths
           VideoPath_ = (std::string) settings["VideoPath"];
           BALPath_ = (std::string) settings["BALPath"];
           CSVPath_ = (std::string) settings["CSVPath"];
           VertexShaderPath_ = (std::string) settings["VertexShaderPath"];
           FragmentShaderPath_ = (std::string) settings["FragmentShaderPath"];
           ImagePath_ = (std::string) settings["ImagePath"];
+          //Camera settings
           cameraFx_ = settings["Camera.fx"];
           cameraFy_ = settings["Camera.fy"];
           cameraS_ = settings["Camera.fy"];
           cameraCx_ = settings["Camera.cx"];
           cameraCy_ = settings["Camera.cy"];
-          minDiversity_ = settings["MinDiversity"];
-          minArea_ = settings["MinArea"];
-          maxArea_ = settings["MaxArea"];
+          //MSER Settings
+          delta_ = settings["MSER.Delta"];
+          minArea_ = settings["MSER.MinArea"];
+          maxArea_ = settings["MSER.MaxArea"];
+          maxVariation_ = settings["MSER.MaxVariation"];
+          minDiversity_ = settings["MSER.MinDiversity"];
+          maxEvolution_ = settings["MSER.MaxEvolution"];
+          areaThreshold_ = settings["MSER.AreaThreshold"];
+          minMargin_ = settings["MSER.MinMargin"];
+          edgeBlurSize_ = settings["MSER.EdgeBlurSize"];
+          //Options
           int intShowRays = settings["Vis.ShowRays"];
           showRays_ = (bool) intShowRays;
           successfulInput_ = true;
+          //Call functions to grab data
           getMSERMeasurementTracks();
           getVOCameraPoses();
      }
@@ -129,6 +140,9 @@ void InputManager::observeMSERs() {
                f++;
           }
      }
+
+
+
      capture.release();
      int imgDirectorySuccess = mkdir(ImagePath_.c_str(), 0777);
      for (int f = 0; f < allVideoFrames.size(); f++){

@@ -36,10 +36,17 @@ private:
     double cameraS_;
     double cameraCx_;
     double cameraCy_;
+
     //MSER parameters
-    double minDiversity_;
+    double delta_;
     double minArea_;
     double maxArea_;
+    double maxVariation_;
+    double minDiversity_;
+    double maxEvolution_;
+    double areaThreshold_;
+    double minMargin_;
+    double edgeBlurSize_;
     //Visualization settings
     bool showRays_;
     //Data structures for MSER tracks and camera poses
