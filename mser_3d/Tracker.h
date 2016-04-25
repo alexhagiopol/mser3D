@@ -9,7 +9,7 @@
 class Tracker {
 public:
     Tracker(InputManager& input);
-    void writeImages() const;
+    void writeImages(std::vector<cv::Mat>& images) const;
 private:
     void readImages();
     void observeMSERs();

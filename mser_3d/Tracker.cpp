@@ -18,7 +18,7 @@ Tracker::Tracker(InputManager& input){
     observeMSERs();
 }
 
-void Tracker::readImages() {
+void Tracker::readImages() { //TODO: Maybe move to InputManager?
     //Extract video frames and store in memory
     cv::VideoCapture capture(input_.videoPath());
     //std::vector<cv::Mat> allVideoFrames;
@@ -42,6 +42,9 @@ void Tracker::readImages() {
 
 void Tracker::observeMSERs() {
     //Observe MSERs and place results into Frame data structure.
+    int cameraPoseIndex = 0; //Assumes that first image in images_ matches first pose in input_.VOCameraPoses() TODO: Better alignment of pose data and image data
+    std::vector<Pose3> cameraPoses;
+    input_.VOCameraPoses(cameraPoses);
     for (int f = 0; f < images_.size(); f++) {
         cv::MSER mser(input_.delta(),
                       input_.minArea(),
@@ -70,16 +73,20 @@ void Tracker::observeMSERs() {
             MserMeasurementColor msmtColor = MserMeasurementColor(msmt,color);
             measurements.push_back(msmtColor);
         }
-        //Frame frame = Frame(f,);
+        if (f < cameraPoses.size()){ //If we have more images than camera poses, tough luck. We won't make more Frame data structures. See TODO above.
+            Frame frame = Frame(f,cameraPoses[f],measurements);
+            frames_.push_back(frame);
+            cameraPoseIndex ++;
+        }
     }
 }
 
-void Tracker::writeImages() const{
+void Tracker::writeImages(std::vector<cv::Mat>& images) const{ //Print out images to check results.
     //Save tracker images to disk
     int imgDirectorySuccess = mkdir(input_.imagePath().c_str(), 0777);
-    for (int f = 0; f < images_.size(); f++){
+    for (int f = 0; f < images.size(); f++){
         char imgFileName[200];
-        cv::Mat videoFrame = images_[f];
+        cv::Mat videoFrame = images[f];
         strcpy(imgFileName,input_.imagePath().c_str());
         strcat(imgFileName,"Frame%04i.bmp");
         sprintf(imgFileName, imgFileName,f);
