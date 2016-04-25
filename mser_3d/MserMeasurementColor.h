@@ -9,7 +9,7 @@ using namespace gtsam;
 
 struct MserMeasurementColor {
     MserMeasurement measurement_;
-    cv::Vec3b color_; //RGB format
-    MserMeasurementColor(const MserMeasurement& measurement, const cv::Vec3b& color) : measurement_(measurement), color_(color){}
+    cv::Scalar color_; //BGR format from OpenCV
+    MserMeasurementColor(const MserMeasurement& measurement, const cv::Scalar& color) : measurement_(measurement), color_(color){}
 };
 

@@ -13,7 +13,7 @@ struct Frame {
     int id_;
     Pose3 cameraPose_;
     cv::Mat image_;
-    std::vector<MserMeasurementColor> measurements_;
-    Frame(const int& id, const Pose3& cameraPose, const std::vector<MserMeasurementColor>& measurements) : id_(id), cameraPose_(cameraPose), measurements_(measurements) {}
+    std::vector<MserMeasurementColor> measurementsColor_;
+    Frame(const int& id, const Pose3& cameraPose, const std::vector<MserMeasurementColor>& measurementsColor) : id_(id), cameraPose_(cameraPose), measurementsColor_(measurementsColor) {}
 };
 

@@ -23,4 +23,3 @@ void syntheticTestOptimization(const InputManager& input, bool visualize = false
 
 //3D Reconstruction tests
 void realWorldTestOptimization(const InputManager& input, bool showEachStep = false, int levMarIterations = 100);
-

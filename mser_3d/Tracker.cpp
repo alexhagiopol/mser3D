@@ -69,7 +69,8 @@ void Tracker::observeMSERs() {
             Pose2 ellipsePose = Pose2(rr.center.x,rr.center.y,rr.angle);
             Point2 ellipseAxes = Point2(rr.size.height,rr.size.width);
             MserMeasurement msmt = MserMeasurement(ellipsePose,ellipseAxes);
-            cv::Vec3b color = image.at<cv::Vec3b>(rr.center.y, rr.center.x);
+            //cv::Vec3b color = image.at<cv::Vec3b>(rr.center.y, rr.center.x);
+            cv::Scalar color = image.at<cv::Scalar>(rr.center.y, rr.center.x);
             MserMeasurementColor msmtColor = MserMeasurementColor(msmt,color);
             measurements.push_back(msmtColor);
         }
@@ -81,14 +82,46 @@ void Tracker::observeMSERs() {
     }
 }
 
-void Tracker::writeImages(std::vector<cv::Mat>& images) const{ //Print out images to check results.
+void Tracker::testFrameObservations() {
+    //Draw MserMeasurement ellipses on each video frame
+    std::vector<cv::Mat> outputImages;
+    for (int f = 0; f < frames_.size(); f++){ //loop through all frames
+        Frame frame = frames_[f];
+        cv::Mat myImage = frame.image_;
+        for (int m = 0; m < frames_[f].measurementsColor_.size(); m++){ //loop through all measurements in frame
+            //Extract measurement data
+            MserMeasurementColor msmtColor = frame.measurementsColor_[m];
+            MserMeasurement msmt = msmtColor.measurement_;
+            double majAxisLength = msmt.second.x();
+            double minAxisLength = msmt.second.y();
+            double theta = msmt.first.theta();
+            double cvTheta = msmt.first.theta()*180/M_PI; //opencv wants angles in degrees
+            //Draw measurement on image
+            cv::Point center = cv::Point(msmt.first.x(),msmt.first.y());
+            cv::Size axes = cv::Size(majAxisLength,minAxisLength);
+            cv::Point majAxisTip = cv::Point(center.x + majAxisLength*cos(theta),center.y + majAxisLength*sin(theta));
+            cv::Point minAxisTip = cv::Point(center.x + minAxisLength*cos(theta + M_PI/2), center.y + minAxisLength*sin(theta + M_PI/2));
+            cv::Scalar color = msmtColor.color_;
+            int thickness = 5;
+            int startAngle = 0;
+            int endAngle = 360;//draw entire ellipse
+            cv::ellipse(myImage,center,axes,cvTheta,startAngle,endAngle,color,thickness);
+            cv::line(myImage,center,majAxisTip,color,thickness);
+            cv::line(myImage,center,minAxisTip,color,thickness);
+            outputImages.push_back(myImage);
+        }
+    }
+    writeImages(outputImages,"MeasurementsFrame%04i.bmp");
+}
+
+void Tracker::writeImages(const std::vector<cv::Mat>& images, const std::string& format) const{ //Print out images to check results.
     //Save tracker images to disk
     int imgDirectorySuccess = mkdir(input_.imagePath().c_str(), 0777);
     for (int f = 0; f < images.size(); f++){
         char imgFileName[200];
         cv::Mat videoFrame = images[f];
         strcpy(imgFileName,input_.imagePath().c_str());
-        strcat(imgFileName,"Frame%04i.bmp");
+        strcat(imgFileName,format.c_str());
         sprintf(imgFileName, imgFileName,f);
         cv::imwrite(imgFileName, videoFrame);
     }
