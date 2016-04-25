@@ -4,15 +4,12 @@
 
 #pragma once
 #include "MserMeasurement.h"
+#include <opencv2/core/core.hpp>
 using namespace gtsam;
 
-class MserMeasurementColor {
-private:
+struct MserMeasurementColor {
     MserMeasurement measurement_;
-    Vector3 color_; //RGB format
-public:
-    MserMeasurementColor(const MserMeasurement& measurement, const Vector3& color) : measurement_(measurement), color_(color){}
-    MserMeasurement measurement(){return measurement_;}
-    Vector3 color() {return color_;} //RGB format
+    cv::Vec3b color_; //RGB format
+    MserMeasurementColor(const MserMeasurement& measurement, const cv::Vec3b& color) : measurement_(measurement), color_(color){}
 };
 

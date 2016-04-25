@@ -6,7 +6,11 @@
 #include <opencv2/core/core.hpp> //need for reading YAML files
 #include <opencv2/highgui/highgui.hpp>
 #include <sys/stat.h> //need for mkdir
+#include "opencv2/features2d/features2d.hpp"
+#include "opencv2/nonfree/features2d.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 
+using namespace gtsam;
 void Tracker::observeMSERs() {
     //Extract video frames and store in memory
     cv::VideoCapture capture(input_.videoPath());
@@ -25,8 +29,41 @@ void Tracker::observeMSERs() {
             f++;
         }
     }
-
     capture.release();
+
+    //Observe MSERs and place results into Frame data structure.
+    for (int f = 0; f < allVideoFrames.size(); f++) {
+        cv::MSER mser(input_.delta(),
+                      input_.minArea(),
+                      input_.maxArea(),
+                      input_.maxVariation(),
+                      input_.minDiversity(),
+                      input_.maxEvolution(),
+                      input_.areaThreshold(),
+                      input_.minMargin(),
+                      input_.edgeBlurSize()); //initialize MSER
+        vector<vector<cv::Point>> regions; //data structure to store pixels for each region
+        cv::Mat image = allVideoFrames[f]; //grab image
+        cv::Mat gray;
+        cv::cvtColor(image, gray, CV_BGR2GRAY ); //convert to gray
+        const cv::Mat mask;
+        mser(gray, regions, mask); //Detect MSER on grayscale image from file. Store results in regions vector.
+        std::vector<MserMeasurementColor> measurements;
+        for (size_t i = 0; i < regions.size(); i++)
+        {
+            cv::RotatedRect rr = fitEllipse(regions[i]); //fit ellipse to region. Store info in rotated rectangle data structure
+            ellipse(gray, rr, cv::Scalar(0,0,0),5);
+            Pose2 ellipsePose = Pose2(rr.center.x,rr.center.y,rr.angle);
+            Point2 ellipseAxes = Point2(rr.size.height,rr.size.width);
+            MserMeasurement msmt = MserMeasurement(ellipsePose,ellipseAxes);
+            cv::Vec3b color = image.at<cv::Vec3b>(rr.center.y, rr.center.x);
+            MserMeasurementColor msmtColor = MserMeasurementColor(msmt,color);
+            measurements.push_back(msmtColor);
+        }
+        //Frame frame = Frame(f,);
+    }
+
+    //Save resulting images to disk
     int imgDirectorySuccess = mkdir(input_.imagePath().c_str(), 0777);
     for (int f = 0; f < allVideoFrames.size(); f++){
         char imgFileName[200];

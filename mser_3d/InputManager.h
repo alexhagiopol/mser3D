@@ -36,7 +36,6 @@ private:
     double cameraS_;
     double cameraCx_;
     double cameraCy_;
-
     //MSER parameters
     double delta_;
     double minArea_;
@@ -59,6 +58,7 @@ public:
     InputManager(){}
     void processSettingsFile(const std::string& settingsPath);
     bool successfulInput() const { return successfulInput_;}
+    //Paths
     std::string settingsPath() const { return SettingsPath_; }
     std::string videoPath() const { return VideoPath_;}
     std::string imagePath() const { return ImagePath_;}
@@ -66,16 +66,23 @@ public:
     std::string CSVPath() const { return CSVPath_;}
     std::string VertexShaderPath() const {return VertexShaderPath_;}
     std::string FragmentShaderPath() const {return FragmentShaderPath_;}
-
+    //Camera settings
     double cameraFx() const { return cameraFx_;}
     double cameraFy() const { return cameraFy_;}
     double cameraS() const { return cameraS_;}
     double cameraCx() const { return cameraCx_;}
     double cameraCy() const { return cameraCy_;}
-
-    double minDiversity() const { return minDiversity_;}
+    //MSER settings
+    double delta() const { return delta_;}
     double minArea() const { return minArea_;}
     double maxArea() const { return maxArea_;}
+    double maxVariation() const { return maxVariation_;}
+    double minDiversity() const { return minDiversity_;}
+    double maxEvolution() const { return maxEvolution_;}
+    double areaThreshold() const { return areaThreshold_;}
+    double minMargin() const { return minMargin_;}
+    double edgeBlurSize() const { return edgeBlurSize_;}
+    //Options
     bool showRays() const { return showRays_;}
     //Use these functions to get tracks and poses
     void MSERTracks(std::vector<gtsam::MserTrack>& tracks) const {tracks = MSERMeasurementTracks_;}

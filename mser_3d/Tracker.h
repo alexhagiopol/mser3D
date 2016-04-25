@@ -4,6 +4,7 @@
 
 #pragma once
 #include "InputManager.h"
+#include "Video.h"
 
 class Tracker {
 public:
@@ -11,5 +12,6 @@ public:
     void observeMSERs();
 private:
     InputManager input_;
+    Video video_;
 };
 

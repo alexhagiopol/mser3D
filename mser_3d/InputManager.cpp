@@ -8,7 +8,6 @@
 #include <opencv2/highgui/highgui.hpp>
 #include "boost/optional.hpp"
 
-
 using namespace gtsam;
 
 std::istream& operator >> (std::istream& ins, record_t& record){
