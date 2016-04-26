@@ -18,7 +18,7 @@
 //Visualization tests
 void testPrintSuperimposedMeasurementImages(const InputManager& input);
 
-//MeasurementFunction tests
+//MeasurementFunction tests TODO: move out of oldTests.h into its own file; no longer an old test.
 void syntheticTestOptimization(const InputManager& input, bool visualize = false, bool showEachStep = false, bool noisy = false, int levMarIterations = 100);
 
 //3D Reconstruction tests

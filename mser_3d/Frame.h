@@ -14,6 +14,6 @@ struct Frame {
     Pose3 cameraPose_;
     cv::Mat image_;
     std::vector<MserMeasurementColor> measurementsColor_;
-    Frame(const int& id, const Pose3& cameraPose, const std::vector<MserMeasurementColor>& measurementsColor) : id_(id), cameraPose_(cameraPose), measurementsColor_(measurementsColor) {}
+    Frame(const int& id, const Pose3& cameraPose, const cv::Mat& image, const std::vector<MserMeasurementColor>& measurementsColor) : id_(id), cameraPose_(cameraPose), image_(image), measurementsColor_(measurementsColor) {}
 };
 

@@ -20,15 +20,15 @@ Camera.cx: 640  #1280/2
 Camera.cy: 360  #720/2
 
 #OpenCV MSER tuning parameters 
-MSER.Delta: 5
-MSER.MinArea: 6
-MSER.MaxArea: 144000 #tuned to only detect the cube in the scene
-MSER.MaxVariation: 2500
-MSER.MinDiversity: 0.02
-MSER.MaxEvolution: 20000
+MSER.Delta: 30
+MSER.MinArea: 1200
+MSER.MaxArea: 60000 
+MSER.MaxVariation: 0.25
+MSER.MinDiversity: 0.1
+MSER.MaxEvolution: 200
 MSER.AreaThreshold: 1.01
-MSER.MinMargin: 0.00003
-MSER.EdgeBlurSize: 50
+MSER.MinMargin: 0.003
+MSER.EdgeBlurSize: 5
 
 #Visualization settings:
 Vis.ShowRays: 1 #(BOOLEAN) Show lines from camera through measurement centroid (USES A LOT OF VRAM)
