@@ -9,6 +9,7 @@
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv2/nonfree/features2d.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include <boost/lexical_cast.hpp>
 
 using namespace gtsam;
 
@@ -141,6 +142,8 @@ void Tracker::testFrameObservations() {
             cv::ellipse(myImage,center,axes,cvTheta,startAngle,endAngle,sColor,thickness);
             cv::line(myImage,center,majAxisTip,cv::Scalar(0,0,255),thickness);
             cv::line(myImage,center,minAxisTip,cv::Scalar(255,0,0),thickness);
+            std::string strIdNum = boost::lexical_cast<std::string>(m);
+            cv::putText(myImage, strIdNum, center, cv::FONT_HERSHEY_PLAIN,2, cv::Scalar(0,0,255),2,8,false);
         }
         outputImages.push_back(myImage);
         display(myImage,"MEASUREMENTS",1);
