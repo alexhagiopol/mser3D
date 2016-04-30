@@ -98,13 +98,19 @@ void Tracker::observeMSERs() {
                     cv::Vec3b pointColor = image.at<cv::Vec3b>(regions[r][p]);
                     gtsam::Vector3 tempColor(pointColor.val[0],pointColor.val[1],pointColor.val[2]);
                     colorForCalculations = colorForCalculations + tempColor / numPoints;
+                    //double intensity = 255*(((double) r)/((double) regions.size()));
+                    //image.at<cv::Vec3b>(regions[r][p]) = cv::Vec3b(0,0,(uchar) intensity);
                 }
                 cv::Vec3b regionAverageColor(colorForCalculations[0],colorForCalculations[1],colorForCalculations[2]); //use average colors
                 MserMeasurementColor msmtColor = MserMeasurementColor(msmt,regionAverageColor);
                 measurements.push_back(msmtColor);
-                //ellipse(image, rr, cv::Scalar(regionAverageColor.val[0],regionAverageColor.val[1],regionAverageColor.val[2]),4);
+                ellipse(image, rr, cv::Scalar(0,0,255),4);
+                std::string strIdNum = boost::lexical_cast<std::string>(r);
+                cv::putText(image, strIdNum, rr.center, cv::FONT_HERSHEY_PLAIN,2, cv::Scalar(255,255,255),2,8,false);
+
             }
         }
+        display(image,"MEASUREMENTS",0);
         //display(image,"INPUT",1);
         if (f < cameraPoses.size()){ //If we have more images than camera poses, tough luck. We won't make more Frame data structures. See TODO above.
             Frame frame = Frame(f,cameraPoses[f],image,measurements);
@@ -146,7 +152,7 @@ void Tracker::testFrameObservations() {
             cv::putText(myImage, strIdNum, center, cv::FONT_HERSHEY_PLAIN,2, cv::Scalar(0,0,255),2,8,false);
         }
         outputImages.push_back(myImage);
-        display(myImage,"MEASUREMENTS",1);
+        //display(myImage,"MEASUREMENTS",1);
     }
     writeImages(outputImages,"MeasurementsFrame%04i.bmp");
     cerr << "TEST FRAME OBSERVATIONS: WROTE RESULTS TO " << input_.imagePath() << endl;

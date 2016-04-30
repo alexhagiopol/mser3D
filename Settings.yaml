@@ -20,15 +20,15 @@ Camera.cx: 640  #1280/2
 Camera.cy: 360  #720/2
 
 #OpenCV MSER tuning parameters 
-MSER.Delta: 30
-MSER.MinArea: 1200
-MSER.MaxArea: 60000 
-MSER.MaxVariation: 0.25
-MSER.MinDiversity: 0.1
-MSER.MaxEvolution: 200
-MSER.AreaThreshold: 1.01
-MSER.MinMargin: 0.003
-MSER.EdgeBlurSize: 5
+MSER.Delta: 10
+MSER.MinArea: 1000
+MSER.MaxArea: 10000
+MSER.MaxVariation: 0.2
+MSER.MinDiversity: 0.2
+MSER.MaxEvolution: 200 #
+MSER.AreaThreshold: 1.01 #
+MSER.MinMargin: 0.003 #
+MSER.EdgeBlurSize: 50 #
 
 #Visualization settings:
 Vis.ShowRays: 1 #(BOOLEAN) Show lines from camera through measurement centroid (USES A LOT OF VRAM)
