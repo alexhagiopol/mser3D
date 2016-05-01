@@ -3,11 +3,11 @@
 #File paths
 VideoPath: "/home/alex/mser/datasets/through_the_cracks_jing.mov" #input video
 BALPath: "/home/alex/mser/datasets/fpv_bal_280_nf2.txt" #BAL file with visual odometry results
-CSVPath: "/home/alex/mser/datasets/mserMeasurements.csv" #CSV file with MSER track results
+#CSVPath: "/home/alex/mser/datasets/mserMeasurements.csv" #CSV file with MSER track results
 VertexShaderPath: "/home/alex/mser/mser_3d/TransformVertexShader.vertexshader"
 FragmentShaderPath: "/home/alex/mser/mser_3d/ColorFragmentShader.fragmentshader"
 #CSVPath: "/home/alex/mser/datasets/firstManualMeasurementGroup.csv" #CSV file with MSER track results
-#CSVPath: "/home/alex/mser/datasets/bothManualMeasurementGroups.csv" #CSV file with MSER track results
+CSVPath: "/home/alex/mser/datasets/bothManualMeasurementGroups.csv" #CSV file with MSER track results
 #CSVPath: "/home/alex/mser/datasets/track9.csv" #CSV file with MSER track results
 #CSVPath: "/home/alex/mser/datasets/first29Tracks.csv" #CSV file with MSER track results
 #CSVPath: "/home/alex/mser/datasets/first14Tracks.csv" #CSV file with MSER track results
@@ -19,10 +19,17 @@ Camera.s: 0.1
 Camera.cx: 640  #1280/2
 Camera.cy: 360  #720/2
 
-#MSER Parameters
-MinDiversity: 0.7
-MinArea: 0.005
-MaxArea: 0.03
+#OpenCV MSER tuning parameters 
+MSER.Delta: 10
+MSER.MinArea: 1000
+MSER.MaxArea: 10000
+MSER.MaxVariation: 0.2
+MSER.MinDiversity: 0.2
+MSER.MaxEvolution: 200 #
+MSER.AreaThreshold: 1.01 #
+MSER.MinMargin: 0.003 #
+MSER.EdgeBlurSize: 50 #
 
 #Visualization settings:
-Vis.ShowRays: 1 #Show lines from camera through measurement centroid (USES A LOT OF VRAM)
+Vis.ShowRays: 1 #(BOOLEAN) Show lines from camera through measurement centroid (USES A LOT OF VRAM)
+ImagePath: "/home/alex/mser/datasets/RenderedImages/"

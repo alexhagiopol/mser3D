@@ -15,8 +15,8 @@ using namespace noiseModel;
 void testPrintSuperimposedMeasurementImages(const InputManager& input){
     std::vector<MserTrack> tracks;// = input.MSERmeasurementTracks;
     std::vector<Pose3> poses;// = getPosesFromBAL();
-    input.getMSERMeasurementTracks(tracks);
-    input.getVOCameraPoses(poses);
+    input.MSERTracks(tracks);
+    input.VOCameraPoses(poses);
     //std::pair<std::vector<MserObject>,std::vector<Vector3>> pair = inferObjectsFromRealMserMeasurements(tracks, poses);
     //drawMserObjects(pair.first,pair.second);
 
@@ -226,8 +226,8 @@ void syntheticTestOptimization(const InputManager& input, bool visualize, bool s
 void realWorldTestOptimization(const InputManager& input, bool showEachStep, int levMarIterations){
     std::vector<MserTrack> tracks;
     std::vector<Pose3> allCameraPoses;
-    input.getMSERMeasurementTracks(tracks);
-    input.getVOCameraPoses(allCameraPoses);
+    input.MSERTracks(tracks);
+    input.VOCameraPoses(allCameraPoses);
     //shows only relevant camera poses; VERY INEFFICIENT!!!
     std::vector<Pose3> relevantCameraPoses;
     for (int t = 0; t < tracks.size(); t++){

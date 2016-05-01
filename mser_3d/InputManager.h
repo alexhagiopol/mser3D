@@ -20,35 +20,16 @@ std::istream& operator >> (std::istream& ins, record_t& record);
 std::istream& operator >> (std::istream& ins, data_t& data);
 
 class InputManager {
-public:
-    InputManager(std::string settingsPath);
-    bool successfulInput() const { return successfulInput_;}
-    std::string videoPath() const { return videoPath_;}
-    std::string BALPath() const { return BALPath_;}
-    std::string CSVPath() const { return CSVPath_;}
-    std::string VertexShaderPath() const {return VertexShaderPath_;}
-    std::string FragmentShaderPath() const {return FragmentShaderPath_;}
-
-    double cameraFx() const { return cameraFx_;}
-    double cameraFy() const { return cameraFy_;}
-    double cameraS() const { return cameraS_;}
-    double cameraCx() const { return cameraCx_;}
-    double cameraCy() const { return cameraCy_;}
-
-    double minDiversity() const { return minDiversity_;}
-    double minArea() const { return minArea_;}
-    double maxArea() const { return maxArea_;}
-    bool showRays() const {return showRays_;}
-    void getMSERMeasurementTracks(std::vector<gtsam::MserTrack>& tracks) const {tracks = MSERMeasurementTracks_;}
-    void getVOCameraPoses(std::vector<gtsam::Pose3>& poses) const {poses = VOCameraPoses_;}
 private:
     bool successfulInput_;
     //File paths
-    std::string videoPath_;
+    std::string VideoPath_;
     std::string BALPath_;
     std::string CSVPath_;
     std::string VertexShaderPath_;
     std::string FragmentShaderPath_;
+    std::string ImagePath_;
+    std::string SettingsPath_;
     //Camera parameters
     double cameraFx_;
     double cameraFy_;
@@ -56,15 +37,55 @@ private:
     double cameraCx_;
     double cameraCy_;
     //MSER parameters
-    double minDiversity_;
+    double delta_;
     double minArea_;
     double maxArea_;
+    double maxVariation_;
+    double minDiversity_;
+    double maxEvolution_;
+    double areaThreshold_;
+    double minMargin_;
+    double edgeBlurSize_;
     //Visualization settings
     bool showRays_;
     //Data structures for MSER tracks and camera poses
     std::vector<gtsam::MserTrack> MSERMeasurementTracks_;
     std::vector<gtsam::Pose3> VOCameraPoses_;
-    //Functions for getting tracks and poses
-    std::vector<gtsam::MserTrack> getMserTracksFromCSV(std::string csvFile);
-    std::vector<gtsam::Pose3> getPosesFromBAL(std::string balFile);
+    //Functions for getting tracks and poses from raw files. Used internally.
+    void getMSERMeasurementTracks();
+    void getVOCameraPoses();
+public:
+    InputManager(){}
+    void processSettingsFile(const std::string& settingsPath);
+    bool successfulInput() const { return successfulInput_;}
+    //Paths
+    std::string settingsPath() const { return SettingsPath_; }
+    std::string videoPath() const { return VideoPath_;}
+    std::string imagePath() const { return ImagePath_;}
+    std::string BALPath() const { return BALPath_;}
+    std::string CSVPath() const { return CSVPath_;}
+    std::string VertexShaderPath() const {return VertexShaderPath_;}
+    std::string FragmentShaderPath() const {return FragmentShaderPath_;}
+    //Camera settings
+    double cameraFx() const { return cameraFx_;}
+    double cameraFy() const { return cameraFy_;}
+    double cameraS() const { return cameraS_;}
+    double cameraCx() const { return cameraCx_;}
+    double cameraCy() const { return cameraCy_;}
+    //MSER settings
+    double delta() const { return delta_;}
+    double minArea() const { return minArea_;}
+    double maxArea() const { return maxArea_;}
+    double maxVariation() const { return maxVariation_;}
+    double minDiversity() const { return minDiversity_;}
+    double maxEvolution() const { return maxEvolution_;}
+    double areaThreshold() const { return areaThreshold_;}
+    double minMargin() const { return minMargin_;}
+    double edgeBlurSize() const { return edgeBlurSize_;}
+    //Options
+    bool showRays() const { return showRays_;}
+    //Use these functions to get tracks and poses
+    void MSERTracks(std::vector<gtsam::MserTrack>& tracks) const {tracks = MSERMeasurementTracks_;}
+    void VOCameraPoses(std::vector<gtsam::Pose3>& poses) const {poses = VOCameraPoses_;}
+    //Converts video into a series of images stored on disk.
 };
