@@ -32,4 +32,4 @@ MSER.EdgeBlurSize: 50 #
 
 #Visualization settings:
 Vis.ShowRays: 1 #(BOOLEAN) Show lines from camera through measurement centroid (USES A LOT OF VRAM)
-ImagePath: "/home/alex/mser/datasets/RenderedImages/"
+ImagePath: "/home/alex/mser/datasets/StillImages/"

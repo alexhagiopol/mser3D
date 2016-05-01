@@ -15,8 +15,6 @@ using namespace gtsam;
 
 Tracker::Tracker(InputManager& input){
     input_ = input;
-    readImages();
-    observeMSERs();
 }
 
 void Tracker::readImages() { //TODO: Maybe move to InputManager?
@@ -53,6 +51,7 @@ void Tracker::writeImages(const std::vector<cv::Mat>& images, const std::string&
         sprintf(imgFileName, imgFileName,f);
         cv::imwrite(imgFileName, videoFrame);
     }
+    cerr << "TRACKER: Wrote " << images.size() << " images to disk." << endl;
 }
 
 //Single utility function for OpenCV display machinery
