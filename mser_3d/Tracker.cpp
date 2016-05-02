@@ -43,9 +43,9 @@ void Tracker::readImages() { //TODO: Maybe move to InputManager?
 void Tracker::writeImages(const std::vector<cv::Mat>& images, const std::string& format) const{ //Print out images to check results.
     //Save tracker images to disk
     int imgDirectorySuccess = mkdir(input_.imagePath().c_str(), 0777);
-    for (int f = 0; f < images.size(); f++){
+    for (int f = 1; f <= images.size(); f++){
         char imgFileName[200];
-        cv::Mat videoFrame = images[f];
+        cv::Mat videoFrame = images[f-1];
         strcpy(imgFileName,input_.imagePath().c_str());
         strcat(imgFileName,format.c_str());
         sprintf(imgFileName, imgFileName,f);

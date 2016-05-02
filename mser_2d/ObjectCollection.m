@@ -417,7 +417,7 @@ classdef ObjectCollection < handle
                     %dlmwrite(filename,vectorToWrite,'delimiter',',','-append');              
                     disp(vectorToWrite);
                     rowNumber = rowNumber + 1;
-                    disp(['Wrote object #',num2str(o),' to ',filename]);
+                    disp(['(CONSOLE ONLY...CSV NOT WRITTEN) Wrote object #',num2str(o),' to ',filename]);
                 end                
             end
         end
