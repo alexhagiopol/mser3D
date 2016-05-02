@@ -15,8 +15,6 @@ using namespace gtsam;
 
 Tracker::Tracker(InputManager& input){
     input_ = input;
-    readImages();
-    observeMSERs();
 }
 
 void Tracker::readImages() { //TODO: Maybe move to InputManager?
@@ -45,14 +43,15 @@ void Tracker::readImages() { //TODO: Maybe move to InputManager?
 void Tracker::writeImages(const std::vector<cv::Mat>& images, const std::string& format) const{ //Print out images to check results.
     //Save tracker images to disk
     int imgDirectorySuccess = mkdir(input_.imagePath().c_str(), 0777);
-    for (int f = 0; f < images.size(); f++){
+    for (int f = 1; f <= images.size(); f++){
         char imgFileName[200];
-        cv::Mat videoFrame = images[f];
+        cv::Mat videoFrame = images[f-1];
         strcpy(imgFileName,input_.imagePath().c_str());
         strcat(imgFileName,format.c_str());
         sprintf(imgFileName, imgFileName,f);
         cv::imwrite(imgFileName, videoFrame);
     }
+    cerr << "TRACKER: Wrote " << images.size() << " images to disk." << endl;
 }
 
 //Single utility function for OpenCV display machinery
@@ -61,6 +60,55 @@ void Tracker::display(const cv::Mat& image, const std::string& title, const int&
     cv::imshow( title, image );                   // Show our image inside it.
     cv::waitKey(wait);                            // Wait for a keystroke in the window
 }
+
+void Tracker::displayTracks(const std::vector<cv::Mat>& images,const std::vector<MserTrack>& tracks) {
+    std::vector<cv::Mat> measurementImages = images_;
+    for (int t = 0; t < tracks.size(); t++) {
+        std::vector<MserMeasurement> measurements = tracks[t].measurements;
+        std::cerr << "OPTIMIZER: Track #" << t << " has " << measurements.size() << " measurements." << std::endl;
+        std::vector<Point2> centroidMeasurements;
+        std::vector<Point2> majorAxisMeasurements;
+        std::vector<Point2> minorAxisMeasurements;
+        for (int m = 0; m < measurements.size(); m++) {
+            int frameNumber = tracks[t].frameNumbers[m]; //measurements and frame numbers have same index
+            MserMeasurement measurement = tracks[t].measurements[m]; //measurements and frame numbers have same index
+            //extract contents of measurement
+            double theta = measurement.first.theta();;
+            double cvTheta = theta * 180 / M_PI;
+            double majAxisLength = measurement.second.x();
+            double minAxisLength = measurement.second.y();
+            double ctrX = measurement.first.x();
+            double ctrY = measurement.first.y();
+
+            double majX = ctrX + majAxisLength * cos(theta);
+            double majY = ctrY + majAxisLength * sin(theta);
+
+            double minX = ctrX + minAxisLength * cos(theta + M_PI / 2);
+            double minY = ctrY + minAxisLength * sin(theta + M_PI / 2);
+
+            //Draw measurement on image
+            cv::Point center = cv::Point(measurement.first.x(), measurement.first.y());
+            cv::Size axes = cv::Size(majAxisLength, minAxisLength);
+            cv::Point majAxisTip = cv::Point(majX, majY);
+            cv::Point minAxisTip = cv::Point(minX, minY);
+            cv::Scalar sColor(255, 0, 0);
+            int thickness = 3;
+            int startAngle = 0;
+            int endAngle = 360;//draw entire ellipse
+            cv::ellipse(measurementImages[frameNumber], center, axes, cvTheta, startAngle, endAngle, sColor, thickness);
+            cv::line(measurementImages[frameNumber], center, majAxisTip, cv::Scalar(0, 0, 255), thickness);
+            cv::line(measurementImages[frameNumber], center, minAxisTip, cv::Scalar(255, 0, 0), thickness);
+            std::string strIdNum = boost::lexical_cast<std::string>(t);
+            cv::putText(measurementImages[frameNumber], strIdNum, center, cv::FONT_HERSHEY_PLAIN, 2,
+                        cv::Scalar(0, 0, 255), 2, 8, false);
+        }
+    }
+    writeImages(measurementImages,"MeasurementsFrame%04i.bmp");
+}
+
+/*
+ * OPENCV MSER IMPLEMENTATIONS BELOW
+ */
 
 void Tracker::observeMSERs() {
     //Observe MSERs and place results into Frame data structure.

@@ -14,7 +14,7 @@ public:
     void writeImages(const std::vector<cv::Mat>& images, const std::string& format) const;
     void display(const cv::Mat& image, const std::string& title, const int& wait) const;
     void observeMSERs();
-private:
+    void displayTracks(const std::vector<cv::Mat>& images,const std::vector<MserTrack>& tracks);
     InputManager input_;
     std::vector<Frame> frames_;
     std::vector<cv::Mat> images_;

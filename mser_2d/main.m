@@ -7,26 +7,21 @@ close all
 run('../vlfeat-0.9.20/toolbox/vl_setup') % start up vl_feat
 vl_version verbose
 
-%% Import video
-disp('Starting Video Import');
-readerobj = VideoReader('../datasets/through_the_cracks_jing.mov', 'tag', 'myreader1');
-vidFrames = read(readerobj);
-N = get(readerobj, 'NumberOfFrames');
-disp('Video Import Finished'); 
-
 %% Set tuning constants 
 %VL Feat tuning constants
 MinDiversity = 0.7; 
 MinArea = 0.005; 
 MaxArea = 0.03; 
 % Alex tuning constants
+minTrackSize = 1;
 start = 1; %start at custom frame number. Default = 1.
-stop = 15;  %end at custom frame number. Default = N.
-manualMatching = true;
-visualization = false;
+stop = 5;  %end at custom frame number. Default = N.
+format = '../datasets/StillImages/Frame%04d.bmp'; % framing
+manualMatching = false;
+visualization = true;
 resize = false; %reduce image to speed up computation
 threshold = -1; %-1 %Score threshold needed for two regions to be considered to come from the same object. A higher score indicates higher similarity.
-measurementsOutputFileName = '/home/alex/mser/datatsets/tempManualMserMeasurements.csv';
+measurementsOutputFileName = 'tempManualMserMeasurements.csv';
 videoOutputFileName = 'Alex_Tracking_Movie';
 
 %% Set up video output
@@ -40,8 +35,9 @@ end
 
 %% Process first video frame 
 f = start;
+filename = sprintf(format,f); 
 % Read image from video and resize + grayscale
-C = vidFrames(:,:,:,f);
+C = imread(filename);
 if resize
     C = imresize(C,0.5);
 end
@@ -49,7 +45,7 @@ I=rgb2gray(C);
 %Detect MSERs
 [SeedValues, EllipsesValues] = vl_mser(I,'MinDiversity',MinDiversity,'MinArea',MinArea,'MaxArea',MaxArea,'BrightOnDark',1,'DarkOnBright',0);
 numRegions = size(EllipsesValues,2);
-%Create object farm!
+%Create object collection!
 mainOC = ObjectCollection(size(I,1),size(I,2),stop - start + 1); %tell the object data structure that the last #numRegs objects are associated with the last frame 
 mainOC.addImage(f,I);
 %Create objects!
@@ -72,7 +68,8 @@ prevIm = mainOC.getImage(I,f);
 %% Process rest of frames + make video
 for f=start + 1:stop
     %% Read image, resize, grayscale, make data structures, & detect MSERs
-    C = vidFrames(:,:,:,f);
+    filename = sprintf(format,f); 
+    C = imread(filename);
     if resize
         C = imresize(C,0.5);
     end
@@ -168,13 +165,13 @@ for f=start + 1:stop
         disp(['Frame #',num2str(f),' done'])
     end
     prevIm = newIm;
-    %pause
+    pause()
 end
 if visualization
     close(writer);
 end
 %Make CSV data file
-mainOC.exportMserMeasurementsInGroups(7,measurementsOutputFileName);
+mainOC.exportMserMeasurementsInGroups(minTrackSize,measurementsOutputFileName);
 if manualMatching == true
     mainOC.showTracks(3,size(I,1),size(I,2),2);
     mainOC.makeTrackVideo(5,size(I,1),size(I,2),2);

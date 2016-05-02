@@ -6,8 +6,9 @@ BALPath: "/home/alex/mser/datasets/fpv_bal_280_nf2.txt" #BAL file with visual od
 #CSVPath: "/home/alex/mser/datasets/mserMeasurements.csv" #CSV file with MSER track results
 VertexShaderPath: "/home/alex/mser/mser_3d/TransformVertexShader.vertexshader"
 FragmentShaderPath: "/home/alex/mser/mser_3d/ColorFragmentShader.fragmentshader"
+CSVPath: "/home/alex/mser/mser_2d/tempManualMserMeasurements.csv" #CSV file with MSER track results
 #CSVPath: "/home/alex/mser/datasets/firstManualMeasurementGroup.csv" #CSV file with MSER track results
-CSVPath: "/home/alex/mser/datasets/bothManualMeasurementGroups.csv" #CSV file with MSER track results
+#CSVPath: "/home/alex/mser/datasets/bothManualMeasurementGroups.csv" #CSV file with MSER track results
 #CSVPath: "/home/alex/mser/datasets/track9.csv" #CSV file with MSER track results
 #CSVPath: "/home/alex/mser/datasets/first29Tracks.csv" #CSV file with MSER track results
 #CSVPath: "/home/alex/mser/datasets/first14Tracks.csv" #CSV file with MSER track results

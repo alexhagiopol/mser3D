@@ -97,7 +97,7 @@ void InputManager::getMSERMeasurementTracks(){
           MserTrack track;
           int numMSERS = data[r][1];
           for (int c = 2; c < 2 + 6*numMSERS; c = c + 6){
-               int frameNum = (int) data[r][c];
+               int frameNum = (int) data[r][c] - 1; //convert from matlab frame num to C++ frame num
                double x = data[r][c+1];
                double y = data[r][c+2];
                double a = data[r][c+3];
