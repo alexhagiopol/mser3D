@@ -14,8 +14,10 @@ int main(int argc, char ** argv) {
     //Perform real world test of optimization
     //realWorldTestOptimization(myInput,false,30);
 
+    std::vector<MserTrack> myTracks;
+    myInput.MSERTracks(myTracks);
     Tracker myTracker(myInput);
     myTracker.readImages();
-    myTracker.writeImages(myTracker.images_,"Frame%04i.bmp");
+    myTracker.displayTracks(myTracker.images_,myTracks);
     return 0;
 }

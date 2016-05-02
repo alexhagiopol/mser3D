@@ -17,8 +17,8 @@ minTrackSize = 1;
 start = 1; %start at custom frame number. Default = 1.
 stop = 5;  %end at custom frame number. Default = N.
 format = '../datasets/StillImages/Frame%04d.bmp'; % framing
-manualMatching = true;
-visualization = false;
+manualMatching = false;
+visualization = true;
 resize = false; %reduce image to speed up computation
 threshold = -1; %-1 %Score threshold needed for two regions to be considered to come from the same object. A higher score indicates higher similarity.
 measurementsOutputFileName = 'tempManualMserMeasurements.csv';
@@ -165,7 +165,7 @@ for f=start + 1:stop
         disp(['Frame #',num2str(f),' done'])
     end
     prevIm = newIm;
-    %pause
+    pause()
 end
 if visualization
     close(writer);
