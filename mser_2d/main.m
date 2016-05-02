@@ -13,14 +13,15 @@ MinDiversity = 0.7;
 MinArea = 0.005; 
 MaxArea = 0.03; 
 % Alex tuning constants
+minTrackSize = 1;
 start = 1; %start at custom frame number. Default = 1.
-stop = 10;  %end at custom frame number. Default = N.
+stop = 5;  %end at custom frame number. Default = N.
 format = '../datasets/StillImages/Frame%04d.bmp'; % framing
 manualMatching = true;
 visualization = false;
 resize = false; %reduce image to speed up computation
 threshold = -1; %-1 %Score threshold needed for two regions to be considered to come from the same object. A higher score indicates higher similarity.
-measurementsOutputFileName = '../datatsets/tempManualMserMeasurements.csv';
+measurementsOutputFileName = 'tempManualMserMeasurements.csv';
 videoOutputFileName = 'Alex_Tracking_Movie';
 
 %% Set up video output
@@ -34,7 +35,7 @@ end
 
 %% Process first video frame 
 f = start;
-filename = sprintf(format,f); %f-1 because images are 0 indexed
+filename = sprintf(format,f); 
 % Read image from video and resize + grayscale
 C = imread(filename);
 if resize
@@ -67,7 +68,7 @@ prevIm = mainOC.getImage(I,f);
 %% Process rest of frames + make video
 for f=start + 1:stop
     %% Read image, resize, grayscale, make data structures, & detect MSERs
-    filename = sprintf(format,f); %f-1 because images are 0 indexed
+    filename = sprintf(format,f); 
     C = imread(filename);
     if resize
         C = imresize(C,0.5);
@@ -170,7 +171,7 @@ if visualization
     close(writer);
 end
 %Make CSV data file
-mainOC.exportMserMeasurementsInGroups(1,measurementsOutputFileName);
+mainOC.exportMserMeasurementsInGroups(minTrackSize,measurementsOutputFileName);
 if manualMatching == true
     mainOC.showTracks(3,size(I,1),size(I,2),2);
     mainOC.makeTrackVideo(5,size(I,1),size(I,2),2);
