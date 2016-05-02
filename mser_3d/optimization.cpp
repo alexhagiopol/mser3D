@@ -81,7 +81,7 @@ float standardDeviation(std::vector<float> data)
 std::pair<std::vector<MserObject>,std::vector<Vector3>> inferObjectsFromRealMserMeasurements(const std::vector<MserTrack>& tracks, const std::vector<Pose3>& VOposes, bool showEachStep, int levMarIterations){
     std::vector<MserObject> objects;
     std::vector<Vector3> colors;
-    Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
+    Cal3_S2::shared_ptr K(new Cal3_S2(857.483, 876.718, 0.1, 1280/2, 720/2)); //TODO: take this from InputManager gopro camera calibration from http://www.theeminentcodfish.com/gopro-calibration/
     float sumMeasurements; //use for measurement stats
     std::vector<float> measurementsSizes; //use for measurement stats
     for (int t = 0; t < tracks.size(); t++){

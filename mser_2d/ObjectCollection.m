@@ -364,7 +364,8 @@ classdef ObjectCollection < handle
         %Write the measurements made in CSV 
         function exportMserMeasurementsInGroups(OC, min_size, filename)            
             rowNumber = 0;
-            dlmwrite(filename,[-1,-1]); %use this as a way to clear the file
+            disp('WRITING TRACK INFO TO CONSOLE; FILE OUTPUT DISABLED BECAUSE OF PERMISSIONS');
+            %dlmwrite(filename,[-1,-1]); %use this as a way to clear the file
             for o = 1:length(OC.objects)
                 obj = OC.objects(o);
                 if length(obj.msers) > min_size
@@ -413,7 +414,8 @@ classdef ObjectCollection < handle
                     end
                     vectorToWrite(end - 2: end) = obj.getColor';
                     
-                    dlmwrite(filename,vectorToWrite,'delimiter',',','-append');
+                    %dlmwrite(filename,vectorToWrite,'delimiter',',','-append');              
+                    disp(vectorToWrite);
                     rowNumber = rowNumber + 1;
                     disp(['Wrote object #',num2str(o),' to ',filename]);
                 end                
