@@ -1,6 +1,7 @@
 #include "oldTests.h"
 #include "InputManager.h"
 #include "Tracker.h"
+#include "visualization.h"
 
 int main(int argc, char ** argv) {
     //Take in input
@@ -14,10 +15,13 @@ int main(int argc, char ** argv) {
     //Perform real world test of optimization
     //realWorldTestOptimization(myInput,false,30);
 
+    /*
     std::vector<MserTrack> myTracks;
     myInput.MSERTracks(myTracks);
     Tracker myTracker(myInput);
     myTracker.readImages();
     myTracker.displayTracks(myTracker.images_,myTracks);
+     */
+    showTextures();
     return 0;
 }
