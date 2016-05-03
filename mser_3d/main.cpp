@@ -13,7 +13,7 @@ int main(int argc, char ** argv) {
     //Perform synthetic test of optimization math. Performs MSER_3D on synthetic dataset.
     //syntheticTestOptimization(myInput,true,true,true,30);
     //Perform real world test of optimization
-    //realWorldTestOptimization(myInput,false,30);
+    realWorldTestOptimization(myInput,false,30);
 
     /*
     std::vector<MserTrack> myTracks;
@@ -22,6 +22,6 @@ int main(int argc, char ** argv) {
     myTracker.readImages();
     myTracker.displayTracks(myTracker.images_,myTracks);
     */
-    showTextures();
+    //showTextures();
     return 0;
 }

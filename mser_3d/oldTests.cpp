@@ -245,5 +245,5 @@ void realWorldTestOptimization(const InputManager& input, bool showEachStep, int
     cerr << "TEST 3D: # of objects " << pair.first.size() << endl;
     cerr << "TEST 3D: # of colors " << pair.second.size() << endl;
     cerr << "TEST 3D: # of rays " << rays.size() << endl;
-    drawMserObjects(input, relevantCameraPoses, pair.first, pair.second, rays); //only display relevant poses
+    drawTexturedMserObjects(input, relevantCameraPoses, pair.first, pair.second, rays); //only display relevant poses
 }

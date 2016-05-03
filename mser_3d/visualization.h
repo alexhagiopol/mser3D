@@ -32,6 +32,8 @@ std::vector<std::pair<Point3,Point3>> makeRayTracingPairs(std::vector<gtsam::Mse
 
 int drawMserObjects(const InputManager& input, const std::vector<Pose3>& cameraPoses, const std::vector<MserObject>& objects, const std::vector<Vector3>& colors = std::vector<Vector3>(), const std::vector<std::pair<Point3,Point3>>& rays = std::vector<std::pair<Point3,Point3>>());
 
+int drawTexturedMserObjects(const InputManager& input, const std::vector<Pose3>& cameraPoses, const std::vector<MserObject>& objects, const std::vector<Vector3>& colors = std::vector<Vector3>(), const std::vector<std::pair<Point3,Point3>>& rays = std::vector<std::pair<Point3,Point3>>());
+
 void addDummyObjectsAndColorsForDisplayingCameraAlongsideMserObjects(const std::vector<Pose3>& cameraPoses, std::vector<MserObject>& objects, std::vector<Vector3>& colors);
 
 void showTextures();
