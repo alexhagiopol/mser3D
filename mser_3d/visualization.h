@@ -19,7 +19,6 @@
 #include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
-//#include "common/texture.hpp"
 
 using namespace cv;
 using namespace glm;

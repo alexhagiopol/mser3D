@@ -2,7 +2,7 @@
 // Created by alex on 12/8/15.
 //
 #include "visualization.h"
-//#include "common/texture.hpp"
+
 using namespace gtsam;
 
 GLuint loadBMP_custom(const char * imagepath){
