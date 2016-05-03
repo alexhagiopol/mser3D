@@ -569,7 +569,7 @@ int drawTexturedMserObjects(const InputManager& input, const std::vector<Pose3>&
 
     GLuint vertexbuffer; //create vertex buffer outside loop so it can be purged outside loop
     GLuint colorbuffer; //create color buffer outside loop so it can be purged outside loop
-
+    GLuint uvbuffer;
     // Camera matrix
     glm::mat4 View = glm::lookAt(
             glm::vec3(0, 10, 40), //camera position
@@ -606,19 +606,11 @@ int drawTexturedMserObjects(const InputManager& input, const std::vector<Pose3>&
         Point3 lowerLeftInObjectFrame(-1*majAxisLength/2,-1*majAxisLength/2,0);
         Point3 lowerRightInObjectFrame(majAxisLength/2,-1*majAxisLength/2,0);
 
-
-
         Rot3 objectRot = objects[o].first.rotation();
         Point3 upperLeftInWorldFrame = objectRot * upperLeftInObjectFrame + centerInWorldFrame;
         Point3 upperRightInWorldFrame = objectRot * upperRightInObjectFrame + centerInWorldFrame;
         Point3 lowerLeftInWorldFrame = objectRot * lowerLeftInObjectFrame + centerInWorldFrame;
         Point3 lowerRightInWorldFrame = objectRot * lowerRightInObjectFrame + centerInWorldFrame;
-
-        cout << "center " << centerInWorldFrame << endl;
-        cout << "lowerleft " << lowerLeftInWorldFrame << endl;
-        cout << "lowerright " << lowerRightInWorldFrame << endl;
-        cout << "upperleft " << upperLeftInWorldFrame << endl;
-        cout << "upperright " << upperRightInWorldFrame << endl;
 
         //Draw square
         g_vertex_buffer_data[18*o] = lowerLeftInWorldFrame.x();
@@ -641,6 +633,19 @@ int drawTexturedMserObjects(const InputManager& input, const std::vector<Pose3>&
         g_vertex_buffer_data[18*o+16] = lowerLeftInWorldFrame.y();
         g_vertex_buffer_data[18*o+17] = lowerLeftInWorldFrame.z();
 
+        //texture
+        g_uv_buffer_data[12*o] = 0;
+        g_uv_buffer_data[12*o+1] = 0;
+        g_uv_buffer_data[12*o+2]= 1;
+        g_uv_buffer_data[12*o+3] = 0;
+        g_uv_buffer_data[12*o+4] = 1;
+        g_uv_buffer_data[12*o+5] = 1;
+        g_uv_buffer_data[12*o+6] = 1;
+        g_uv_buffer_data[12*o+7] = 1;
+        g_uv_buffer_data[12*o+8] = 0;
+        g_uv_buffer_data[12*o+9] = 1;
+        g_uv_buffer_data[12*o+10] = 0;
+        g_uv_buffer_data[12*o+11] = 0;
 
         //colors
         g_color_buffer_data[18*o] = 0;
@@ -683,8 +688,8 @@ int drawTexturedMserObjects(const InputManager& input, const std::vector<Pose3>&
             // Object vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
             float rad_angle = (i/9) * 360/numVerticesPerEllipse * M_PI / 180;
             float next_rad_angle = (i/9 + 1) * 360/numVerticesPerEllipse * M_PI / 180;
-            float ellipse_x_radius = objects[o].second.x();// / 40;
-            float ellipse_y_radius = objects[o].second.y();// / 40;
+            float ellipse_x_radius = 0;//objects[o].second.x();// / 40;
+            float ellipse_y_radius = 0;//objects[o].second.y();// / 40;
             //cout << ellipse_x_radius << " " << ellipse_y_radius << endl;
 
             double scaleFactor = 1; //use this to make things further apart, closer together for easier visualization
@@ -901,10 +906,16 @@ int drawTexturedMserObjects(const InputManager& input, const std::vector<Pose3>&
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
+    glGenBuffers(1, &uvbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);
+
+    /*
     //Place color info into a buffer
     glGenBuffers(1, &colorbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
+    */
 
     //MAIN WINDOW ANIMATION LOOP: while loop start
     do{
@@ -917,6 +928,14 @@ int drawTexturedMserObjects(const InputManager& input, const std::vector<Pose3>&
         glm::mat4 ModelMatrix = glm::mat4(1.0);
         glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE,&MVP[0][0]); // Send our transformation to the currently bound shader in the "MVP" uniform
+
+
+        // Bind our texture in Texture Unit 0
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, Texture);
+        // Set our "myTextureSampler" sampler to user Texture Unit 0
+        glUniform1i(TextureID, 0);
+
         // 1st attribute buffer : vertices
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -928,7 +947,21 @@ int drawTexturedMserObjects(const InputManager& input, const std::vector<Pose3>&
                 0,                  // stride
                 (void *) 0            // array buffer offset
         );
+
+        // 2nd attribute buffer : UVs
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+        glVertexAttribPointer(
+                1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+                2,                                // size : U+V => 2
+                GL_FLOAT,                         // type
+                GL_FALSE,                         // normalized?
+                0,                                // stride
+                (void*)0                          // array buffer offset
+        );
+
         // 2nd attribute buffer : colors
+        /*
         glEnableVertexAttribArray(1);
         glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
         glVertexAttribPointer(
@@ -939,6 +972,8 @@ int drawTexturedMserObjects(const InputManager& input, const std::vector<Pose3>&
                 0,                                // stride
                 (void *) 0                          // array buffer offset
         );
+         */
+
         //MOST IMPORTANT DRAWING CODE IS HERE! We take what we stored in the vertex buffer and draw it.
         //Note that here we count VERTICES (e.g. 3 points per triangle or 2 points per line) NOT DOUBLES
         //glDrawArrays(GL_TRIANGLES,0,originalObjectsSize*2*3);
@@ -1036,7 +1071,7 @@ void showTextures(){
             1,1,0,
             1,1,0,
             0,1,0,
-            0,0,0
+            0,0,0,
     };
 
     // Two UV coordinatesfor each vertex. They were created withe Blender.
